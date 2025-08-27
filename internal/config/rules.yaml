@@ -1,0 +1,162 @@
+services:
+  # Cloud Spanner
+  - service_name: "spanner"
+    package_path: "cloud.google.com/go/spanner"
+    creation_functions:
+      - "NewClient"
+      - "NewClientWithConfig"
+      - "ReadOnlyTransaction"
+      - "ReadWriteTransaction"
+      - "BatchReadOnlyTransaction"
+      - "Query"
+      - "Read"
+    cleanup_methods:
+      - method: "Close"
+        required: true
+        description: "Spannerクライアント接続のクローズ"
+      - method: "Stop"
+        required: true
+        description: "RowIteratorの停止"
+
+  # Cloud Storage
+  - service_name: "storage"
+    package_path: "cloud.google.com/go/storage"
+    creation_functions:
+      - "NewClient"
+      - "NewReader"
+      - "NewWriter"
+      - "NewComposer"
+    cleanup_methods:
+      - method: "Close"
+        required: true
+        description: "ストレージクライアント/ストリーム接続のクローズ"
+
+  # Cloud Pub/Sub
+  - service_name: "pubsub"
+    package_path: "cloud.google.com/go/pubsub"
+    creation_functions:
+      - "NewClient"
+      - "NewClientWithConfig"
+      - "Receive"
+      - "NewMessage"
+    cleanup_methods:
+      - method: "Close"
+        required: true
+        description: "Pub/Subクライアント接続のクローズ"
+      - method: "Stop"
+        required: true
+        description: "サブスクリプション受信の停止"
+      - method: "Shutdown"
+        required: true
+        description: "メッセージ処理の終了"
+
+  # Cloud Vision AI
+  - service_name: "vision"
+    package_path: "cloud.google.com/go/vision/apiv1"
+    creation_functions:
+      - "NewImageAnnotatorClient"
+      - "NewProductSearchClient"
+    cleanup_methods:
+      - method: "Close"
+        required: true
+        description: "Vision APIクライアント接続のクローズ"
+
+  # Cloud Identity and Access Management (Admin)
+  - service_name: "admin"
+    package_path: "cloud.google.com/go/iam/admin/apiv1"
+    creation_functions:
+      - "NewIamClient"
+    cleanup_methods:
+      - method: "Close"
+        required: true
+        description: "IAM Adminクライアント接続のクローズ"
+
+  # reCAPTCHA Enterprise
+  - service_name: "recaptcha"
+    package_path: "cloud.google.com/go/recaptchaenterprise/apiv1"
+    creation_functions:
+      - "NewRecaptchaEnterpriseServiceClient"
+    cleanup_methods:
+      - method: "Close"
+        required: true
+        description: "reCAPTCHA Enterpriseクライアント接続のクローズ"
+
+  # BigQuery
+  - service_name: "bigquery"
+    package_path: "cloud.google.com/go/bigquery"
+    creation_functions:
+      - "NewClient"
+      - "NewJob"
+    cleanup_methods:
+      - method: "Close"
+        required: true
+        description: "BigQueryクライアント接続のクローズ"
+
+  # Cloud Firestore
+  - service_name: "firestore"
+    package_path: "cloud.google.com/go/firestore"
+    creation_functions:
+      - "NewClient"
+      - "NewClientWithDatabase"
+    cleanup_methods:
+      - method: "Close"
+        required: true
+        description: "Firestoreクライアント接続のクローズ"
+
+  # Cloud Functions
+  - service_name: "functions"
+    package_path: "cloud.google.com/go/functions/apiv1"
+    creation_functions:
+      - "NewCloudFunctionsServiceClient"
+    cleanup_methods:
+      - method: "Close"
+        required: true
+        description: "Cloud Functionsクライアント接続のクローズ"
+
+package_exceptions:
+  # 短命プログラム例外（cmd以下のmainパッケージ）
+  - name: "cmd_short_lived"
+    pattern: "*/cmd/*"
+    condition:
+      type: "short_lived"
+      description: "短命プログラム例外"
+      enabled: true
+
+  # Cloud Functions例外（function以下のディレクトリ）
+  - name: "cloud_functions"
+    pattern: "**/function/**"
+    condition:
+      type: "cloud_function"
+      description: "Cloud Functions例外"
+      enabled: true
+
+  # テストコード例外（デフォルト無効）
+  - name: "test_files"
+    pattern: "**/*_test.go"
+    condition:
+      type: "test"
+      description: "テストコード例外"
+      enabled: true
+
+# 診断レベル制御設定
+diagnostics:
+  level: "warning"                        # エラー/警告/情報レベル
+  include_suggestions: true               # 修正提案を含める
+  include_escape_reasons: true            # エスケープ理由を含める
+  confidence_threshold: 0.8               # 信頼度しきい値
+  potential_false_positive_detection: true # 偽陽性疑義検出
+  custom_filters:
+    # 偽陽性疑義のマーク
+    - pattern: "potential false positive"
+      action: "mark_uncertain"
+      description: "偽陽性疑義のある診断に不確実性マークを付加"
+    
+    # フレームワーク管理の抑制
+    - pattern: "framework managed"  
+      action: "suppress"
+      description: "フレームワーク自動管理リソースの診断を抑制"
+    
+    # 自動管理パターンの抑制
+    - pattern: "automatically managed"
+      action: "suppress" 
+      description: "自動管理されるリソースの診断を抑制"
