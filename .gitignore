@@ -1,0 +1,118 @@
+# Created by https://www.toptal.com/developers/gitignore/api/macos,go
+# Edit at https://www.toptal.com/developers/gitignore?templates=macos,go
+
+### Go ###
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+### macOS ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+### macOS Patch ###
+# iCloud generated files
+*.icloud
+
+# End of https://www.toptal.com/developers/gitignore/api/macos,go
+
+# Project specific
+tmp/
+bin/
+/gcpclosecheck
+
+# Test files and samples
+test_sample.go
+simple_test/
+
+# IDE Files  
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Coverage reports
+coverage.out
+coverage.html
+
+# Profile files
+*.prof
+cpu.prof  
+mem.prof
+
+# Log files
+*.log
+
+# Configuration files (if containing sensitive data)
+config.yaml
+config.json
+.env
+.env.local
+
+# Build and dependency directories
+vendor/
+node_modules/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Archives
+*.tar.gz
+*.zip
+*.7z
+*.rar
+
+# Temporary files
+*.tmp
+*.temp
+.kiro/
