@@ -7,6 +7,11 @@ on:
     branches: [ main, develop ]
     types: [ opened, synchronize, reopened ]  # Avoid duplicate runs
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   # Quality checks - single OS, latest Go only (run on all events)
   quality:
