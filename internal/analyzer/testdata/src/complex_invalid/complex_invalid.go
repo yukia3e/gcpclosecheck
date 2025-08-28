@@ -2,9 +2,10 @@ package complex_invalid
 
 import (
 	"context"
-	"cloud.google.com/go/storage"
+
 	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/spanner"
+	"cloud.google.com/go/storage"
 )
 
 // 複数のGCPサービスで一部のClose不足
@@ -77,7 +78,7 @@ func conditionalMissingClose(ctx context.Context, useSpanner bool) error {
 // ループ内でのClose不足
 func loopMissingClose(ctx context.Context) error {
 	databases := []string{"db1", "db2", "db3"}
-	
+
 	for _, db := range databases {
 		client, err := spanner.NewClient(ctx, "projects/test/instances/test/databases/"+db) // want "GCP リソース 'client' の解放処理 \\(Close\\) が見つかりません"
 		if err != nil {
@@ -126,7 +127,7 @@ type ResourceManager interface {
 
 func interfaceMissingClose(ctx context.Context) error {
 	var resource ResourceManager
-	
+
 	client, err := storage.NewClient(ctx) // want "GCP リソース 'client' の解放処理 \\(Close\\) が見つかりません"
 	if err != nil {
 		return err

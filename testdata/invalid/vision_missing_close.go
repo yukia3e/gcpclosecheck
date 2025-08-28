@@ -46,6 +46,6 @@ func VisionProcessingMissingClose(ctx context.Context) error { // want `vision c
 
 	// 実際の画像解析処理（詳細は省略）
 	_ = client
-	
+
 	return nil
 }

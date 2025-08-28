@@ -2,6 +2,7 @@ package recaptcha_valid
 
 import (
 	"context"
+
 	recaptcha "cloud.google.com/go/recaptchaenterprise/v2/apiv1"
 )
 
@@ -38,7 +39,7 @@ func correctComplexRecaptcha(ctx context.Context) error {
 	// reCAPTCHA操作の実行
 	// req := &recaptchapb.CreateAssessmentRequest{...}
 	// _, err = client.CreateAssessment(ctx, req)
-	
+
 	return nil
 }
 

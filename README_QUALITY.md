@@ -1,348 +1,346 @@
-# 品質チェックツール使用ガイド
+# Quality Check Tools Usage Guide
 
-gcpclosecheckプロジェクトの品質とパフォーマンスを包括的に分析・改善するためのツール群の使用方法とベストプラクティスを説明します。
+A comprehensive guide on how to use the tool suite for analyzing and improving the quality and performance of the gcpclosecheck project.
 
-## 📋 概要
+[日本語版](README_QUALITY.ja.md) | English
 
-このツール群は以下の機能を提供します：
+## 📋 Overview
 
-- **テスト分析**: カバレッジ分析、テスト実行結果の詳細評価
-- **コード品質検証**: 静的解析、セキュリティスキャン、ビルド検証
-- **パフォーマンス測定**: ベンチマーク実行、プロファイリング
-- **自動修正**: 検出された問題の自動修正とコードフォーマット
-- **レポート生成**: 統合レポートと詳細分析結果
-- **継続改善支援**: 品質指標履歴管理とトレンド分析
+This tool suite provides the following features:
 
-## 🚀 クイックスタート
+- **Test Analysis**: Coverage analysis, detailed evaluation of test execution results
+- **Code Quality Verification**: Static analysis, security scans, build verification
+- **Performance Measurement**: Benchmark execution, profiling
+- **Automatic Fixes**: Automatic fixing of detected issues and code formatting
+- **Report Generation**: Integrated reports and detailed analysis results
+- **Continuous Improvement Support**: Quality metrics history management and trend analysis
 
-### 前提条件
+## 🚀 Quick Start
 
-- Go 1.25.0以上
-- golangci-lint 2.4.0以上（推奨）
-- gosec、govulncheck（オプション）
+### Prerequisites
 
-### 基本的な使用方法
+- Go 1.25.0 or higher
+- golangci-lint 2.4.0 or higher (recommended)
+- gosec, govulncheck (optional)
+
+### Basic Usage
 
 ```bash
-# 全分析の実行
+# Run all analyses
 scripts/quality-check.sh
 
-# テスト分析のみ
+# Test analysis only
 scripts/quality-check.sh --test
 
-# 品質検証のみ
+# Quality verification only
 scripts/quality-check.sh --quality
 
-# パフォーマンス測定のみ
+# Performance measurement only
 scripts/quality-check.sh --perf
 ```
 
-## 📚 各スクリプトの詳細な使用方法
+## 📚 Detailed Usage of Each Script
 
-### quality-check.sh - メインオーケストレーションスクリプト
+### quality-check.sh - Main Orchestration Script
 
-プロジェクトの包括的な品質とパフォーマンス分析を実行します。
+Executes comprehensive quality and performance analysis of the project.
 
-**使用方法:**
+**Usage:**
 ```bash
-scripts/quality-check.sh [オプション]
+scripts/quality-check.sh [options]
 ```
 
-**オプション:**
-- `--test`: テスト分析のみ実行（カバレッジ、テスト結果）
-- `--quality`: 品質検証のみ実行（静的解析、セキュリティ）  
-- `--perf`: パフォーマンス測定のみ実行（ベンチマーク、プロファイル）
-- `--all`: 全ての分析を実行（デフォルト）
-- `--help`: ヘルプを表示
+**Options:**
+- `--test`: Execute test analysis only (coverage, test results)
+- `--quality`: Execute quality verification only (static analysis, security)  
+- `--perf`: Execute performance measurement only (benchmarks, profiling)
+- `--all`: Execute all analyses (default)
+- `--help`: Show help
 
-**出力ファイル:**
-- `reports/performance_summary.json`: 実行時間とパフォーマンス情報
+**Output Files:**
+- `reports/performance_summary.json`: Execution time and performance information
 
-### test-analysis.sh - テスト分析専用スクリプト
+### test-analysis.sh - Dedicated Test Analysis Script
 
-テストカバレッジの詳細分析とテスト実行結果の評価を行います。
+Performs detailed analysis of test coverage and evaluation of test execution results.
 
-**主な機能:**
-- go test -cover を使用したカバレッジ測定
-- テスト実行結果の詳細分析
-- HTMLカバレッジレポート生成
-- 失敗テストの詳細レポート作成
+**Main Features:**
+- Coverage measurement using go test -cover
+- Detailed analysis of test execution results
+- HTML coverage report generation
+- Detailed report creation for failed tests
 
-**出力ファイル:**
-- `reports/test_results.json`: 構造化されたテスト結果
-- `reports/test_summary.txt`: テスト結果サマリー
-- `reports/coverage.html`: HTMLカバレッジレポート
-- `reports/failed_tests_detail.txt`: 失敗テストの詳細
+**Output Files:**
+- `reports/test_results.json`: Structured test results
+- `reports/test_summary.txt`: Test results summary
+- `reports/coverage.html`: HTML coverage report
+- `reports/failed_tests_detail.txt`: Details of failed tests
 
-### code-quality.sh - コード品質検証スクリプト
+### code-quality.sh - Code Quality Verification Script
 
-静的解析、セキュリティスキャン、ビルド検証を実行します。
+Executes static analysis, security scans, and build verification.
 
-**主な機能:**
-- golangci-lint による静的解析
-- gosec によるセキュリティスキャン
-- govulncheck による脆弱性チェック
-- go build と go vet によるビルド検証
+**Main Features:**
+- Static analysis with golangci-lint
+- Security scanning with gosec
+- Vulnerability checking with govulncheck
+- Build verification with go build and go vet
 
-**出力ファイル:**
-- `reports/lint_results.json`: 静的解析結果
-- `reports/security_results.json`: セキュリティスキャン結果
-- `reports/build_results.json`: ビルド検証結果
+**Output Files:**
+- `reports/lint_results.json`: Static analysis results
+- `reports/security_results.json`: Security scan results
+- `reports/build_results.json`: Build verification results
 
-### performance-check.sh - パフォーマンス測定スクリプト
+### performance-check.sh - Performance Measurement Script
 
-ベンチマーク実行とプロファイリング分析を行います。
+Executes benchmark testing and profiling analysis.
 
-**主な機能:**
-- go test -bench によるベンチマーク実行
-- CPU・メモリプロファイリング
-- パフォーマンス指標の算出
+**Main Features:**
+- Benchmark execution with go test -bench
+- CPU and memory profiling
+- Performance metrics calculation
 
-**出力ファイル:**
-- `reports/benchmark_results.json`: ベンチマーク結果
-- `reports/profile_results.json`: プロファイリング結果
+**Output Files:**
+- `reports/benchmark_results.json`: Benchmark results
+- `reports/profile_results.json`: Profiling results
 
-### fix-issues.sh - 自動修正スクリプト
+### fix-issues.sh - Automatic Fix Script
 
-検出された問題の自動修正と優先度付けを行います。
+Performs automatic fixing and prioritization of detected issues.
 
-**主な機能:**
-- go fmt による自動フォーマット
-- goimports による import 整理
-- golangci-lint --fix による自動修正
-- 問題の優先度付けと修正推奨順序の提案
+**Main Features:**
+- Automatic formatting with go fmt
+- Import organization with goimports
+- Automatic fixes with golangci-lint --fix
+- Issue prioritization and recommended fix order suggestions
 
-**出力ファイル:**
-- `reports/fix_results.json`: 修正実行結果
-- `reports/priority_results.json`: 問題優先度分析
+**Output Files:**
+- `reports/fix_results.json`: Fix execution results
+- `reports/priority_results.json`: Issue priority analysis
 
-### generate-report.sh - レポート生成スクリプト
+### generate-report.sh - Report Generation Script
 
-統合レポートと詳細分析レポートを生成します。
+Generates integrated reports and detailed analysis reports.
 
-**主な機能:**
-- 全分析結果の統合レポート生成
-- 詳細な技術分析レポート作成
-- 経営層向けサマリーレポート生成
+**Main Features:**
+- Integrated report generation from all analysis results
+- Detailed technical analysis report creation
+- Executive summary report generation for management
 
-**出力ファイル:**
-- `reports/integrated_report.md`: 統合レポート
-- `reports/detailed_report.md`: 詳細技術レポート
-- `reports/executive_summary.md`: 経営層向けサマリー
+**Output Files:**
+- `reports/integrated_report.md`: Integrated report
+- `reports/detailed_report.md`: Detailed technical report
+- `reports/executive_summary.md`: Executive summary
 
-### track-progress.sh - 継続改善支援スクリプト
+### track-progress.sh - Continuous Improvement Support Script
 
-品質指標の履歴管理とトレンド分析を行います。
+Manages quality metrics history and performs trend analysis.
 
-**使用方法:**
+**Usage:**
 ```bash
-scripts/track-progress.sh [オプション]
+scripts/track-progress.sh [options]
 ```
 
-**オプション:**
-- `--track`: 品質指標追跡を実行
-- `--trend`: トレンド分析のみ実行
-- `--compare`: 比較分析のみ実行
+**Options:**
+- `--track`: Execute quality metrics tracking
+- `--trend`: Execute trend analysis only
+- `--compare`: Execute comparison analysis only
 
-**出力ファイル:**
-- `reports/history/`: 品質指標履歴データ
-- `reports/trend_analysis.md`: トレンド分析レポート
-- `reports/progress_report.md`: 進捗レポート
+**Output Files:**
+- `reports/history/`: Quality metrics history data
+- `reports/trend_analysis.md`: Trend analysis report
+- `reports/progress_report.md`: Progress report
 
-## 🎯 ベストプラクティス
+## 🎯 Best Practices
 
-### 1. 定期実行の推奨
+### 1. Recommended Regular Execution
 
 ```bash
-# 週次での品質チェック実行を推奨
-# crontabに以下を追加:
+# Recommended weekly quality check execution
+# Add to crontab:
 # 0 2 * * 1 /path/to/gcpclosecheck/scripts/quality-check.sh
 ```
 
-### 2. 品質改善ワークフロー
+### 2. Quality Improvement Workflow
 
-1. **分析実行**: `scripts/quality-check.sh` で現状把握
-2. **問題特定**: `reports/` ディレクトリのレポートを確認
-3. **自動修正**: `scripts/fix-issues.sh` で修正可能な問題を解決
-4. **手動修正**: 残りの問題を優先度順に対応
-5. **効果測定**: `scripts/track-progress.sh` で改善効果を確認
+1. **Analysis Execution**: Understand current state with `scripts/quality-check.sh`
+2. **Issue Identification**: Check reports in `reports/` directory
+3. **Automatic Fixes**: Resolve fixable issues with `scripts/fix-issues.sh`
+4. **Manual Fixes**: Address remaining issues in priority order
+5. **Effect Measurement**: Confirm improvement effects with `scripts/track-progress.sh`
 
-### 3. CI/CDパイプラインとの統合
+### 3. CI/CD Pipeline Integration
 
 ```yaml
-# GitHub Actions例
+# GitHub Actions example
 - name: Quality Check
   run: |
     chmod +x scripts/quality-check.sh
     scripts/quality-check.sh --test
 ```
 
-### 4. レポートの活用方法
+### 4. Report Utilization Methods
 
-- **developers**: `reports/detailed_report.md` で技術的な詳細を確認
-- **managers**: `reports/executive_summary.md` で全体状況を把握
-- **継続改善**: `reports/trend_analysis.md` で改善傾向を追跡
+- **Developers**: Check technical details in `reports/detailed_report.md`
+- **Managers**: Understand overall situation with `reports/executive_summary.md`
+- **Continuous Improvement**: Track improvement trends with `reports/trend_analysis.md`
 
-## 🔧 トラブルシューティング
+## 🔧 Troubleshooting
 
-### よくある問題と解決方法
+### Common Issues and Solutions
 
-#### 1. golangci-lint設定エラー
+#### 1. golangci-lint Configuration Error
 
-**エラー例:**
+**Error Example:**
 ```
 Error: can't load config: unsupported version of the configuration
 ```
 
-**解決方法:**
+**Solution:**
 ```bash
-# .golangci.yml の更新
-golangci-lint --version  # バージョン確認
-# 最新の設定形式に更新
+# Update .golangci.yml
+golangci-lint --version  # Check version
+# Update to latest configuration format
 ```
 
-#### 2. テスト失敗の大量発生
+#### 2. Mass Test Failures
 
-**対処方法:**
-1. `reports/failed_tests_detail.txt` で失敗原因を確認
-2. 依存関係の問題か確認: `go mod tidy`
-3. 段階的にテスト修正を実行
+**Solution Approach:**
+1. Check failure causes in `reports/failed_tests_detail.txt`
+2. Check for dependency issues: `go mod tidy`
+3. Execute gradual test fixes
 
-#### 3. メモリ不足エラー
+#### 3. Memory Shortage Error
 
-**対処方法:**
+**Solution:**
 ```bash
-# 大規模プロジェクトの場合、並列数を削減
-# scripts/quality-check.sh内のMAX_PARALLEL_JOBSを調整
+# For large projects, reduce parallelism
+# Adjust MAX_PARALLEL_JOBS in scripts/quality-check.sh
 ```
 
-#### 4. カバレッジが取得できない
+#### 4. Unable to Obtain Coverage
 
-**確認事項:**
-- テストファイルが存在するか
-- go.mod の設定が正しいか
-- テストが実際に実行されているか
+**Check Items:**
+- Do test files exist?
+- Is go.mod configuration correct?
+- Are tests actually executing?
 
-### 既知の問題
+### Known Issues
 
-#### 1. GCPライブラリの依存関係エラー
+#### 1. GCP Library Dependency Errors
 
-一部のテストでGCPクライアントライブラリのインポートエラーが発生する場合があります。
+Some tests may encounter GCP client library import errors.
 
-**回避策:**
+**Workaround:**
 ```bash
-# 必要なGCPライブラリをインストール
+# Install necessary GCP libraries
 go mod download cloud.google.com/go/...
 ```
 
-#### 2. macOSでのdate コマンド互換性
+#### 2. macOS date Command Compatibility
 
-macOSとLinuxでdateコマンドの動作が異なる場合があります。
+The date command behavior may differ between macOS and Linux.
 
-**対処済み:**
-スクリプト内で自動的に環境を検出し、適切なコマンドを使用します。
+**Already Addressed:**
+The scripts automatically detect the environment and use appropriate commands.
 
-## 📊 運用ガイド
+## 📊 Operations Guide
 
-### 継続的品質改善のための運用プロセス
+### Operational Process for Continuous Quality Improvement
 
-#### 1. 日次モニタリング
+#### 1. Daily Monitoring
 
 ```bash
-# 開発チーム向け: 毎日の品質チェック
+# For development teams: Daily quality checks
 scripts/quality-check.sh --test
 ```
 
-#### 2. 週次品質レビュー
+#### 2. Weekly Quality Review
 
 ```bash
-# 全分析と履歴比較
+# Full analysis and history comparison
 scripts/quality-check.sh
 scripts/track-progress.sh
 ```
 
-#### 3. 月次品質評価
+#### 3. Monthly Quality Assessment
 
-1. 詳細レポートの作成と共有
-2. 品質指標のトレンド分析
-3. 改善計画の見直し
+1. Create and share detailed reports
+2. Quality metrics trend analysis
+3. Review improvement plans
 
-### 品質ゲート基準
+### Quality Gate Criteria
 
-以下の基準を満たすことを推奨します：
+The following criteria are recommended:
 
-- **テストカバレッジ**: 80%以上
-- **テスト失敗**: 0件
-- **セキュリティ問題**: 0件
-- **クリティカルなLint問題**: 0件
+- **Test Coverage**: 80% or higher
+- **Test Failures**: 0 failures
+- **Security Issues**: 0 issues
+- **Critical Lint Issues**: 0 issues
 
-### メンテナンス
+### Maintenance
 
-#### 定期メンテナンス作業
+#### Regular Maintenance Tasks
 
 ```bash
-# 週次クリーンアップ
+# Weekly cleanup
 scripts/cleanup.sh
 
-# 月次セットアップ確認
+# Monthly setup verification
 scripts/setup.sh --verify
 ```
 
-#### ログとレポートの管理
+#### Log and Report Management
 
-- レポートは自動的にローテーションされます
-- 30日以上古いレポートは自動削除されます
-- 履歴データは`reports/history/`に永続保存されます
+- Reports are automatically rotated
+- Reports older than 30 days are automatically deleted
+- History data is permanently stored in `reports/history/`
 
-## 🔄 アップデートガイド
+## 🔄 Update Guide
 
-### ツールのアップデート
+### Tool Updates
 
 ```bash
-# Goツールチェーンの更新
+# Update Go toolchain
 mise install go@latest
 
-# golangci-lintの更新
+# Update golangci-lint
 golangci-lint --version
-# 最新版をインストール
+# Install latest version
 ```
 
-### 設定の更新
+### Configuration Updates
 
-- `.golangci.yml`: 静的解析ルールの調整
-- `scripts/utils.sh`: 共通設定の変更
-- `scripts/quality-check.sh`: 実行パラメーターの調整
+- `.golangci.yml`: Adjust static analysis rules
+- `scripts/utils.sh`: Change common settings
+- `scripts/quality-check.sh`: Adjust execution parameters
 
-## 📈 品質指標の理解
+## 📈 Understanding Quality Metrics
 
-### 総合品質スコア算出方法
+### Overall Quality Score Calculation Method
 
 ```
-総合品質スコア = テストカバレッジ(%) - (失敗テスト数 × 2) - (Lint問題数 ÷ 2) - (セキュリティ問題数 × 10)
+Overall Quality Score = Test Coverage(%) - (Failed Tests × 2) - (Lint Issues ÷ 2) - (Security Issues × 10)
 ```
 
-### 推奨改善順序
+### Recommended Improvement Order
 
-1. **セキュリティ問題** (最優先): 即座に修正
-2. **テスト失敗**: リリース前に修正
-3. **カバレッジ不足**: 継続的改善
-4. **Lint問題**: 次回リリースで修正
+1. **Security Issues** (Highest Priority): Fix immediately
+2. **Test Failures**: Fix before release
+3. **Coverage Deficiency**: Continuous improvement
+4. **Lint Issues**: Fix in next release
 
-## 🤝 サポート
+## 🤝 Support
 
-### 問題報告
+### Issue Reporting
 
-品質チェックツールに関する問題や改善提案は、プロジェクトのissueとして報告してください。
+Please report issues or improvement suggestions for quality check tools as project issues.
 
-### 拡張方法
+### Extension Methods
 
-新しい品質チェック機能の追加方法：
+How to add new quality check features:
 
-1. `scripts/`ディレクトリに新しいスクリプトを作成
-2. `scripts/quality-check.sh`に統合
-3. `scripts/tests/test-scripts.sh`にテストを追加
-4. このドキュメントを更新
-
----
-
-*🤖 この品質チェックツールは [Claude Code](https://claude.ai/code) によって開発されました。*
+1. Create new script in `scripts/` directory
+2. Integrate into `scripts/quality-check.sh`
+3. Add tests to `scripts/tests/test-scripts.sh`
+4. Update this documentation

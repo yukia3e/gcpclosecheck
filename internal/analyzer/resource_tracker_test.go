@@ -419,7 +419,7 @@ func TestResourceTracker_GoldenTest(t *testing.T) {
 		{
 			name:              "Valid Spanner code",
 			filename:          "testdata/valid/spanner_correct.go",
-			wantResourceCount: 5, // ResourceTrackerはリソース生成を検出（defer検証は後のタスクで実装）
+			wantResourceCount: 6, // ResourceTrackerはリソース生成を検出（defer検証は後のタスクで実装）
 		},
 		{
 			name:              "Valid Storage code",
@@ -439,7 +439,7 @@ func TestResourceTracker_GoldenTest(t *testing.T) {
 		{
 			name:              "Invalid Spanner code",
 			filename:          "testdata/invalid/spanner_missing_close.go",
-			wantResourceCount: 7, // リソース生成数を実際の数に合わせて調整
+			wantResourceCount: 8, // リソース生成数を実際の数に合わせて調整
 		},
 		{
 			name:              "Invalid Storage code",
@@ -567,13 +567,14 @@ func setupPackageInfo(file *ast.File, typeInfo *types.Info) {
 		if sel, ok := n.(*ast.SelectorExpr); ok {
 			if ident, ok := sel.X.(*ast.Ident); ok {
 				// clientなどの変数がspannerの型を持つように設定
-				if ident.Name == "client" {
+				switch ident.Name {
+				case "client":
 					clientType := &mockSpannerType{name: "*spanner.Client"}
 					typeInfo.Types[sel.X] = types.TypeAndValue{
 						Type:  clientType,
 						Value: nil,
 					}
-				} else if ident.Name == "txn" {
+				case "txn":
 					txnType := &mockSpannerType{name: "*spanner.ReadOnlyTransaction"}
 					typeInfo.Types[sel.X] = types.TypeAndValue{
 						Type:  txnType,

@@ -18,8 +18,8 @@ func TestProjectStructure(t *testing.T) {
 	requiredDirs := []string{
 		"cmd/gcpclosecheck",
 		"internal/analyzer",
-		"internal/rules",
 		"internal/config",
+		"internal/messages",
 		"testdata/valid",
 		"testdata/invalid",
 	}

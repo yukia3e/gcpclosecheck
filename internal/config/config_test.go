@@ -8,7 +8,7 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	// テスト用の一時設定ファイルを作成
+	// Create test configuration file
 	testYAML := `
 services:
   - service_name: "spanner"
@@ -19,10 +19,10 @@ services:
     cleanup_methods:
       - method: "Close"
         required: true
-        description: "クライアント接続のクローズ"
+        description: "Client connection close"
       - method: "Stop"
         required: true
-        description: "RowIterator の停止"
+        description: "RowIterator stop"
   - service_name: "storage"
     package_path: "cloud.google.com/go/storage"
     creation_functions:
@@ -31,81 +31,81 @@ services:
     cleanup_methods:
       - method: "Close"
         required: true
-        description: "ストリーム接続のクローズ"
+        description: "Stream connection close"
 `
 
-	// 一時ファイル作成
+	// Create temporary file
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "test_config.yaml")
 	if err := os.WriteFile(configFile, []byte(testYAML), 0644); err != nil {
-		t.Fatalf("テスト設定ファイルの作成に失敗: %v", err)
+		t.Fatalf("Failed to create test configuration file: %v", err)
 	}
 
-	// 設定読み込みテスト
+	// Test configuration loading
 	config, err := LoadConfig(configFile)
 	if err != nil {
-		t.Fatalf("設定読み込みに失敗: %v", err)
+		t.Fatalf("Failed to load configuration: %v", err)
 	}
 
 	if config == nil {
-		t.Fatal("設定が nil です")
+		t.Fatal("Configuration is nil")
 	}
 
 	if len(config.Services) != 2 {
-		t.Errorf("サービス数が期待値と異なります: got %d, want 2", len(config.Services))
+		t.Errorf("Service count mismatch: got %d, want 2", len(config.Services))
 	}
 
-	// Spanner サービスの検証
+	// Verify Spanner service
 	spannerService := findServiceByName(config.Services, "spanner")
 	if spannerService == nil {
-		t.Fatal("spanner サービスが見つかりません")
+		t.Fatal("Spanner service not found")
 	}
 	if spannerService.PackagePath != "cloud.google.com/go/spanner" {
-		t.Errorf("spanner パッケージパスが異なります: %s", spannerService.PackagePath)
+		t.Errorf("Spanner package path mismatch: %s", spannerService.PackagePath)
 	}
 	if len(spannerService.CreationFuncs) != 2 {
-		t.Errorf("spanner 生成関数数が異なります: %d", len(spannerService.CreationFuncs))
+		t.Errorf("Spanner creation function count mismatch: %d", len(spannerService.CreationFuncs))
 	}
 	if len(spannerService.CleanupMethods) != 2 {
-		t.Errorf("spanner 解放メソッド数が異なります: %d", len(spannerService.CleanupMethods))
+		t.Errorf("Spanner cleanup method count mismatch: %d", len(spannerService.CleanupMethods))
 	}
 }
 
 func TestLoadDefaultConfig(t *testing.T) {
-	// デフォルト設定読み込みテスト
+	// Test default configuration loading
 	config, err := LoadDefaultConfig()
 	if err != nil {
-		t.Fatalf("デフォルト設定読み込みに失敗: %v", err)
+		t.Fatalf("Failed to load default configuration: %v", err)
 	}
 
 	if config == nil {
-		t.Fatal("デフォルト設定が nil です")
+		t.Fatal("Default configuration is nil")
 	}
 
-	// 最低限のサービスが含まれているかチェック
+	// Check if minimum required services are included
 	expectedServices := []string{"spanner", "storage", "pubsub", "vision"}
 	for _, serviceName := range expectedServices {
 		if findServiceByName(config.Services, serviceName) == nil {
-			t.Errorf("期待されるサービス %s が見つかりません", serviceName)
+			t.Errorf("Expected service %s not found", serviceName)
 		}
 	}
 
-	// パッケージ例外が設定されているかチェック
+	// Check if package exceptions are configured
 	if len(config.PackageExceptions) < 3 {
-		t.Errorf("期待されるパッケージ例外数が不足: got %d, want >= 3", len(config.PackageExceptions))
+		t.Errorf("Insufficient package exception count: got %d, want >= 3", len(config.PackageExceptions))
 	}
 
-	// デフォルト例外の存在確認
+	// Verify default exception existence
 	expectedExceptions := []string{"cmd_short_lived", "cloud_functions", "test_files"}
 	for _, exceptionName := range expectedExceptions {
 		if findExceptionByName(config.PackageExceptions, exceptionName) == nil {
-			t.Errorf("期待される例外 %s が見つかりません", exceptionName)
+			t.Errorf("Expected exception %s not found", exceptionName)
 		}
 	}
 }
 
 func TestConfigValidation(t *testing.T) {
-	// 不正な設定のテスト
+	// Test invalid configuration
 	invalidYAML := `
 services:
   - service_name: ""
@@ -117,22 +117,22 @@ services:
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "invalid_config.yaml")
 	if err := os.WriteFile(configFile, []byte(invalidYAML), 0644); err != nil {
-		t.Fatalf("不正テスト設定ファイルの作成に失敗: %v", err)
+		t.Fatalf("Failed to create invalid test configuration file: %v", err)
 	}
 
 	config, err := LoadConfig(configFile)
 	if err != nil {
-		t.Fatalf("設定読み込みに失敗: %v", err)
+		t.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// バリデーションテスト
+	// Validation test
 	if err := config.Validate(); err == nil {
-		t.Error("不正な設定でバリデーションエラーになるべきです")
+		t.Error("Invalid configuration should result in validation error")
 	}
 }
 
 func TestConfigGetService(t *testing.T) {
-	// GetService メソッドのテスト
+	// Test GetService method
 	testYAML := `
 services:
   - service_name: "test_service"
@@ -141,34 +141,34 @@ services:
     cleanup_methods:
       - method: "TestClose"
         required: true
-        description: "テストクローズ"
+        description: "Test close"
 `
 
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "test_service_config.yaml")
 	if err := os.WriteFile(configFile, []byte(testYAML), 0644); err != nil {
-		t.Fatalf("テスト設定ファイルの作成に失敗: %v", err)
+		t.Fatalf("Failed to create test configuration file: %v", err)
 	}
 
 	config, err := LoadConfig(configFile)
 	if err != nil {
-		t.Fatalf("設定読み込みに失敗: %v", err)
+		t.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// 存在するサービスの取得
+	// Get existing service
 	service := config.GetService("test_service")
 	if service == nil {
-		t.Error("存在するサービスが取得できません")
+		t.Error("Cannot retrieve existing service")
 	}
 
-	// 存在しないサービスの取得
+	// Get non-existent service
 	nonExistentService := config.GetService("non_existent")
 	if nonExistentService != nil {
-		t.Error("存在しないサービスが取得されました")
+		t.Error("Non-existent service was retrieved")
 	}
 }
 
-// TestPackageExceptionRule は PackageExceptionRule 構造体の動作をテストする
+// TestPackageExceptionRule tests PackageExceptionRule struct behavior
 func TestPackageExceptionRule(t *testing.T) {
 	testYAML := `
 services:
@@ -178,89 +178,89 @@ services:
     cleanup_methods:
       - method: "Close"
         required: true
-        description: "クライアント接続のクローズ"
+        description: "Client connection close"
 
 package_exceptions:
   - name: "cmd_short_lived"
     pattern: "*/cmd/*"
     condition:
       type: "short_lived"
-      description: "短命プログラム例外"
+      description: "Short-lived program exception"
       enabled: true
   - name: "cloud_functions"
     pattern: "**/function/**"
     condition:
       type: "cloud_function"
-      description: "Cloud Functions例外"
+      description: "Cloud Functions exception"
       enabled: true
   - name: "test_files"
     pattern: "**/*_test.go"
     condition:
       type: "test"
-      description: "テストコード例外"
+      description: "Test code exception"
       enabled: false
 `
 
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "exception_config.yaml")
 	if err := os.WriteFile(configFile, []byte(testYAML), 0644); err != nil {
-		t.Fatalf("テスト設定ファイルの作成に失敗: %v", err)
+		t.Fatalf("Failed to create test configuration file: %v", err)
 	}
 
 	config, err := LoadConfig(configFile)
 	if err != nil {
-		t.Fatalf("設定読み込みに失敗: %v", err)
+		t.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// PackageExceptions が正しく読み込まれているかチェック
+	// Check if PackageExceptions are loaded correctly
 	if len(config.PackageExceptions) != 3 {
-		t.Errorf("パッケージ例外数が期待値と異なります: got %d, want 3", len(config.PackageExceptions))
+		t.Errorf("Package exception count mismatch: got %d, want 3", len(config.PackageExceptions))
 	}
 
-	// cmd_short_lived 例外の検証
+	// Verify cmd_short_lived exception
 	cmdException := findExceptionByName(config.PackageExceptions, "cmd_short_lived")
 	if cmdException == nil {
-		t.Fatal("cmd_short_lived 例外が見つかりません")
+		t.Fatal("cmd_short_lived exception not found")
 	}
 	if cmdException.Pattern != "*/cmd/*" {
-		t.Errorf("cmd_short_lived パターンが異なります: got %s, want */cmd/*", cmdException.Pattern)
+		t.Errorf("cmd_short_lived pattern mismatch: got %s, want */cmd/*", cmdException.Pattern)
 	}
 	if cmdException.Condition.Type != "short_lived" {
-		t.Errorf("cmd_short_lived タイプが異なります: got %s, want short_lived", cmdException.Condition.Type)
+		t.Errorf("cmd_short_lived type mismatch: got %s, want short_lived", cmdException.Condition.Type)
 	}
 	if !cmdException.Condition.Enabled {
-		t.Error("cmd_short_lived が無効になっています")
+		t.Error("cmd_short_lived is disabled")
 	}
 
-	// cloud_functions 例外の検証
+	// Verify cloud_functions exception
 	functionException := findExceptionByName(config.PackageExceptions, "cloud_functions")
 	if functionException == nil {
-		t.Fatal("cloud_functions 例外が見つかりません")
+		t.Fatal("cloud_functions exception not found")
 	}
 	if functionException.Pattern != "**/function/**" {
-		t.Errorf("cloud_functions パターンが異なります: got %s, want **/function/**", functionException.Pattern)
+		t.Errorf("cloud_functions pattern mismatch: got %s, want **/function/**", functionException.Pattern)
 	}
 	if functionException.Condition.Type != "cloud_function" {
-		t.Errorf("cloud_functions タイプが異なります: got %s, want cloud_function", functionException.Condition.Type)
+		t.Errorf("cloud_functions type mismatch: got %s, want cloud_function", functionException.Condition.Type)
 	}
 
-	// test_files 例外の検証（デフォルト無効）
+	// Verify test_files exception (disabled by default)
 	testException := findExceptionByName(config.PackageExceptions, "test_files")
 	if testException == nil {
-		t.Fatal("test_files 例外が見つかりません")
+		t.Fatal("test_files exception not found")
 	}
 	if testException.Pattern != "**/*_test.go" {
-		t.Errorf("test_files パターンが異なります: got %s, want **/*_test.go", testException.Pattern)
+		t.Errorf("test_files pattern mismatch: got %s, want **/*_test.go", testException.Pattern)
 	}
 	if testException.Condition.Type != "test" {
-		t.Errorf("test_files タイプが異なります: got %s, want test", testException.Condition.Type)
+		t.Errorf("test_files type mismatch: got %s, want test", testException.Condition.Type)
 	}
 	if testException.Condition.Enabled {
-		t.Error("test_files がデフォルトで有効になっています")
+		t.Error("test_files is enabled by default")
 	}
 }
 
-// TestPackageExceptionRuleValidation は PackageExceptionRule のバリデーションをテストする
+// TestPackageExceptionRuleValidation tests PackageExceptionRule validation
 func TestPackageExceptionRuleValidation(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -278,14 +278,14 @@ services:
     cleanup_methods:
       - method: "Close"
         required: true
-        description: "テスト"
+        description: "Test"
 
 package_exceptions:
   - name: "valid"
     pattern: "*/test/*"
     condition:
       type: "short_lived"
-      description: "テスト例外"
+      description: "Test exception"
       enabled: true
 `,
 			expectError: false,
@@ -300,18 +300,18 @@ services:
     cleanup_methods:
       - method: "Close"
         required: true
-        description: "テスト"
+        description: "Test"
 
 package_exceptions:
   - name: ""
     pattern: "*/test/*"
     condition:
       type: "short_lived"
-      description: "テスト例外"
+      description: "Test exception"
       enabled: true
 `,
 			expectError: true,
-			errorMsg:    "例外名が空です",
+			errorMsg:    "exception name is empty",
 		},
 		{
 			name: "empty_pattern",
@@ -323,18 +323,18 @@ services:
     cleanup_methods:
       - method: "Close"
         required: true
-        description: "テスト"
+        description: "Test"
 
 package_exceptions:
   - name: "test"
     pattern: ""
     condition:
       type: "short_lived"
-      description: "テスト例外"
+      description: "Test exception"
       enabled: true
 `,
 			expectError: true,
-			errorMsg:    "パターンが空です",
+			errorMsg:    "pattern is empty",
 		},
 		{
 			name: "invalid_condition_type",
@@ -346,18 +346,18 @@ services:
     cleanup_methods:
       - method: "Close"
         required: true
-        description: "テスト"
+        description: "Test"
 
 package_exceptions:
   - name: "test"
     pattern: "*/test/*"
     condition:
       type: "invalid_type"
-      description: "テスト例外"
+      description: "Test exception"
       enabled: true
 `,
 			expectError: true,
-			errorMsg:    "不正な条件タイプです",
+			errorMsg:    "invalid condition type",
 		},
 	}
 
@@ -366,31 +366,31 @@ package_exceptions:
 			tmpDir := t.TempDir()
 			configFile := filepath.Join(tmpDir, "test_config.yaml")
 			if err := os.WriteFile(configFile, []byte(tt.yaml), 0644); err != nil {
-				t.Fatalf("テスト設定ファイルの作成に失敗: %v", err)
+				t.Fatalf("Failed to create test configuration file: %v", err)
 			}
 
 			config, err := LoadConfig(configFile)
 			if err != nil {
-				t.Fatalf("設定読み込みに失敗: %v", err)
+				t.Fatalf("Failed to load configuration: %v", err)
 			}
 
 			err = config.Validate()
 			if tt.expectError {
 				if err == nil {
-					t.Errorf("バリデーションエラーが期待されましたが、エラーが発生しませんでした")
+					t.Errorf("Expected validation error but no error occurred")
 				} else if !containsString(err.Error(), tt.errorMsg) {
-					t.Errorf("期待されるエラーメッセージが含まれていません: got %v, want contains %s", err, tt.errorMsg)
+					t.Errorf("Expected error message not found: got %v, want contains %s", err, tt.errorMsg)
 				}
 			} else {
 				if err != nil {
-					t.Errorf("バリデーションエラーが発生しました: %v", err)
+					t.Errorf("Validation error occurred: %v", err)
 				}
 			}
 		})
 	}
 }
 
-// TestShouldExemptPackage は ShouldExemptPackage メソッドをテストする
+// TestShouldExemptPackage tests ShouldExemptPackage method
 func TestShouldExemptPackage(t *testing.T) {
 	testYAML := `
 services:
@@ -400,38 +400,38 @@ services:
     cleanup_methods:
       - method: "Close"
         required: true
-        description: "クライアント接続のクローズ"
+        description: "Client connection close"
 
 package_exceptions:
   - name: "cmd_short_lived"
     pattern: "*/cmd/*"
     condition:
       type: "short_lived"
-      description: "短命プログラム例外"
+      description: "Short-lived program exception"
       enabled: true
   - name: "cloud_functions"
     pattern: "**/function/**"
     condition:
       type: "cloud_function"
-      description: "Cloud Functions例外"
+      description: "Cloud Functions exception"
       enabled: true
   - name: "test_files"
     pattern: "**/*_test.go"
     condition:
       type: "test"
-      description: "テストコード例外"
+      description: "Test code exception"
       enabled: false
 `
 
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "exempt_config.yaml")
 	if err := os.WriteFile(configFile, []byte(testYAML), 0644); err != nil {
-		t.Fatalf("テスト設定ファイルの作成に失敗: %v", err)
+		t.Fatalf("Failed to create test configuration file: %v", err)
 	}
 
 	config, err := LoadConfig(configFile)
 	if err != nil {
-		t.Fatalf("設定読み込みに失敗: %v", err)
+		t.Fatalf("Failed to load configuration: %v", err)
 	}
 
 	tests := []struct {
@@ -444,13 +444,13 @@ package_exceptions:
 			name:         "cmd_package_should_exempt",
 			packagePath:  "github.com/example/project/cmd/server",
 			shouldExempt: true,
-			exemptReason: "短命プログラム例外",
+			exemptReason: "Short-lived program exception",
 		},
 		{
 			name:         "function_package_should_exempt",
 			packagePath:  "github.com/example/project/internal/function/handler",
 			shouldExempt: true,
-			exemptReason: "Cloud Functions例外",
+			exemptReason: "Cloud Functions exception",
 		},
 		{
 			name:         "test_file_should_not_exempt_when_disabled",
@@ -479,7 +479,7 @@ package_exceptions:
 	}
 }
 
-// ヘルパー関数: サービス名でサービスを検索
+// Helper function: Find service by name
 func findServiceByName(services []ServiceRule, name string) *ServiceRule {
 	for i := range services {
 		if services[i].ServiceName == name {
@@ -489,7 +489,7 @@ func findServiceByName(services []ServiceRule, name string) *ServiceRule {
 	return nil
 }
 
-// ヘルパー関数: 例外名でパッケージ例外を検索
+// Helper function: Find package exception by name
 func findExceptionByName(exceptions []PackageExceptionRule, name string) *PackageExceptionRule {
 	for i := range exceptions {
 		if exceptions[i].Name == name {
@@ -499,7 +499,88 @@ func findExceptionByName(exceptions []PackageExceptionRule, name string) *Packag
 	return nil
 }
 
-// ヘルパー関数: 文字列が含まれているかチェック
+// TestMessagesIntegration verifies that config package uses messages constants
+func TestMessagesIntegration(t *testing.T) {
+	// Test LoadConfig with empty path - should use ConfigFileEmpty message
+	_, err := LoadConfig("")
+	if err == nil {
+		t.Error("Expected error for empty config path")
+	}
+	if !strings.Contains(err.Error(), "configuration file path is empty") {
+		t.Errorf("Expected English error message from messages package, got: %s", err.Error())
+	}
+
+	// Test LoadConfig with non-existent file - should use ConfigLoadFailed message
+	_, err = LoadConfig("/non/existent/config.yaml")
+	if err == nil {
+		t.Error("Expected error for non-existent config file")
+	}
+	if !strings.Contains(err.Error(), "failed to load configuration file") {
+		t.Errorf("Expected English error message from messages package, got: %s", err.Error())
+	}
+
+	// Test invalid YAML - should use ConfigYAMLParseFailed message
+	tmpDir := t.TempDir()
+	invalidFile := filepath.Join(tmpDir, "invalid.yaml")
+	if err := os.WriteFile(invalidFile, []byte("invalid: yaml: content: ["), 0644); err != nil {
+		t.Fatalf("Failed to create invalid YAML file: %v", err)
+	}
+
+	_, err = LoadConfig(invalidFile)
+	if err == nil {
+		t.Error("Expected error for invalid YAML")
+	}
+	if !strings.Contains(err.Error(), "failed to parse YAML configuration") {
+		t.Errorf("Expected English error message from messages package, got: %s", err.Error())
+	}
+}
+
+// TestConfigValidationMessagesIntegration tests validation error messages
+func TestConfigValidationMessagesIntegration(t *testing.T) {
+	tests := []struct {
+		name        string
+		config      Config
+		expectedMsg string
+	}{
+		{
+			name:        "empty_services",
+			config:      Config{Services: []ServiceRule{}},
+			expectedMsg: "services definition is empty",
+		},
+		{
+			name: "empty_service_name",
+			config: Config{
+				Services: []ServiceRule{
+					{ServiceName: "", PackagePath: "test", CreationFuncs: []string{"test"}, CleanupMethods: []CleanupMethod{{Method: "Close", Required: true}}},
+				},
+			},
+			expectedMsg: "service[0]: service name is empty",
+		},
+		{
+			name: "empty_package_path",
+			config: Config{
+				Services: []ServiceRule{
+					{ServiceName: "test", PackagePath: "", CreationFuncs: []string{"test"}, CleanupMethods: []CleanupMethod{{Method: "Close", Required: true}}},
+				},
+			},
+			expectedMsg: "service[0](test): package path is empty",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.config.Validate()
+			if err == nil {
+				t.Error("Expected validation error")
+			}
+			if !strings.Contains(err.Error(), tt.expectedMsg) {
+				t.Errorf("Expected English error message %q, got: %s", tt.expectedMsg, err.Error())
+			}
+		})
+	}
+}
+
+// Helper function: Check if string contains substring
 func containsString(s, substr string) bool {
 	return len(substr) > 0 && len(s) >= len(substr) &&
 		(s == substr ||

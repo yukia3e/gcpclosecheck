@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]  # Only run full CI on main branch pushes
+  pull_request:
+    branches: [ main, develop ]
+    types: [ opened, synchronize, reopened ]  # Avoid duplicate runs
+
+jobs:
+  # Quality checks - single OS, latest Go only (run on all events)
+  quality:
+    name: Code Quality & Security  
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.24"
+        cache: true
+        
+    # Format and lint checks
+    - name: Check gofmt
+      run: |
+        if [ -n "$(gofmt -l .)" ]; then
+          echo "The following files are not formatted:"
+          gofmt -l .
+          echo "Please run 'go fmt ./...' to format your code."
+          exit 1
+        fi
+        
+    - name: Check goimports
+      run: |
+        go install golang.org/x/tools/cmd/goimports@latest
+        if [ -n "$(goimports -l .)" ]; then
+          echo "The following files have incorrect imports:"
+          goimports -l .
+          echo "Please run 'goimports -w .' to fix your imports."
+          exit 1
+        fi
+        
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v8
+      with:
+        version: v2.1
+        args: --timeout=10m --config=.golangci.yml
+        
+    - name: Run go vet
+      run: go vet ./...
+      
+    - name: Run staticcheck
+      run: |
+        go install honnef.co/go/tools/cmd/staticcheck@latest
+        staticcheck ./...
+        
+    # Security scans
+    - name: Run govulncheck
+      run: |
+        go install golang.org/x/vuln/cmd/govulncheck@latest
+        govulncheck ./...
+        
+    - name: Run gosec
+      uses: securego/gosec@master
+      with:
+        args: '-no-fail -fmt sarif -out gosec.sarif -exclude-dir=testdata -exclude-dir=internal/analyzer/testdata ./...'
+        
+    - name: Upload SARIF file
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: gosec.sarif
+
+  # Build and test - ubuntu for comprehensive testing
+  test:
+    name: Build & Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            go-version: "1.22"
+          - os: ubuntu-latest  
+            go-version: "1.24"
+          - os: macos-latest    # Minimal macOS check for compatibility
+            go-version: "1.24"
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+        cache: true
+        
+    - name: Download dependencies
+      run: go mod download
+      
+    - name: Build
+      run: go build -v ./...
+      
+    - name: Run tests
+      run: go test -v -race -coverprofile=coverage.out ./...
+      
+    - name: Run E2E tests
+      run: go test -v ./... -tags=e2e
+      
+    - name: Upload coverage
+      if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.25'
+      uses: codecov/codecov-action@v5
+      with:
+        file: ./coverage.out
+
+  # Build binary for release validation
+  build:
+    name: Build Binary
+    runs-on: ubuntu-latest
+    needs: [quality, test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.24"
+        cache: true
+        
+    - name: Build binary
+      run: |
+        mkdir -p bin
+        go build -o bin/gcpclosecheck ./cmd/gcpclosecheck
+        
+    - name: Test binary
+      run: |
+        ./bin/gcpclosecheck -V
+        
+    - name: Upload binary artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: gcpclosecheck-binary
+        path: bin/gcpclosecheck

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"go/token"
 	"go/types"
+
+	"github.com/yukia3e/gcpclosecheck/internal/messages"
 )
 
 // ResourceInfo は GCP リソースの生成情報と解放要求を表す
@@ -42,13 +44,13 @@ func NewResourceInfo(variable *types.Var, creationPos token.Pos, serviceType, cr
 // Validate は ResourceInfo の妥当性を検証する
 func (r *ResourceInfo) Validate() error {
 	if r.Variable == nil {
-		return errors.New("Variable は nil であってはいけません")
+		return errors.New(messages.VariableCannotBeNil)
 	}
 	if r.ServiceType == "" {
-		return errors.New("ServiceType は空であってはいけません")
+		return errors.New(messages.ServiceTypeCannotBeEmpty)
 	}
 	if r.CleanupMethod == "" {
-		return errors.New("CleanupMethod は空であってはいけません")
+		return errors.New(messages.CleanupMethodCannotBeEmpty)
 	}
 	return nil
 }
@@ -99,10 +101,10 @@ func NewContextInfo(variable, cancelFunc *types.Var, creationPos token.Pos, isDe
 // Validate は ContextInfo の妥当性を検証する
 func (c *ContextInfo) Validate() error {
 	if c.Variable == nil {
-		return errors.New("Variable は nil であってはいけません")
+		return errors.New(messages.VariableCannotBeNil)
 	}
 	if c.CancelFunc == nil {
-		return errors.New("CancelFunc は nil であってはいけません")
+		return errors.New(messages.CancelFuncCannotBeNil)
 	}
 	return nil
 }
@@ -160,10 +162,10 @@ func NewDeferCancelInfo(cancelVarName string, deferPos token.Pos, scopeDepth int
 // Validate は DeferCancelInfo の妥当性を検証する
 func (d *DeferCancelInfo) Validate() error {
 	if d.CancelVarName == "" {
-		return errors.New("CancelVarName は空であってはいけません")
+		return errors.New(messages.CancelVarNameCannotBeEmpty)
 	}
 	if d.DeferPos == 0 {
-		return errors.New("DeferPos は無効であってはいけません")
+		return errors.New(messages.DeferPosInvalid)
 	}
 	return nil
 }
@@ -259,10 +261,10 @@ func NewSpannerEscapeInfo(transactionType string, isAutoManaged bool, reason str
 // Validate は SpannerEscapeInfo の妥当性を検証する
 func (s *SpannerEscapeInfo) Validate() error {
 	if s.TransactionType != ReadWriteTransactionType && s.TransactionType != ReadOnlyTransactionType {
-		return errors.New("TransactionType は ReadWriteTransaction または ReadOnlyTransaction である必要があります")
+		return errors.New(messages.TransactionTypeMustBeValid)
 	}
 	if s.IsAutoManaged && s.AutoManagementReason == "" {
-		return errors.New("自動管理の場合、AutoManagementReason は空であってはいけません")
+		return errors.New(messages.AutoManagementReasonRequired)
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package spanner_invalid
 
 import (
 	"context"
+
 	"cloud.google.com/go/spanner"
 )
 

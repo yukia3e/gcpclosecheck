@@ -10,7 +10,7 @@ type Client struct{}
 // ReadWriteTransaction はReadWriteTransactionのモック
 type ReadWriteTransaction struct{}
 
-// ReadOnlyTransaction はReadOnlyTransactionのモック  
+// ReadOnlyTransaction はReadOnlyTransactionのモック
 type ReadOnlyTransaction struct{}
 
 // Statement はクエリステートメントのモック

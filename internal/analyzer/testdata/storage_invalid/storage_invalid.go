@@ -2,6 +2,7 @@ package storage_invalid
 
 import (
 	"context"
+
 	"cloud.google.com/go/storage"
 )
 
@@ -20,7 +21,7 @@ func missingClientClose(ctx context.Context) error {
 func missingReaderClose(ctx context.Context, client *storage.Client) error {
 	bucket := client.Bucket("test-bucket")
 	obj := bucket.Object("test-object")
-	
+
 	reader, err := obj.NewReader(ctx) // want "GCP リソース 'reader' の解放処理 \\(Close\\) が見つかりません"
 	if err != nil {
 		return err
@@ -34,7 +35,7 @@ func missingReaderClose(ctx context.Context, client *storage.Client) error {
 func missingWriterClose(ctx context.Context, client *storage.Client) error {
 	bucket := client.Bucket("test-bucket")
 	obj := bucket.Object("test-object")
-	
+
 	writer := obj.NewWriter(ctx) // want "GCP リソース 'writer' の解放処理 \\(Close\\) が見つかりません"
 	// defer writer.Close() が不足
 

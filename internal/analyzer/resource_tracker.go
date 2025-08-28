@@ -203,30 +203,34 @@ func (rt *ResourceTracker) extractPackagePath(call *ast.CallExpr, _ *ast.Ident) 
 		// パッケージ関数の場合（pkg.Function）
 		if pkgIdent, ok := sel.X.(*ast.Ident); ok {
 			// 型情報からパッケージパスを取得
-			if obj := rt.typeInfo.Uses[pkgIdent]; obj != nil {
-				if pkg, ok := obj.(*types.PkgName); ok {
-					return pkg.Imported().Path()
+			if rt.typeInfo != nil && rt.typeInfo.Uses != nil {
+				if obj := rt.typeInfo.Uses[pkgIdent]; obj != nil {
+					if pkg, ok := obj.(*types.PkgName); ok {
+						return pkg.Imported().Path()
+					}
 				}
 			}
 		}
 
 		// メソッド呼び出しの場合（obj.Method）
 		// sel.Xの型情報を取得してパッケージパスを推定
-		if typeAndValue, exists := rt.typeInfo.Types[sel.X]; exists {
-			if typeAndValue.Type != nil {
-				typeName := typeAndValue.Type.String()
-				// 型名からパッケージパスを推定
-				if strings.Contains(typeName, "spanner") {
-					return "cloud.google.com/go/spanner"
-				}
-				if strings.Contains(typeName, "storage") {
-					return "cloud.google.com/go/storage"
-				}
-				if strings.Contains(typeName, "pubsub") {
-					return "cloud.google.com/go/pubsub"
-				}
-				if strings.Contains(typeName, "vision") {
-					return "cloud.google.com/go/vision"
+		if rt.typeInfo != nil && rt.typeInfo.Types != nil {
+			if typeAndValue, exists := rt.typeInfo.Types[sel.X]; exists {
+				if typeAndValue.Type != nil {
+					typeName := typeAndValue.Type.String()
+					// 型名からパッケージパスを推定
+					if strings.Contains(typeName, "spanner") {
+						return "cloud.google.com/go/spanner"
+					}
+					if strings.Contains(typeName, "storage") {
+						return "cloud.google.com/go/storage"
+					}
+					if strings.Contains(typeName, "pubsub") {
+						return "cloud.google.com/go/pubsub"
+					}
+					if strings.Contains(typeName, "vision") {
+						return "cloud.google.com/go/vision"
+					}
 				}
 			}
 		}
@@ -265,14 +269,14 @@ func (rt *ResourceTracker) createResourceInfo(call *ast.CallExpr, serviceName st
 
 	// 関数名に基づいてクリーンアップメソッドを決定
 	var cleanupMethod string
-	var isRequired bool = true
+	isRequired := true
 
 	// 特定の関数に対する特別なクリーンアップメソッド
-	switch {
-	case funcName == "ReadOnlyTransaction" || funcName == "ReadWriteTransaction" || funcName == "BatchReadOnlyTransaction":
+	switch funcName {
+	case "ReadOnlyTransaction", "ReadWriteTransaction", "BatchReadOnlyTransaction":
 		cleanupMethod = "Close" // Transactionは必ずClose
 		isRequired = true
-	case funcName == "Query" || funcName == "Read":
+	case "Query", "Read":
 		cleanupMethod = "Stop" // IteratorはStop
 		isRequired = true
 	default:

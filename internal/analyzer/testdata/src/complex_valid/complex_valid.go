@@ -2,9 +2,10 @@ package complex_valid
 
 import (
 	"context"
-	"cloud.google.com/go/storage"
+
 	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/spanner"
+	"cloud.google.com/go/storage"
 )
 
 // 複数のGCPサービスを組み合わせた正しいパターン
@@ -64,7 +65,7 @@ type ResourceManager interface {
 
 func correctInterfaceUsage(ctx context.Context) error {
 	var resource ResourceManager
-	
+
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return err

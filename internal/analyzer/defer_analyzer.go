@@ -210,40 +210,6 @@ func (da *DeferAnalyzer) isIteratorResource(resource ResourceInfo) bool {
 	}
 }
 
-// isLikelyResourceVariable は変数がリソースと同じ種類かどうかを推定する
-func (da *DeferAnalyzer) isLikelyResourceVariable(resource ResourceInfo, varName string, ident *ast.Ident) bool {
-	// 生成関数と変数名の一般的なパターンで判定
-	if da.isValidVariableNamePattern(resource.CreationFunction, varName) {
-		return true
-	}
-
-	// TypesInfoが利用可能な場合、型情報も確認
-	if da.tracker != nil && da.tracker.typeInfo != nil {
-		if obj, ok := da.tracker.typeInfo.Uses[ident]; ok {
-			if varObj, ok := obj.(*types.Var); ok {
-				// 同じ型のリソースかチェック
-				if da.isSameResourceType(resource, varObj) {
-					return true
-				}
-			}
-		}
-	}
-
-	// defers配列による管理をチェック
-	if da.isDeferredInArray(resource, varName) {
-		return true
-	}
-
-	return false
-}
-
-// isDeferredInArray はdefers配列に追加されたリソースかチェック
-func (da *DeferAnalyzer) isDeferredInArray(resource ResourceInfo, varName string) bool {
-	// defers = append(defers, spannerClient.Close) のパターンを検出
-	// より詳細な実装は別途追加予定
-	return false
-}
-
 // IsAddedToDeferArray はリソースがdefers配列に追加されているかチェック
 func (da *DeferAnalyzer) IsAddedToDeferArray(block *ast.BlockStmt, resource ResourceInfo) bool {
 	if block == nil || resource.VariableName == "" {
@@ -374,49 +340,52 @@ func (da *DeferAnalyzer) isClosureWithResourceClose(funcLit *ast.FuncLit, resour
 }
 
 // isSameResourceType は2つのリソースが同じ型かチェックする
-func (da *DeferAnalyzer) isSameResourceType(resource ResourceInfo, variable *types.Var) bool {
-	if resource.Variable == nil || variable == nil {
-		return false
-	}
-
-	// 型文字列の比較（簡易版）
-	resourceType := resource.Variable.Type().String()
-	variableType := variable.Type().String()
-
-	// Storage Writer の場合：*cloud.google.com/go/storage.Writer
-	// Spanner Transaction の場合：*cloud.google.com/go/spanner.ReadWriteTransaction
-	return resourceType == variableType
-}
 
 // isValidVariableNamePattern は生成関数と変数名の妥当性をチェックする
 func (da *DeferAnalyzer) isValidVariableNamePattern(creationFunction, varName string) bool {
-	switch creationFunction {
-	case "NewClient":
-		// client, xxxClient パターン
-		return strings.Contains(varName, "client") || strings.Contains(varName, "Client")
-	case "NewWriter":
-		// writer, dst, w, xxxWriter パターン
-		return strings.Contains(varName, "writer") || strings.Contains(varName, "Writer") ||
-			varName == "dst" || varName == "w"
-	case "NewReader":
-		// reader, src, r, xxxReader パターン
-		return strings.Contains(varName, "reader") || strings.Contains(varName, "Reader") ||
-			varName == "src" || varName == "r"
-	case "Query", "QueryWithOptions", "Read", "ReadWithOptions":
-		// iter, iterator, rows, result, xxxIter パターン
-		return strings.Contains(varName, "iter") || strings.Contains(varName, "Iter") ||
-			strings.Contains(varName, "rows") || strings.Contains(varName, "Rows") ||
-			strings.Contains(varName, "result") || strings.Contains(varName, "Result") ||
-			varName == "it" || varName == "rs"
-	case "ReadWriteTransaction", "ReadOnlyTransaction":
-		// tx, txn, transaction, xxxTx パターン
-		return varName == "tx" || varName == "txn" ||
-			strings.Contains(varName, "transaction") || strings.Contains(varName, "Transaction") ||
-			strings.Contains(varName, "tx") || strings.Contains(varName, "Tx")
-	default:
-		// その他の場合は基本的な名前の類似性をチェック
-		return false
+	validators := map[string]func(string) bool{
+		"NewClient":            da.isValidClientVariableName,
+		"NewWriter":            da.isValidWriterVariableName,
+		"NewReader":            da.isValidReaderVariableName,
+		"Query":                da.isValidQueryVariableName,
+		"QueryWithOptions":     da.isValidQueryVariableName,
+		"Read":                 da.isValidQueryVariableName,
+		"ReadWithOptions":      da.isValidQueryVariableName,
+		"ReadWriteTransaction": da.isValidTransactionVariableName,
+		"ReadOnlyTransaction":  da.isValidTransactionVariableName,
 	}
+
+	if validator, exists := validators[creationFunction]; exists {
+		return validator(varName)
+	}
+	return false
+}
+
+func (da *DeferAnalyzer) isValidClientVariableName(varName string) bool {
+	return strings.Contains(varName, "client") || strings.Contains(varName, "Client")
+}
+
+func (da *DeferAnalyzer) isValidWriterVariableName(varName string) bool {
+	return strings.Contains(varName, "writer") || strings.Contains(varName, "Writer") ||
+		varName == "dst" || varName == "w"
+}
+
+func (da *DeferAnalyzer) isValidReaderVariableName(varName string) bool {
+	return strings.Contains(varName, "reader") || strings.Contains(varName, "Reader") ||
+		varName == "src" || varName == "r"
+}
+
+func (da *DeferAnalyzer) isValidQueryVariableName(varName string) bool {
+	return strings.Contains(varName, "iter") || strings.Contains(varName, "Iter") ||
+		strings.Contains(varName, "rows") || strings.Contains(varName, "Rows") ||
+		strings.Contains(varName, "result") || strings.Contains(varName, "Result") ||
+		varName == "it" || varName == "rs"
+}
+
+func (da *DeferAnalyzer) isValidTransactionVariableName(varName string) bool {
+	return varName == "tx" || varName == "txn" ||
+		strings.Contains(varName, "transaction") || strings.Contains(varName, "Transaction") ||
+		strings.Contains(varName, "tx") || strings.Contains(varName, "Tx")
 }
 
 // ValidateCleanupOrder はdefer文の順序が適切かを検証する
@@ -445,81 +414,101 @@ func (da *DeferAnalyzer) ValidateCleanupOrder(block *ast.BlockStmt) bool {
 }
 
 // analyzeFunction は関数内のリソース生成を解析する
-func (da *DeferAnalyzer) analyzeFunction(fn *ast.FuncDecl) {
-	// リソース情報をリセット
-	da.resources = da.resources[:0]
-
-	// ResourceTrackerを使用してリソース生成を検出
-	if da.tracker != nil {
-		// 追跡状態をクリア
-		da.tracker.ClearTrackedResources()
-
-		// 関数内を走査してリソース生成を検出
-		ast.Inspect(fn, func(n ast.Node) bool {
-			if call, ok := n.(*ast.CallExpr); ok {
-				// リソースを追跡（エラーは無視）
-				da.tracker.TrackCall(call)
-			}
-			return true
-		})
-
-		// 追跡されたリソースを取得
-		da.resources = da.tracker.GetTrackedResources()
-	}
-}
 
 // collectDeferStatements は文を再帰的に走査してdefer文を収集する
 func (da *DeferAnalyzer) collectDeferStatements(stmt ast.Stmt, defers *[]*ast.DeferStmt) {
+	if stmt == nil {
+		return
+	}
+
 	switch s := stmt.(type) {
 	case *ast.DeferStmt:
 		*defers = append(*defers, s)
 	case *ast.BlockStmt:
-		for _, blockStmt := range s.List {
-			da.collectDeferStatements(blockStmt, defers)
-		}
+		da.collectDefersFromBlockStmt(s, defers)
 	case *ast.IfStmt:
-		if s.Body != nil {
-			da.collectDeferStatements(s.Body, defers)
-		}
-		if s.Else != nil {
-			da.collectDeferStatements(s.Else, defers)
-		}
+		da.collectDefersFromIfStmt(s, defers)
 	case *ast.ForStmt:
-		if s.Body != nil {
-			da.collectDeferStatements(s.Body, defers)
-		}
+		da.collectDefersFromForStmt(s, defers)
 	case *ast.RangeStmt:
-		if s.Body != nil {
-			da.collectDeferStatements(s.Body, defers)
-		}
+		da.collectDefersFromRangeStmt(s, defers)
 	case *ast.SwitchStmt:
-		if s.Body != nil {
-			da.collectDeferStatements(s.Body, defers)
-		}
+		da.collectDefersFromSwitchStmt(s, defers)
 	case *ast.TypeSwitchStmt:
-		if s.Body != nil {
-			da.collectDeferStatements(s.Body, defers)
-		}
+		da.collectDefersFromTypeSwitchStmt(s, defers)
 	case *ast.SelectStmt:
-		if s.Body != nil {
-			da.collectDeferStatements(s.Body, defers)
-		}
+		da.collectDefersFromSelectStmt(s, defers)
 	case *ast.CaseClause:
-		for _, caseStmt := range s.Body {
-			da.collectDeferStatements(caseStmt, defers)
-		}
+		da.collectDefersFromCaseClause(s, defers)
 	case *ast.CommClause:
-		for _, commStmt := range s.Body {
-			da.collectDeferStatements(commStmt, defers)
-		}
+		da.collectDefersFromCommClause(s, defers)
 	case *ast.ExprStmt:
-		// 式文の中の関数呼び出しに含まれるクロージャをチェック
 		da.collectDeferFromExpression(s.X, defers)
 	case *ast.AssignStmt:
-		// 代入文の右辺にある関数呼び出しのクロージャをチェック
-		for _, rhs := range s.Rhs {
-			da.collectDeferFromExpression(rhs, defers)
-		}
+		da.collectDefersFromAssignStmt(s, defers)
+	}
+}
+
+func (da *DeferAnalyzer) collectDefersFromBlockStmt(s *ast.BlockStmt, defers *[]*ast.DeferStmt) {
+	for _, blockStmt := range s.List {
+		da.collectDeferStatements(blockStmt, defers)
+	}
+}
+
+func (da *DeferAnalyzer) collectDefersFromIfStmt(s *ast.IfStmt, defers *[]*ast.DeferStmt) {
+	if s.Body != nil {
+		da.collectDeferStatements(s.Body, defers)
+	}
+	if s.Else != nil {
+		da.collectDeferStatements(s.Else, defers)
+	}
+}
+
+func (da *DeferAnalyzer) collectDefersFromForStmt(s *ast.ForStmt, defers *[]*ast.DeferStmt) {
+	if s.Body != nil {
+		da.collectDeferStatements(s.Body, defers)
+	}
+}
+
+func (da *DeferAnalyzer) collectDefersFromRangeStmt(s *ast.RangeStmt, defers *[]*ast.DeferStmt) {
+	if s.Body != nil {
+		da.collectDeferStatements(s.Body, defers)
+	}
+}
+
+func (da *DeferAnalyzer) collectDefersFromSwitchStmt(s *ast.SwitchStmt, defers *[]*ast.DeferStmt) {
+	if s.Body != nil {
+		da.collectDeferStatements(s.Body, defers)
+	}
+}
+
+func (da *DeferAnalyzer) collectDefersFromTypeSwitchStmt(s *ast.TypeSwitchStmt, defers *[]*ast.DeferStmt) {
+	if s.Body != nil {
+		da.collectDeferStatements(s.Body, defers)
+	}
+}
+
+func (da *DeferAnalyzer) collectDefersFromSelectStmt(s *ast.SelectStmt, defers *[]*ast.DeferStmt) {
+	if s.Body != nil {
+		da.collectDeferStatements(s.Body, defers)
+	}
+}
+
+func (da *DeferAnalyzer) collectDefersFromCaseClause(s *ast.CaseClause, defers *[]*ast.DeferStmt) {
+	for _, caseStmt := range s.Body {
+		da.collectDeferStatements(caseStmt, defers)
+	}
+}
+
+func (da *DeferAnalyzer) collectDefersFromCommClause(s *ast.CommClause, defers *[]*ast.DeferStmt) {
+	for _, commStmt := range s.Body {
+		da.collectDeferStatements(commStmt, defers)
+	}
+}
+
+func (da *DeferAnalyzer) collectDefersFromAssignStmt(s *ast.AssignStmt, defers *[]*ast.DeferStmt) {
+	for _, rhs := range s.Rhs {
+		da.collectDeferFromExpression(rhs, defers)
 	}
 }
 

@@ -1,0 +1,32 @@
+name: "CodeQL config for gcpclosecheck"
+
+disable-default-queries: false
+
+queries:
+  - name: Use built-in Go security queries
+    uses: security-and-quality
+
+paths-ignore:
+  - "**/*_test.go"
+  - "**/testdata/**"
+  - "**/vendor/**"
+  - "bin/"
+  - ".github/"
+
+paths:
+  - "cmd/"
+  - "internal/"
+
+query-filters:
+  - include:
+      kind: problem
+  - exclude:
+      id: go/missing-error-check
+      
+packs:
+  - codeql/go-queries
+
+# Additional security-focused query suites
+query-suites:
+  - security-extended
+  - security-experimental

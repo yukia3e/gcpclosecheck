@@ -69,12 +69,12 @@ func nestedFunctionMissingCancel(ctx context.Context) error {
 // エラーハンドリング後のcancel不足
 func errorHandlingMissingCancel(ctx context.Context) error {
 	_, cancel := context.WithCancel(ctx) // want "context.WithCancel のキャンセル関数 'cancel' の呼び出しが見つかりません"
-	
+
 	// エラーが発生した場合のcancel不足
 	if time.Now().Unix()%2 == 0 {
 		return nil // エラー時にcancelが呼ばれない
 	}
-	
+
 	// defer cancel() が不足
 	return nil
 }

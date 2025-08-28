@@ -5,12 +5,13 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
-	"strings"
 	"testing"
+
+	"github.com/yukia3e/gcpclosecheck/internal/messages"
 )
 
 func TestDiagnosticGenerator_ReportMissingDefer(t *testing.T) {
-	// テスト用のサンプルコード
+	// Test sample code
 	testCode := `
 package test
 
@@ -24,7 +25,7 @@ func testFunction(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// defer client.Close() が不足
+	// defer client.Close() is missing
 	return nil
 }
 `
@@ -37,7 +38,7 @@ func testFunction(ctx context.Context) error {
 
 	generator := NewDiagnosticGenerator(fset)
 
-	// ResourceInfo を作成（テスト用）
+	// Create ResourceInfo (for testing)
 	resource := ResourceInfo{
 		Variable:         types.NewVar(token.Pos(100), nil, "client", nil),
 		CreationPos:      token.Pos(100),
@@ -49,24 +50,27 @@ func testFunction(ctx context.Context) error {
 
 	diagnostic := generator.ReportMissingDefer(resource)
 
-	// 診断内容の検証
+	// Verify diagnostic content
 	if diagnostic.Category != "resource-leak" {
 		t.Errorf("Expected category 'resource-leak', got %q", diagnostic.Category)
 	}
 
-	expectedMessage := "GCP リソース 'client' の解放処理 (Close) が見つかりません"
-	if !strings.Contains(diagnostic.Message, expectedMessage) {
-		t.Errorf("Expected message to contain %q, got %q", expectedMessage, diagnostic.Message)
+	// Expect English message format (updated for Task 15)
+	expectedMessage := "GCP resource client 'client' missing cleanup method (Close)"
+	if diagnostic.Message != expectedMessage {
+		t.Errorf("Expected message %q, got %q", expectedMessage, diagnostic.Message)
 	}
 
-	// SuggestedFix の存在確認
+	// Verify SuggestedFix existence
 	if len(diagnostic.SuggestedFixes) == 0 {
 		t.Error("Expected at least one SuggestedFix")
 	}
 
+	// Expect English suggested fix message (updated for Task 15)
 	fix := diagnostic.SuggestedFixes[0]
-	if !strings.Contains(fix.Message, "defer client.Close()") {
-		t.Errorf("Expected SuggestedFix message to contain 'defer client.Close()', got %q", fix.Message)
+	expectedFixMessage := "Add defer client.Close() for client cleanup"
+	if fix.Message != expectedFixMessage {
+		t.Errorf("Expected SuggestedFix message %q, got %q", expectedFixMessage, fix.Message)
 	}
 }
 
@@ -78,7 +82,7 @@ import "context"
 
 func testFunction(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
-	// defer cancel() が不足
+	// defer cancel() is missing
 	return nil
 }
 `
@@ -91,7 +95,7 @@ func testFunction(ctx context.Context) error {
 
 	generator := NewDiagnosticGenerator(fset)
 
-	// ContextInfo を作成（テスト用）
+	// Create ContextInfo (for testing)
 	contextInfo := ContextInfo{
 		Variable:    types.NewVar(token.Pos(80), nil, "ctx", nil),
 		CancelFunc:  types.NewVar(token.Pos(90), nil, "cancel", nil),
@@ -101,24 +105,27 @@ func testFunction(ctx context.Context) error {
 
 	diagnostic := generator.ReportMissingContextCancel(contextInfo)
 
-	// 診断内容の検証
+	// Verify diagnostic content
 	if diagnostic.Category != "context-leak" {
 		t.Errorf("Expected category 'context-leak', got %q", diagnostic.Category)
 	}
 
-	expectedMessage := "context.WithCancel のキャンセル関数 'cancel' の呼び出しが見つかりません"
-	if !strings.Contains(diagnostic.Message, expectedMessage) {
-		t.Errorf("Expected message to contain %q, got %q", expectedMessage, diagnostic.Message)
+	// Expect English message format (updated for Task 15)
+	expectedMessage := "Context.WithCancel missing cancel function call 'cancel'"
+	if diagnostic.Message != expectedMessage {
+		t.Errorf("Expected message %q, got %q", expectedMessage, diagnostic.Message)
 	}
 
-	// SuggestedFix の存在確認
+	// Verify SuggestedFix existence
 	if len(diagnostic.SuggestedFixes) == 0 {
 		t.Error("Expected at least one SuggestedFix")
 	}
 
+	// Expect English suggested fix message
 	fix := diagnostic.SuggestedFixes[0]
-	if !strings.Contains(fix.Message, "defer cancel()") {
-		t.Errorf("Expected SuggestedFix message to contain 'defer cancel()', got %q", fix.Message)
+	expectedFixMessage := "Add defer cancel()"
+	if fix.Message != expectedFixMessage {
+		t.Errorf("Expected SuggestedFix message %q, got %q", expectedFixMessage, fix.Message)
 	}
 }
 
@@ -136,7 +143,7 @@ func testFunction(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// ここに defer client.Close() を追加する必要がある
+	// Here needs to add defer client.Close()
 	return nil
 }
 `
@@ -149,7 +156,7 @@ func testFunction(ctx context.Context) error {
 
 	generator := NewDiagnosticGenerator(fset)
 
-	// リソース作成位置を特定
+	// Identify resource creation position
 	var creationPos token.Pos
 	ast.Inspect(file, func(n ast.Node) bool {
 		if call, ok := n.(*ast.CallExpr); ok {
@@ -165,13 +172,13 @@ func testFunction(ctx context.Context) error {
 
 	suggestedFix := generator.CreateSuggestedFix("client", "Close", creationPos)
 
-	// SuggestedFix の検証
-	expectedMessage := "defer client.Close() を追加"
+	// Expect English SuggestedFix message (updated for Task 15)
+	expectedMessage := "Add defer client.Close() for client cleanup"
 	if suggestedFix.Message != expectedMessage {
 		t.Errorf("Expected SuggestedFix message %q, got %q", expectedMessage, suggestedFix.Message)
 	}
 
-	// TextEdits の存在確認
+	// Verify TextEdits existence
 	if len(suggestedFix.TextEdits) == 0 {
 		t.Error("Expected at least one TextEdit")
 	}
@@ -191,7 +198,7 @@ func testFunction(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// defer client.Close() を意図的に省略
+	// defer client.Close() intentionally omitted
 	return nil
 }
 `
@@ -204,7 +211,7 @@ func testFunction(ctx context.Context) error {
 
 	generator := NewDiagnosticGenerator(fset)
 
-	// リソース作成位置を特定
+	// Identify resource creation position
 	var creationPos token.Pos
 	ast.Inspect(file, func(n ast.Node) bool {
 		if call, ok := n.(*ast.CallExpr); ok {
@@ -250,7 +257,7 @@ func testFunction(ctx context.Context) error {
 
 	generator := NewDiagnosticGenerator(fset)
 
-	// リソース作成位置を特定
+	// Identify resource creation position
 	var creationPos token.Pos
 	ast.Inspect(file, func(n ast.Node) bool {
 		if call, ok := n.(*ast.CallExpr); ok {
@@ -271,7 +278,7 @@ func testFunction(ctx context.Context) error {
 }
 
 func TestDiagnosticGenerator_Integration(t *testing.T) {
-	// 複数のリソースを含む複雑なテストケース
+	// Complex test case containing multiple resources
 	testCode := `
 package test
 
@@ -308,10 +315,106 @@ func complexFunction(ctx context.Context) error {
 
 	generator := NewDiagnosticGenerator(fset)
 
-	// 複数のリソースに対する診断生成をテスト
-	// この場合は4つの診断（cancel, client.Close, txn.Close, iter.Stop）が期待される
+	// Test diagnostic generation for multiple resources
+	// In this case, 4 diagnostics are expected (cancel, client.Close, txn.Close, iter.Stop)
 
-	// 実際の統合テストではanalyzer全体を通して実行する
-	// ここでは診断生成機能の基本動作を確認
-	_ = generator
+	// Note: This is an integration test focusing on DiagnosticGenerator functionality
+	// The actual resource detection is handled by other components
+
+	// Test successful generator creation
+	if generator == nil {
+		t.Error("Expected non-nil DiagnosticGenerator")
+		return
+	}
+
+	// Test FileSet accessibility
+	if generator.fset == nil {
+		t.Error("Expected DiagnosticGenerator to have FileSet")
+	}
+}
+
+// TestDiagnosticGenerator_MessagesIntegration validates using messages package constants
+func TestDiagnosticGenerator_MessagesIntegration(t *testing.T) {
+	fset := token.NewFileSet()
+	generator := NewDiagnosticGenerator(fset)
+
+	// Test ResourceInfo with messages constants validation
+	resource := ResourceInfo{
+		Variable:         types.NewVar(token.Pos(100), nil, "client", nil),
+		CreationPos:      token.Pos(100),
+		ServiceType:      "spanner",
+		CreationFunction: "NewClient",
+		CleanupMethod:    "Close",
+		IsRequired:       true,
+	}
+
+	diagnostic := generator.ReportMissingDefer(resource)
+
+	// Verify that the message matches the messages package constant format
+	expectedPattern := messages.MissingResourceCleanup
+	if expectedPattern == "" {
+		t.Error("messages.MissingResourceCleanup should not be empty")
+	}
+
+	// Verify message contains expected placeholders
+	if !containsPlaceholders(expectedPattern, "%s", "%s") {
+		t.Errorf("Expected pattern %q to contain %%s placeholders", expectedPattern)
+	}
+
+	// Test ContextInfo with messages constants validation
+	contextInfo := ContextInfo{
+		Variable:    types.NewVar(token.Pos(80), nil, "ctx", nil),
+		CancelFunc:  types.NewVar(token.Pos(90), nil, "cancel", nil),
+		CreationPos: token.Pos(80),
+		IsDeferred:  false,
+	}
+
+	contextDiagnostic := generator.ReportMissingContextCancel(contextInfo)
+
+	// Verify context message pattern
+	expectedContextPattern := messages.MissingContextCancel
+	if expectedContextPattern == "" {
+		t.Error("messages.MissingContextCancel should not be empty")
+	}
+
+	if !containsPlaceholders(expectedContextPattern, "%s") {
+		t.Errorf("Expected context pattern %q to contain %%s placeholder", expectedContextPattern)
+	}
+
+	// Verify SuggestedFix messages use correct constants
+	resourceFix := diagnostic.SuggestedFixes[0]
+	contextFix := contextDiagnostic.SuggestedFixes[0]
+
+	// Verify suggested fix patterns exist and are not empty
+	if messages.AddDeferMethodCall == "" {
+		t.Error("messages.AddDeferMethodCall should not be empty")
+	}
+	if messages.AddDeferStatement == "" {
+		t.Error("messages.AddDeferStatement should not be empty")
+	}
+
+	// Verify fixes contain expected content structure
+	if resourceFix.Message == "" {
+		t.Error("Resource fix message should not be empty")
+	}
+	if contextFix.Message == "" {
+		t.Error("Context fix message should not be empty")
+	}
+}
+
+// Helper function to check if a pattern contains expected placeholders
+func containsPlaceholders(pattern string, placeholders ...string) bool {
+	for _, placeholder := range placeholders {
+		found := false
+		for i := 0; i < len(pattern)-len(placeholder)+1; i++ {
+			if pattern[i:i+len(placeholder)] == placeholder {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }

@@ -17,12 +17,12 @@ func PubSubCorrectUsage(ctx context.Context) error {
 
 	// トピックを取得
 	topic := client.Topic("test-topic")
-	
+
 	// メッセージを発行
 	result := topic.Publish(ctx, &pubsub.Message{
 		Data: []byte("test message"),
 	})
-	
+
 	// 結果を待機
 	_, err = result.Get(ctx)
 	return err
@@ -38,13 +38,13 @@ func PubSubSubscriptionCorrectUsage(ctx context.Context) error {
 
 	// サブスクリプションを取得
 	sub := client.Subscription("test-subscription")
-	
+
 	// メッセージを受信
 	err = sub.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
 		// メッセージ処理
 		msg.Ack()
 	})
-	
+
 	return err
 }
 

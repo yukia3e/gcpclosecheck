@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"cloud.google.com/go/spanner"
-	"cloud.google.com/go/storage"
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/spanner"
+	"cloud.google.com/go/storage"
 )
 
 // Cloud Functions HTTP トリガー関数
@@ -24,7 +24,7 @@ func HandleHTTPRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	// defer spannerClient.Close() 不要（例外により診断されない）
 
-	// Storage Client - Cloud Functions例外により診断除外される  
+	// Storage Client - Cloud Functions例外により診断除外される
 	storageClient, err := storage.NewClient(ctx)
 	if err != nil {
 		http.Error(w, "Storage client creation failed", http.StatusInternalServerError)
@@ -42,7 +42,7 @@ func HandleHTTPRequest(w http.ResponseWriter, r *http.Request) {
 
 	// 処理を実行
 	result := processCloudFunctionRequest(ctx, spannerClient, storageClient, firestoreClient)
-	
+
 	fmt.Fprintf(w, "Processing result: %s", result)
 	// Cloud Functions の実行終了時にランタイムがリソースを管理
 }
@@ -73,13 +73,13 @@ type PubSubMessage struct {
 	Attributes map[string]string `json:"attributes"`
 }
 
-func processCloudFunctionRequest(ctx context.Context, spannerClient *spanner.Client, 
+func processCloudFunctionRequest(ctx context.Context, spannerClient *spanner.Client,
 	storageClient *storage.Client, firestoreClient *firestore.Client) string {
 	// Cloud Functions内での処理をシミュレート
 	return "Cloud Functions processing completed"
 }
 
-func processBackgroundTask(ctx context.Context, pubsubClient *pubsub.Client, 
+func processBackgroundTask(ctx context.Context, pubsubClient *pubsub.Client,
 	spannerClient *spanner.Client, msg PubSubMessage) error {
 	// バックグラウンドタスクの処理をシミュレート
 	return nil

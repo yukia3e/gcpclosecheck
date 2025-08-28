@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
+
+	"github.com/yukia3e/gcpclosecheck/internal/messages"
 )
 
 // DiagnosticGenerator は診断レポートを生成する
@@ -23,7 +25,7 @@ func NewDiagnosticGenerator(fset *token.FileSet) *DiagnosticGenerator {
 
 // ReportMissingDefer はdefer文が不足しているリソースの診断を生成する
 func (dg *DiagnosticGenerator) ReportMissingDefer(resource ResourceInfo) analysis.Diagnostic {
-	message := fmt.Sprintf("GCP リソース '%s' の解放処理 (%s) が見つかりません",
+	message := fmt.Sprintf(messages.MissingResourceCleanup,
 		resource.Variable.Name(), resource.CleanupMethod)
 
 	suggestedFix := dg.CreateSuggestedFix(
@@ -43,7 +45,7 @@ func (dg *DiagnosticGenerator) ReportMissingDefer(resource ResourceInfo) analysi
 
 // ReportMissingContextCancel はcontext.WithCancelのキャンセル関数が不足している診断を生成する
 func (dg *DiagnosticGenerator) ReportMissingContextCancel(contextInfo ContextInfo) analysis.Diagnostic {
-	message := fmt.Sprintf("context.WithCancel のキャンセル関数 '%s' の呼び出しが見つかりません",
+	message := fmt.Sprintf(messages.MissingContextCancel,
 		contextInfo.CancelFunc.Name())
 
 	suggestedFix := dg.CreateSuggestedFix(
@@ -68,11 +70,11 @@ func (dg *DiagnosticGenerator) CreateSuggestedFix(variableName, method string, c
 
 	if method == "" {
 		// Context cancel function
-		message = fmt.Sprintf("defer %s() を追加", variableName)
+		message = fmt.Sprintf(messages.AddDeferStatement, variableName)
 		deferStatement = fmt.Sprintf("defer %s()", variableName)
 	} else {
 		// Resource cleanup method
-		message = fmt.Sprintf("defer %s.%s() を追加", variableName, method)
+		message = fmt.Sprintf(messages.AddDeferMethodCall, variableName, method)
 		deferStatement = fmt.Sprintf("defer %s.%s()", variableName, method)
 	}
 

@@ -2,8 +2,9 @@ package large_codebase
 
 import (
 	"context"
-	"cloud.google.com/go/storage"
+
 	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/storage"
 )
 
 // 大規模コードベースのテスト用パフォーマンスファイル

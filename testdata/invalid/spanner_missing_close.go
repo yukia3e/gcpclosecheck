@@ -36,7 +36,7 @@ func SpannerTransactionMissingClose(ctx context.Context) error { // want `spanne
 	return nil
 }
 
-// RowIteratorのStopが漏れている例  
+// RowIteratorのStopが漏れている例
 func SpannerIteratorMissingStop(ctx context.Context) error { // want `spanner iterator not properly stopped`
 	client, err := spanner.NewClient(ctx, "projects/test-project/instances/test-instance/databases/test-db")
 	if err != nil {
