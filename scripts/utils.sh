@@ -55,7 +55,7 @@ ensure_directories() {
     done
 }
 
-# Task 16: 改善されたエラーハンドリング付きコマンド実行
+# 改善されたエラーハンドリング付きコマンド実行
 run_with_error_handling() {
     local description="$1"
     shift  # 第一引数（説明）を除去
@@ -93,7 +93,7 @@ time_command() {
     fi
 }
 
-# Task 16: 強化されたエラーハンドリング - graceful exit機能
+# 強化されたエラーハンドリング - graceful exit機能
 graceful_exit() {
     local exit_code=${1:-1}
     local message=${2:-"予期しないエラーが発生しました"}
@@ -119,14 +119,14 @@ graceful_exit() {
     exit $exit_code
 }
 
-# Task 16: シグナルハンドラーの設定
+# シグナルハンドラーの設定
 setup_signal_handlers() {
     trap 'graceful_exit 130 "プロセスが中断されました"' INT
     trap 'graceful_exit 143 "プロセスが終了されました"' TERM
     trap 'graceful_exit 1 "予期しないエラーが発生しました"' ERR
 }
 
-# Task 16: リソース使用量モニタリング
+# リソース使用量モニタリング
 monitor_system_resources() {
     local memory_threshold_mb=${1:-1000}  # デフォルト1GB
     local disk_threshold_mb=${2:-5000}    # デフォルト5GB

@@ -162,18 +162,18 @@ test_test_analysis_script() {
         ((test_failures++))
     fi
     
-    # Task 4: テスト実行結果分析機能のテスト（新機能）
+    # テスト実行結果分析機能のテスト（新機能）
     if echo "$script_content" | grep -q "analyze_test_execution_results\|test_results.json"; then
         echo "    ✓ テスト実行結果分析機能が実装されています"
     else
-        echo "    ❌ テスト実行結果分析機能が見つかりません（Task 4 未実装）"
+        echo "    ❌ テスト実行結果分析機能が見つかりません（未実装）"
         ((test_failures++))
     fi
 }
 
-# Task 4: テスト実行結果分析機能の動作テスト
+# テスト実行結果分析機能の動作テスト
 test_test_execution_analysis() {
-    echo "  ✓ Task 4: テスト実行結果分析機能の動作テスト"
+    echo "  ✓ テスト実行結果分析機能の動作テスト"
     
     # test-analysis.shを実行してテスト結果分析を行う
     if scripts/test-analysis.sh >/dev/null 2>&1; then
@@ -185,9 +185,9 @@ test_test_execution_analysis() {
     # テスト結果JSONファイルの存在確認
     if [ -f "reports/test_results.json" ]; then
         echo "    ✓ test_results.json生成確認"
-# Task 7: ビルド検証機能の実装テスト
+# ビルド検証機能の実装テスト
 test_build_verification_functionality() {
-    echo "  ✓ Task 7: ビルド検証機能の実装テスト"
+    echo "  ✓ ビルド検証機能の実装テスト"
     
     # code-quality.shにビルド検証機能が含まれているか確認
     if [ -f "scripts/code-quality.sh" ]; then
@@ -195,7 +195,7 @@ test_build_verification_functionality() {
         if echo "$script_content" | grep -q "run_build_verification\|go build\|go vet"; then
             echo "    ✓ ビルド検証機能が実装されています"
         else
-            echo "    ❌ ビルド検証機能が見つかりません（Task 7 未実装）"
+            echo "    ❌ ビルド検証機能が見つかりません（未実装）"
             ((test_failures++))
             return 1
         fi
@@ -238,9 +238,9 @@ test_build_verification_functionality() {
     fi
 }
 
-# Task 8: ベンチマーク実行スクリプトの実装テスト
+# ベンチマーク実行スクリプトの実装テスト
 test_benchmark_execution_functionality() {
-    echo "  ✓ Task 8: ベンチマーク実行スクリプトの実装テスト"
+    echo "  ✓ ベンチマーク実行スクリプトの実装テスト"
     
     # scripts/performance-check.sh の存在確認
     if [ -f "scripts/performance-check.sh" ]; then
@@ -259,12 +259,12 @@ test_benchmark_execution_functionality() {
         if echo "$script_content" | grep -q "run_benchmark_tests\|go test -bench"; then
             echo "    ✓ ベンチマーク実行機能が実装されています"
         else
-            echo "    ❌ ベンチマーク実行機能が見つかりません（Task 8 未実装）"
+            echo "    ❌ ベンチマーク実行機能が見つかりません（未実装）"
             ((test_failures++))
             return 1
         fi
     else
-        echo "    ❌ scripts/performance-check.sh が存在しません（Task 8 未実装）"
+        echo "    ❌ scripts/performance-check.sh が存在しません（未実装）"
         ((test_failures++))
         return 1
     fi
@@ -302,9 +302,9 @@ test_benchmark_execution_functionality() {
     fi
 }
 
-# Task 9: プロファイリング機能の実装テスト
+# プロファイリング機能の実装テスト
 test_profiling_functionality() {
-    echo "  ✓ Task 9: プロファイリング機能の実装テスト"
+    echo "  ✓ プロファイリング機能の実装テスト"
     
     # performance-check.shにプロファイリング機能が含まれているか確認
     if [ -f "scripts/performance-check.sh" ]; then
@@ -312,7 +312,7 @@ test_profiling_functionality() {
         if echo "$script_content" | grep -q "run_profiling\|go tool pprof\|cpuprof\|memprof"; then
             echo "    ✓ プロファイリング機能が実装されています"
         else
-            echo "    ❌ プロファイリング機能が見つかりません（Task 9 未実装）"
+            echo "    ❌ プロファイリング機能が見つかりません（未実装）"
             ((test_failures++))
             return 1
         fi
@@ -355,9 +355,9 @@ test_profiling_functionality() {
     fi
 }
 
-# Task 10: 自動修正スクリプトの実装テスト
+# 自動修正スクリプトの実装テスト
 test_auto_fix_functionality() {
-    echo "  ✓ Task 10: 自動修正スクリプトの実装テスト"
+    echo "  ✓ 自動修正スクリプトの実装テスト"
     
     # scripts/fix-issues.sh の存在確認
     if [ -f "scripts/fix-issues.sh" ]; then
@@ -376,12 +376,12 @@ test_auto_fix_functionality() {
         if echo "$script_content" | grep -q "run_auto_fixes\|go fmt\|goimports\|golangci-lint --fix"; then
             echo "    ✓ 自動修正機能が実装されています"
         else
-            echo "    ❌ 自動修正機能が見つかりません（Task 10 未実装）"
+            echo "    ❌ 自動修正機能が見つかりません（未実装）"
             ((test_failures++))
             return 1
         fi
     else
-        echo "    ❌ scripts/fix-issues.sh が存在しません（Task 10 未実装）"
+        echo "    ❌ scripts/fix-issues.sh が存在しません（未実装）"
         ((test_failures++))
         return 1
     fi
@@ -419,9 +419,9 @@ test_auto_fix_functionality() {
     fi
 }
 
-# Task 11: 問題優先度付け機能の実装テスト
+# 問題優先度付け機能の実装テスト
 test_priority_functionality() {
-    echo "  ✓ Task 11: 問題優先度付け機能の実装テスト"
+    echo "  ✓ 問題優先度付け機能の実装テスト"
     
     # scripts/fix-issues.sh に優先度付け機能が含まれているか確認
     if [ -f "scripts/fix-issues.sh" ]; then
@@ -429,7 +429,7 @@ test_priority_functionality() {
         if echo "$script_content" | grep -q "priority\|影響度\|修正コスト\|prioritize_issues\|calculate_priority"; then
             echo "    ✓ 優先度付け機能が実装されています"
         else
-            echo "    ❌ 優先度付け機能が見つかりません（Task 11 未実装）"
+            echo "    ❌ 優先度付け機能が見つかりません（未実装）"
             ((test_failures++))
             return 1
         fi
@@ -472,9 +472,9 @@ test_priority_functionality() {
     fi
 }
 
-# Task 12: 統合レポート生成機能の実装テスト
+# 統合レポート生成機能の実装テスト
 test_integrated_report_functionality() {
-    echo "  ✓ Task 12: 統合レポート生成機能の実装テスト"
+    echo "  ✓ 統合レポート生成機能の実装テスト"
     
     # scripts/generate-report.sh の存在確認
     if [ -f "scripts/generate-report.sh" ]; then
@@ -493,12 +493,12 @@ test_integrated_report_functionality() {
         if echo "$script_content" | grep -q "generate_integrated_report\|markdown\|総合品質スコア\|quality_score"; then
             echo "    ✓ 統合レポート機能が実装されています"
         else
-            echo "    ❌ 統合レポート機能が見つかりません（Task 12 未実装）"
+            echo "    ❌ 統合レポート機能が見つかりません（未実装）"
             ((test_failures++))
             return 1
         fi
     else
-        echo "    ❌ scripts/generate-report.sh が存在しません（Task 12 未実装）"
+        echo "    ❌ scripts/generate-report.sh が存在しません（未実装）"
         ((test_failures++))
         return 1
     fi
@@ -536,9 +536,9 @@ test_integrated_report_functionality() {
     fi
 }
 
-# Task 13: 詳細レポート機能の実装テスト
+# 詳細レポート機能の実装テスト
 test_detailed_report_functionality() {
-    echo "  ✓ Task 13: 詳細レポート機能の実装テスト"
+    echo "  ✓ 詳細レポート機能の実装テスト"
     
     # scripts/generate-report.sh に詳細レポート機能が含まれているか確認
     if [ -f "scripts/generate-report.sh" ]; then
@@ -546,7 +546,7 @@ test_detailed_report_functionality() {
         if echo "$script_content" | grep -q "detailed_report\|詳細レポート\|executive_summary\|technical_details"; then
             echo "    ✓ 詳細レポート機能が実装されています"
         else
-            echo "    ❌ 詳細レポート機能が見つかりません（Task 13 未実装）"
+            echo "    ❌ 詳細レポート機能が見つかりません（未実装）"
             ((test_failures++))
             return 1
         fi
@@ -589,16 +589,16 @@ test_detailed_report_functionality() {
     fi
 }
 
-# Task 14: エンドツーエンドテストスクリプトの実装テスト
+# エンドツーエンドテストスクリプトの実装テスト
 test_e2e_script_functionality() {
-    echo "  ✓ Task 14: エンドツーエンドテストスクリプトの実装テスト"
+    echo "  ✓ エンドツーエンドテストスクリプトの実装テスト"
     
     # test-e2e.sh の存在確認
-    if [ -f "test-e2e.sh" ]; then
+    if [ -f "scripts/tests/test-e2e.sh" ]; then
         echo "    ✓ test-e2e.sh 存在確認"
         
         # 実行権限確認
-        if [ -x "test-e2e.sh" ]; then
+        if [ -x "scripts/tests/test-e2e.sh" ]; then
             echo "    ✓ test-e2e.sh 実行権限確認"
         else
             echo "    ❌ test-e2e.sh に実行権限がありません"
@@ -606,16 +606,16 @@ test_e2e_script_functionality() {
         fi
         
         # E2Eテスト機能が実装されているか確認
-        local script_content=$(cat test-e2e.sh)
+        local script_content=$(cat scripts/tests/test-e2e.sh)
         if echo "$script_content" | grep -q "e2e\|end.*to.*end\|全体フロー\|統合動作\|test_full_flow"; then
             echo "    ✓ エンドツーエンドテスト機能が実装されています"
         else
-            echo "    ❌ エンドツーエンドテスト機能が見つかりません（Task 14 未実装）"
+            echo "    ❌ エンドツーエンドテスト機能が見つかりません（未実装）"
             ((test_failures++))
             return 1
         fi
     else
-        echo "    ❌ test-e2e.sh が存在しません（Task 14 未実装）"
+        echo "    ❌ scripts/tests/test-e2e.sh が存在しません（未実装）"
         ((test_failures++))
         return 1
     fi
@@ -653,9 +653,9 @@ test_e2e_script_functionality() {
     fi
 }
 
-# Task 15: 継続改善支援機能の実装テスト
+# 継続改善支援機能の実装テスト
 test_track_progress_functionality() {
-    echo "  ✓ Task 15: 継続改善支援機能の実装テスト"
+    echo "  ✓ 継続改善支援機能の実装テスト"
     
     # scripts/track-progress.sh の存在確認
     if [ -f "scripts/track-progress.sh" ]; then
@@ -674,12 +674,12 @@ test_track_progress_functionality() {
         if echo "$script_content" | grep -q "track.*progress\|履歴管理\|トレンド\|比較分析\|改善効果"; then
             echo "    ✓ 継続改善支援機能が実装されています"
         else
-            echo "    ❌ 継続改善支援機能が見つかりません（Task 15 未実装）"
+            echo "    ❌ 継続改善支援機能が見つかりません（未実装）"
             ((test_failures++))
             return 1
         fi
     else
-        echo "    ❌ scripts/track-progress.sh が存在しません（Task 15 未実装）"
+        echo "    ❌ scripts/track-progress.sh が存在しません（未実装）"
         ((test_failures++))
         return 1
     fi
@@ -725,9 +725,9 @@ test_track_progress_functionality() {
     fi
 }
 
-# Task 16: 実プロジェクトでの動作検証と最適化のテスト
+# 実プロジェクトでの動作検証と最適化のテスト
 test_real_project_validation() {
-    echo "  ✓ Task 16: 実プロジェクトでの動作検証と最適化のテスト"
+    echo "  ✓ 実プロジェクトでの動作検証と最適化のテスト"
     
     # パフォーマンス最適化機能の存在確認
     local optimization_found=false
@@ -744,7 +744,7 @@ test_real_project_validation() {
     done
     
     if [ "$optimization_found" = false ]; then
-        echo "    ❌ パフォーマンス最適化機能が見つかりません（Task 16 未実装）"
+        echo "    ❌ パフォーマンス最適化機能が見つかりません（未実装）"
         ((test_failures++))
         return 1
     fi
@@ -819,9 +819,9 @@ test_real_project_validation() {
     fi
 }
 
-# Task 17: ドキュメントとメンテナンススクリプトの実装テスト
+# ドキュメントとメンテナンススクリプトの実装テスト
 test_documentation_and_maintenance() {
-    echo "  ✓ Task 17: ドキュメントとメンテナンススクリプトの実装テスト"
+    echo "  ✓ ドキュメントとメンテナンススクリプトの実装テスト"
     
     # README_QUALITY.md の存在確認
     if [ -f "README_QUALITY.md" ]; then
@@ -836,7 +836,7 @@ test_documentation_and_maintenance() {
             ((test_failures++))
         fi
     else
-        echo "    ❌ README_QUALITY.md が存在しません（Task 17 未実装）"
+        echo "    ❌ README_QUALITY.md が存在しません（未実装）"
         ((test_failures++))
         return 1
     fi
@@ -935,13 +935,13 @@ test_documentation_and_maintenance() {
     fi
 }
 
-# Task 5: 静的解析スクリプトの実装テスト
+# 静的解析スクリプトの実装テスト
 test_static_analysis_script() {
-    echo "  ✓ Task 5: 静的解析スクリプトの実装テスト"
+    echo "  ✓ 静的解析スクリプトの実装テスト"
     
     # code-quality.shスクリプト存在確認
     if [ ! -f "scripts/code-quality.sh" ]; then
-        echo "    ❌ scripts/code-quality.sh が存在しません（Task 5 未実装）"
+        echo "    ❌ scripts/code-quality.sh が存在しません（未実装）"
         ((test_failures++))
         return 1
     fi
@@ -984,9 +984,9 @@ test_static_analysis_script() {
     fi
 }
 
-# Task 6: セキュリティスキャン機能の実装テスト
+# セキュリティスキャン機能の実装テスト
 test_security_scan_functionality() {
-    echo "  ✓ Task 6: セキュリティスキャン機能の実装テスト"
+    echo "  ✓ セキュリティスキャン機能の実装テスト"
     
     # code-quality.shにセキュリティスキャン機能が含まれているか確認
     if [ -f "scripts/code-quality.sh" ]; then
@@ -994,7 +994,7 @@ test_security_scan_functionality() {
         if echo "$script_content" | grep -q "run_security_scan\|gosec\|govulncheck"; then
             echo "    ✓ セキュリティスキャン機能が実装されています"
         else
-            echo "    ❌ セキュリティスキャン機能が見つかりません（Task 6 未実装）"
+            echo "    ❌ セキュリティスキャン機能が見つかりません（未実装）"
             ((test_failures++))
             return 1
         fi

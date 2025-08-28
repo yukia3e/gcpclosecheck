@@ -111,7 +111,7 @@ identify_low_coverage_functions() {
     fi
 }
 
-# Task 4: テスト実行結果分析機能
+# テスト実行結果分析機能
 analyze_test_execution_results() {
     log_info "テスト実行結果分析を開始..."
     
@@ -250,7 +250,7 @@ main() {
     # プロジェクトルートに移動
     cd "$PROJECT_ROOT"
     
-    # Task 4: テスト実行結果分析機能を実行
+    # テスト実行結果分析機能を実行
     if analyze_test_execution_results; then
         log_success "テスト実行結果分析完了"
     else

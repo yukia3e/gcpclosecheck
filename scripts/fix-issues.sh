@@ -2,7 +2,7 @@
 
 # 自動修正スクリプト: 検出された問題の自動修正と修正結果レポート
 # go fmt、goimports、golangci-lint --fixを使用した自動修正機能
-# Task 11: 問題優先度付け機能を含む
+# 問題優先度付け機能を含む
 
 set -e
 
@@ -17,7 +17,7 @@ source "$SCRIPT_DIR/utils.sh"
 REPORTS_DIR="$PROJECT_ROOT/reports"
 TMP_DIR="$PROJECT_ROOT/tmp"
 
-# Task 10: 自動修正実行機能
+# 自動修正実行機能
 run_auto_fixes() {
     log_info "自動修正を開始..."
     
@@ -276,7 +276,7 @@ EOF
     log_success "修正内容詳細分析: $changes_analysis_file"
 }
 
-# Task 11: 問題優先度付け機能
+# 問題優先度付け機能
 prioritize_issues() {
     log_info "問題の優先度付けを実行中..."
     
@@ -477,14 +477,14 @@ main() {
     # プロジェクトルートに移動
     cd "$PROJECT_ROOT"
     
-    # Task 10: 自動修正実行
+    # 自動修正実行
     if run_auto_fixes; then
         log_success "自動修正完了"
     else
         log_warning "自動修正で問題が発生しました"
     fi
     
-    # Task 11: 問題優先度付け実行
+    # 問題優先度付け実行
     if prioritize_issues; then
         log_success "問題優先度付け完了"
     else

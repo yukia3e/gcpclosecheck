@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # 統合レポート生成スクリプト: 全分析結果を統合しMarkdown形式レポート生成
-# Task 12: 統合レポート生成機能
-# Task 13: 詳細レポート機能を含む
+# 統合レポート生成機能
+# 詳細レポート機能を含む
 
 set -e
 
@@ -17,7 +17,7 @@ source "$SCRIPT_DIR/utils.sh"
 REPORTS_DIR="$PROJECT_ROOT/reports"
 TMP_DIR="$PROJECT_ROOT/tmp"
 
-# Task 12: 統合レポート生成機能
+# 統合レポート生成機能
 generate_integrated_report() {
     log_info "統合レポートを生成中..."
     
@@ -226,7 +226,7 @@ EOF
     return 0
 }
 
-# Task 13: 詳細レポート機能
+# 詳細レポート機能
 generate_detailed_report() {
     log_info "詳細レポートを生成中..."
     
@@ -563,14 +563,14 @@ main() {
     # プロジェクトルートに移動
     cd "$PROJECT_ROOT"
     
-    # Task 12: 統合レポート生成
+    # 統合レポート生成
     if generate_integrated_report; then
         log_success "統合レポート生成完了"
     else
         log_warning "統合レポート生成で問題が発生しました"
     fi
     
-    # Task 13: 詳細レポート生成
+    # 詳細レポート生成
     if generate_detailed_report; then
         log_success "詳細レポート生成完了"
     else

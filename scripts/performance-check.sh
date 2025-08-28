@@ -16,7 +16,7 @@ source "$SCRIPT_DIR/utils.sh"
 REPORTS_DIR="$PROJECT_ROOT/reports"
 TMP_DIR="$PROJECT_ROOT/tmp"
 
-# Task 8: ベンチマーク実行機能
+# ベンチマーク実行機能
 run_benchmark_tests() {
     log_info "ベンチマークテストを開始..."
     
@@ -159,7 +159,7 @@ EOF
     fi
 }
 
-# Task 9: プロファイリング実行機能
+# プロファイリング実行機能
 run_profiling() {
     log_info "プロファイリングを開始..."
     
@@ -377,14 +377,14 @@ main() {
     # プロジェクトルートに移動
     cd "$PROJECT_ROOT"
     
-    # Task 8: ベンチマーク実行
+    # ベンチマーク実行
     if run_benchmark_tests; then
         log_success "ベンチマーク測定完了"
     else
         log_warning "ベンチマーク測定で問題が発生しました"
     fi
     
-    # Task 9: プロファイリング実行
+    # プロファイリング実行
     if run_profiling; then
         log_success "プロファイリング完了"
     else

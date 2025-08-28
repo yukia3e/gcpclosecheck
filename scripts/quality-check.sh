@@ -16,7 +16,7 @@ source "$SCRIPT_DIR/utils.sh"
 REPORTS_DIR="$PROJECT_ROOT/reports"
 TMP_DIR="$PROJECT_ROOT/tmp"
 
-# Task 16: パフォーマンス最適化設定
+# パフォーマンス最適化設定
 PARALLEL_EXECUTION=true
 MAX_PARALLEL_JOBS=4
 TIMEOUT_SECONDS=300
@@ -99,7 +99,7 @@ show_progress() {
     echo "progress: $(( (current * 100) / total ))%"
 }
 
-# Task 16: 大規模プロジェクト検出
+# 大規模プロジェクト検出
 detect_project_scale() {
     local go_file_count=$(find "$PROJECT_ROOT" -name "*.go" -not -path "*/vendor/*" -not -path "*/.git/*" | wc -l | tr -d ' ')
     log_info "Goファイル数: $go_file_count 件"
@@ -114,7 +114,7 @@ detect_project_scale() {
     fi
 }
 
-# Task 16: 並列実行機能付きバックグラウンド実行
+# 並列実行機能付きバックグラウンド実行
 run_parallel_analysis() {
     local tasks=("$@")
     local pids=()
@@ -171,7 +171,7 @@ run_parallel_analysis() {
     done
 }
 
-# Task 16: 最適化されたリソース使用量モニタリング
+# 最適化されたリソース使用量モニタリング
 monitor_resource_usage() {
     local start_time=$(date +%s)
     local start_memory=0
@@ -208,7 +208,7 @@ run_quality_checks() {
 run_performance_tests() {
     show_progress 3 3 "パフォーマンス測定を実行中..."
     
-    # Task 8: ベンチマーク実行スクリプトを呼び出し
+    # ベンチマーク実行スクリプトを呼び出し
     if [ -f "$SCRIPT_DIR/performance-check.sh" ]; then
         log_info "ベンチマーク測定を実行中..."
         if "$SCRIPT_DIR/performance-check.sh"; then
@@ -238,18 +238,18 @@ main() {
     # プロジェクトルートに移動
     cd "$PROJECT_ROOT"
     
-    # Task 16: 実行時間とリソース使用量のモニタリング開始
+    # 実行時間とリソース使用量のモニタリング開始
     local start_time=$(date +%s)
     monitor_resource_usage
     
-    # Task 16: プロジェクト規模の検出と最適化モード選択
+    # プロジェクト規模の検出と最適化モード選択
     local is_large_project=false
     if detect_project_scale; then
         is_large_project=true
         log_info "大規模プロジェクト対応モードで実行します"
     fi
     
-    # Task 16: 並列実行可能な分析の実行
+    # 並列実行可能な分析の実行
     if [ "$RUN_ALL" = true ]; then
         log_info "全分析を実行します"
         
@@ -278,7 +278,7 @@ main() {
             analysis_tasks+=("performance")
         fi
         
-        # Task 16: 複数タスクがある場合は並列実行を検討
+        # 複数タスクがある場合は並列実行を検討
         if [ ${#analysis_tasks[@]} -gt 1 ] && [ "$PARALLEL_EXECUTION" = true ]; then
             run_parallel_analysis "${analysis_tasks[@]}"
         else
@@ -299,7 +299,7 @@ main() {
         fi
     fi
     
-    # Task 16: 実行時間とリソース使用量の計算・報告
+    # 実行時間とリソース使用量の計算・報告
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     

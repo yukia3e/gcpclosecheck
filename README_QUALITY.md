@@ -340,7 +340,7 @@ golangci-lint --version
 
 1. `scripts/`ディレクトリに新しいスクリプトを作成
 2. `scripts/quality-check.sh`に統合
-3. `test-scripts.sh`にテストを追加
+3. `scripts/tests/test-scripts.sh`にテストを追加
 4. このドキュメントを更新
 
 ---

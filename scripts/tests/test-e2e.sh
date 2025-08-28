@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # エンドツーエンドテストスクリプト: 全体フロー動作テスト
-# Task 14: 各スクリプトの統合動作確認とエラーハンドリングテスト
+# 各スクリプトの統合動作確認とエラーハンドリングテスト
 
 set -e
 
 # スクリプトディレクトリの取得
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$SCRIPT_DIR"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # 共通関数の読み込み
-source "$SCRIPT_DIR/scripts/utils.sh"
+source "$PROJECT_ROOT/scripts/utils.sh"
 
 # 設定
 REPORTS_DIR="$PROJECT_ROOT/reports"

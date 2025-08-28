@@ -16,7 +16,7 @@ source "$SCRIPT_DIR/utils.sh"
 REPORTS_DIR="$PROJECT_ROOT/reports"
 TMP_DIR="$PROJECT_ROOT/tmp"
 
-# Task 6: セキュリティスキャン実行機能
+# セキュリティスキャン実行機能
 run_security_scan() {
     log_info "セキュリティスキャンを開始..."
     
@@ -159,7 +159,7 @@ EOF
     fi
 }
 
-# Task 7: ビルド検証実行機能
+# ビルド検証実行機能
 run_build_verification() {
     log_info "ビルド検証を開始..."
     
@@ -350,7 +350,7 @@ EOF
     log_success "セキュリティ問題詳細: $security_detail_file"
 }
 
-# Task 5: 静的解析実行機能
+# 静的解析実行機能
 run_static_analysis() {
     log_info "静的解析を開始..."
     
@@ -508,21 +508,21 @@ main() {
     # プロジェクトルートに移動
     cd "$PROJECT_ROOT"
     
-    # Task 7: ビルド検証実行
+    # ビルド検証実行
     if run_build_verification; then
         log_success "ビルド検証完了"
     else
         log_warning "ビルド検証で問題が発生しました（処理継続）"
     fi
     
-    # Task 6: セキュリティスキャン実行
+    # セキュリティスキャン実行
     if run_security_scan; then
         log_success "セキュリティスキャン完了"
     else
         log_warning "セキュリティスキャンで問題が発生しました（処理継続）"
     fi
     
-    # Task 5: 静的解析実行
+    # 静的解析実行
     if run_static_analysis; then
         log_success "静的解析完了"
     else
