@@ -206,73 +206,77 @@ func (c *Config) ShouldExemptFilePath(filePath string) (bool, string) {
 
 // matchPattern は簡単なglobパターンマッチングを行う
 func matchPattern(pattern, str string) bool {
-	// **/* パターン（任意のディレクトリ階層）
-	// 例: "**/function/**" は "github.com/example/project/internal/function/handler" にマッチ
 	if strings.Contains(pattern, "**/") {
-		// パターンを分割
-		beforeAfter := strings.Split(pattern, "**/")
-		if len(beforeAfter) == 2 {
-			before := beforeAfter[0]
-			after := beforeAfter[1]
-
-			// afterの**も処理
-			if strings.HasSuffix(after, "/**") {
-				after = strings.TrimSuffix(after, "/**")
-			} else if strings.HasPrefix(after, "*/") {
-				after = strings.TrimPrefix(after, "*/")
-			}
-
-			// beforeで始まり、afterが含まれる
-			hasPrefix := before == "" || strings.HasPrefix(str, before)
-			var hasAfter bool
-
-			// afterがワイルドカードを含む場合の特別処理
-			if strings.HasPrefix(after, "*") {
-				suffix := strings.TrimPrefix(after, "*")
-				hasAfter = strings.HasSuffix(str, suffix)
-			} else {
-				hasAfter = after == "" || strings.Contains(str, after)
-			}
-
-			return hasPrefix && hasAfter
-		}
+		return matchDoubleStarPattern(pattern, str)
 	}
-
-	// */ パターン（単一ディレクトリ階層）
-	// 例: "*/cmd/*" は "github.com/example/project/cmd/server" にマッチ
+	
 	if strings.Contains(pattern, "*/") && !strings.Contains(pattern, "**/") {
-		parts := strings.Split(pattern, "*/")
-		if len(parts) == 2 {
-			before := parts[0]
-			after := parts[1]
-
-			// afterの後ろの*も処理
-			after = strings.TrimSuffix(after, "/*")
-
-			if before == "" {
-				// "*/after" の形式 - afterが含まれる
-				return strings.Contains(str, after)
-			} else {
-				// "before/*/after" の形式
-				// beforeで始まり、afterが含まれる
-				return strings.HasPrefix(str, before) && strings.Contains(str, after)
-			}
-		}
+		return matchSingleStarPattern(pattern, str)
 	}
-
-	// **/*_test.go のようなパターン
+	
 	if strings.HasPrefix(pattern, "**/") {
-		suffix := strings.TrimPrefix(pattern, "**/")
-		// 先頭の*を処理
-		if strings.HasPrefix(suffix, "*") {
-			suffix = strings.TrimPrefix(suffix, "*")
-			return strings.HasSuffix(str, suffix)
-		}
+		return matchPrefixStarPattern(pattern, str)
+	}
+	
+	return str == pattern
+}
+
+// matchDoubleStarPattern handles patterns with **/ (arbitrary directory hierarchy)
+func matchDoubleStarPattern(pattern, str string) bool {
+	beforeAfter := strings.Split(pattern, "**/")
+	if len(beforeAfter) != 2 {
+		return false
+	}
+	
+	before := beforeAfter[0]
+	after := beforeAfter[1]
+	
+	// Clean up after pattern
+	if strings.HasSuffix(after, "/**") {
+		after = strings.TrimSuffix(after, "/**")
+	} else if strings.HasPrefix(after, "*/") {
+		after = strings.TrimPrefix(after, "*/")
+	}
+	
+	hasPrefix := before == "" || strings.HasPrefix(str, before)
+	hasAfter := matchAfterPattern(after, str)
+	
+	return hasPrefix && hasAfter
+}
+
+// matchAfterPattern handles the after part of a pattern
+func matchAfterPattern(after, str string) bool {
+	if strings.HasPrefix(after, "*") {
+		suffix := strings.TrimPrefix(after, "*")
 		return strings.HasSuffix(str, suffix)
 	}
+	return after == "" || strings.Contains(str, after)
+}
 
-	// 単純な文字列マッチ
-	return str == pattern
+// matchSingleStarPattern handles patterns with */ (single directory hierarchy)
+func matchSingleStarPattern(pattern, str string) bool {
+	parts := strings.Split(pattern, "*/")
+	if len(parts) != 2 {
+		return false
+	}
+	
+	before := parts[0]
+	after := strings.TrimSuffix(parts[1], "/*")
+	
+	if before == "" {
+		return strings.Contains(str, after)
+	}
+	return strings.HasPrefix(str, before) && strings.Contains(str, after)
+}
+
+// matchPrefixStarPattern handles patterns starting with **/
+func matchPrefixStarPattern(pattern, str string) bool {
+	suffix := strings.TrimPrefix(pattern, "**/")
+	if strings.HasPrefix(suffix, "*") {
+		suffix = strings.TrimPrefix(suffix, "*")
+		return strings.HasSuffix(str, suffix)
+	}
+	return strings.HasSuffix(str, suffix)
 }
 
 // isValidExceptionType は指定された例外タイプが有効かチェックする

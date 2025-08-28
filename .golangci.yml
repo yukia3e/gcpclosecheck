@@ -1,10 +1,13 @@
+# https://golangci-lint.run/docs/product/migration-guide
+
 run:
   timeout: 10m
   tests: true
   modules-download-mode: readonly
 
 output:
-  format: colored-line-number
+  formats:
+    - format: colored-line-number
 
 linters:
   disable-all: true
@@ -43,6 +46,7 @@ issues:
         - gocyclo
         - cyclop
         - errcheck
+        - revive
         
     # Exclude testdata files
     - path: testdata/
@@ -50,3 +54,4 @@ issues:
         - errcheck
         - govet
         - staticcheck
+        - revive
