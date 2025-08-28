@@ -16,8 +16,8 @@ func buildCLI(t *testing.T) (string, string) {
 	// Start from current test's source file directory
 	projectRoot := findProjectRoot(t)
 
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = projectRoot // Ensure build happens in project root
+	buildCmd := exec.Command("go", "build", "-o", binPath, ".") // #nosec G204 -- binPath is controlled temp directory for testing
+	buildCmd.Dir = projectRoot                                   // Ensure build happens in project root
 	output, err := buildCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to build CLI: %v\nOutput: %s", err, string(output))

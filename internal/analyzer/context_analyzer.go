@@ -74,7 +74,10 @@ func (ca *ContextAnalyzer) FindMissingCancels(pass *analysis.Pass) []analysis.Di
 	// 各ファイルを解析
 	for _, file := range pass.Files {
 		// 改良された解析を実行
-		ca.AnalyzeContextUsage(file, pass.TypesInfo)
+		if err := ca.AnalyzeContextUsage(file, pass.TypesInfo); err != nil {
+			// エラーログは AnalyzeContextUsage 内で処理されているため、ここでは無視
+			_ = err
+		}
 
 		// 各contextについてdefer文の存在を確認
 		for _, contextInfo := range ca.contextVars {

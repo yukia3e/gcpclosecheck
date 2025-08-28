@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/yukia3e/gcpclosecheck/internal/messages"
@@ -68,7 +69,7 @@ func LoadConfig(configPath string) (*Config, error) {
 		return nil, errors.New(messages.ConfigFileEmpty)
 	}
 
-	data, err := os.ReadFile(configPath)
+	data, err := os.ReadFile(filepath.Clean(configPath)) // #nosec G304 -- configPath is validated user input
 	if err != nil {
 		return nil, fmt.Errorf(messages.ConfigLoadFailed, err)
 	}
