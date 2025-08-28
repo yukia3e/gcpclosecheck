@@ -324,6 +324,7 @@ func complexFunction(ctx context.Context) error {
 	// Test successful generator creation
 	if generator == nil {
 		t.Error("Expected non-nil DiagnosticGenerator")
+		return
 	}
 
 	// Test FileSet accessibility

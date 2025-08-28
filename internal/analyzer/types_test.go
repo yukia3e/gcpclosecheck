@@ -446,6 +446,7 @@ func TestContextInfoWithDeferInfo(t *testing.T) {
 	retrievedDeferInfo := contextInfo.GetDeferInfo()
 	if retrievedDeferInfo == nil {
 		t.Error("DeferInfo should not be nil after setting")
+		return
 	}
 
 	if retrievedDeferInfo.CancelVarName != deferInfo.CancelVarName ||

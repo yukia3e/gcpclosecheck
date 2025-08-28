@@ -196,22 +196,6 @@ func (ea *EscapeAnalyzer) isSpannerTransactionMethod(methodName string) bool {
 }
 
 // isWrappedSpannerTransaction はラップされたSpannerトランザクションメソッドかをチェック
-func (ea *EscapeAnalyzer) isWrappedSpannerTransaction(callExpr *ast.CallExpr) bool {
-	// c.ReadWriteTransaction(ctx, func(ctx context.Context) error { ... })
-	// のパターンをチェック
-	if sel, ok := callExpr.Fun.(*ast.SelectorExpr); ok {
-		methodName := sel.Sel.Name
-		if ea.isSpannerTransactionMethod(methodName) {
-			// 引数にクロージャがあるかチェック
-			for _, arg := range callExpr.Args {
-				if _, ok := arg.(*ast.FuncLit); ok {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
 
 // findVariableInClosureParams はクロージャのパラメータに指定した変数名があるかを検索する
 func (ea *EscapeAnalyzer) findVariableInClosureParams(funcLit *ast.FuncLit, varName string) bool {

@@ -123,82 +123,9 @@ func (ca *ContextAnalyzer) GetTrackedContextVars() []ContextInfo {
 	return contexts
 }
 
-// analyzeContextCreations はファイル内のcontext生成を解析する
-func (ca *ContextAnalyzer) analyzeContextCreations(file *ast.File, typeInfo *types.Info) {
-	ast.Inspect(file, func(n ast.Node) bool {
-		if call, ok := n.(*ast.CallExpr); ok {
-			ca.TrackContextCreation(call, typeInfo)
-		}
-		return true
-	})
-}
 
-// analyzeDeferStatementsWithFileScope はより精密なスコープ解析でdefer文を確認する
-func (ca *ContextAnalyzer) analyzeDeferStatementsWithFileScope(file *ast.File) {
-	// 関数ごとに解析
-	for _, decl := range file.Decls {
-		if fn, ok := decl.(*ast.FuncDecl); ok {
-			ca.analyzeFunctionForDefers(fn)
-		}
-	}
-}
 
-// analyzeFunctionForDefers は関数内のcontext生成とdefer文を対応付ける
-func (ca *ContextAnalyzer) analyzeFunctionForDefers(fn *ast.FuncDecl) {
-	if fn.Body == nil {
-		return
-	}
 
-	// この関数で生成されたcontextを追跡
-	functionContexts := make(map[string]*ContextInfo)
-
-	// 関数内のcontext生成を検索
-	ast.Inspect(fn.Body, func(n ast.Node) bool {
-		if assignStmt, ok := n.(*ast.AssignStmt); ok {
-			if len(assignStmt.Lhs) >= 2 && len(assignStmt.Rhs) == 1 {
-				if call, ok := assignStmt.Rhs[0].(*ast.CallExpr); ok {
-					if ca.isContextWithCancelCall(call) {
-						// cancel関数の変数名を取得
-						if len(assignStmt.Lhs) >= 2 {
-							if cancelIdent, ok := assignStmt.Lhs[1].(*ast.Ident); ok {
-								cancelVarName := cancelIdent.Name
-								// contextVarsから対応するcontextを検索
-								for _, contextInfo := range ca.contextVars {
-									functionContexts[cancelVarName] = contextInfo
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		return true
-	})
-
-	// defer文を検索してキャンセル関数の名前と対応付け
-	ast.Inspect(fn.Body, func(n ast.Node) bool {
-		if deferStmt, ok := n.(*ast.DeferStmt); ok {
-			if call := deferStmt.Call; call != nil {
-				if ident, ok := call.Fun.(*ast.Ident); ok {
-					cancelVarName := ident.Name
-					if contextInfo, exists := functionContexts[cancelVarName]; exists {
-						contextInfo.IsDeferred = true
-					}
-				}
-			}
-		}
-		return true
-	})
-}
-
-// isContextWithCancelCall は呼び出しがcontext.WithCancel系の関数かどうかを判定する
-func (ca *ContextAnalyzer) isContextWithCancelCall(call *ast.CallExpr) bool {
-	if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
-		funcName := sel.Sel.Name
-		return ca.IsContextWithCancel(funcName)
-	}
-	return false
-}
 
 // AnalyzeContextUsage は改良されたcontext使用解析を実行する
 func (ca *ContextAnalyzer) AnalyzeContextUsage(file *ast.File, typeInfo *types.Info) error {

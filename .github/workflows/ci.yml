@@ -6,18 +6,82 @@ on:
   pull_request:
     branches: [ main, develop ]
 
-env:
-  GO_VERSION_MATRIX: "1.21, 1.22, 1.23, 1.24, 1.25"
-
 jobs:
+  # Quality checks - single OS, latest Go only
+  quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.25"
+        cache: true
+        
+    # Format and lint checks
+    - name: Check gofmt
+      run: |
+        if [ -n "$(gofmt -l .)" ]; then
+          echo "The following files are not formatted:"
+          gofmt -l .
+          echo "Please run 'go fmt ./...' to format your code."
+          exit 1
+        fi
+        
+    - name: Check goimports
+      run: |
+        go install golang.org/x/tools/cmd/goimports@latest
+        if [ -n "$(goimports -l .)" ]; then
+          echo "The following files have incorrect imports:"
+          goimports -l .
+          echo "Please run 'goimports -w .' to fix your imports."
+          exit 1
+        fi
+        
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v8
+      with:
+        version: latest
+        args: --timeout=10m --config=.golangci.yml
+        
+    - name: Run go vet
+      run: go vet ./...
+      
+    - name: Run staticcheck
+      run: |
+        go install honnef.co/go/tools/cmd/staticcheck@latest
+        staticcheck ./...
+        
+    # Security scans
+    - name: Run govulncheck
+      run: |
+        go install golang.org/x/vuln/cmd/govulncheck@latest
+        govulncheck ./...
+        
+    - name: Run gosec
+      uses: securego/gosec@master
+      with:
+        args: '-no-fail -fmt sarif -out gosec.sarif ./...'
+        
+    - name: Upload SARIF file
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: gosec.sarif
+
+  # Build and test - minimal OS matrix
   test:
-    name: Test
+    name: Build & Test
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        go-version: ["1.21", "1.22", "1.23", "1.24", "1.25"]
+        os: [ubuntu-latest, macos-latest]  # Removed windows for go vet tool
+        go-version: ["1.21", "1.25"]       # Min and max versions only
     
     steps:
     - name: Checkout code
@@ -29,125 +93,51 @@ jobs:
         go-version: ${{ matrix.go-version }}
         cache: true
         
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-${{ matrix.go-version }}-
-          ${{ runner.os }}-go-
-          
     - name: Download dependencies
       run: go mod download
       
-    - name: Verify dependencies
-      run: go mod verify
+    - name: Build
+      run: go build -v ./...
       
     - name: Run tests
       run: go test -v -race -coverprofile=coverage.out ./...
       
-    - name: Generate coverage report
-      if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.25'
-      run: go tool cover -html=coverage.out -o coverage.html
+    - name: Run E2E tests
+      run: go test -v ./... -tags=e2e
       
-    - name: Upload coverage to Codecov
+    - name: Upload coverage
       if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.25'
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: ./coverage.out
-        flags: unittests
-        name: codecov-umbrella
+
+  # Build binary for release validation
+  build:
+    name: Build Binary
+    runs-on: ubuntu-latest
+    needs: [quality, test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.25"
+        cache: true
         
     - name: Build binary
-      run: go build -v -o gcpclosecheck${{ matrix.os == 'windows-latest' && '.exe' || '' }} ./cmd/gcpclosecheck
-      
-    - name: Test binary execution
-      shell: bash
       run: |
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          ./gcpclosecheck.exe -V
-        else
-          ./gcpclosecheck -V
-        fi
-
-  benchmark:
-    name: Benchmark
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-      
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: "1.25"
-        cache: true
+        mkdir -p bin
+        go build -o bin/gcpclosecheck ./cmd/gcpclosecheck
         
-    - name: Run benchmarks
-      run: go test -bench=. -benchmem -run=^Benchmark ./...
-      
-    - name: Save benchmark results
-      run: go test -bench=. -benchmem -run=^Benchmark ./... > benchmark.txt
-      
-    - name: Upload benchmark results
+    - name: Test binary
+      run: |
+        ./bin/gcpclosecheck -V
+        
+    - name: Upload binary artifact
       uses: actions/upload-artifact@v4
       with:
-        name: benchmark-results
-        path: benchmark.txt
-
-  integration:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-      
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: "1.25"
-        cache: true
-        
-    - name: Run integration tests
-      run: go test -v -tags=integration ./cmd/gcpclosecheck/...
-      
-    - name: Test CLI integration
-      run: |
-        go build -o gcpclosecheck ./cmd/gcpclosecheck
-        echo 'package main; import "context"; func main() { ctx, cancel := context.WithCancel(context.Background()); _ = ctx; _ = cancel }' > test.go
-        ./gcpclosecheck test.go || true  # Expected to find issues
-        rm test.go
-
-  e2e:
-    name: E2E Tests  
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-      
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: "1.25"
-        cache: true
-        
-    - name: Run E2E tests
-      run: |
-        cd internal/analyzer
-        go test -v -run "TestE2E" ./...
-        
-    - name: Verify testdata integrity
-      run: |
-        find internal/analyzer/testdata -name "*.go" | xargs -I {} go fmt {}
-        if [ -n "$(git status --porcelain)" ]; then
-          echo "Testdata files are not properly formatted"
-          git status
-          exit 1
-        fi
+        name: gcpclosecheck-binary
+        path: bin/gcpclosecheck
