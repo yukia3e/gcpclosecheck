@@ -210,8 +210,6 @@ func (da *DeferAnalyzer) isIteratorResource(resource ResourceInfo) bool {
 	}
 }
 
-
-
 // IsAddedToDeferArray はリソースがdefers配列に追加されているかチェック
 func (da *DeferAnalyzer) IsAddedToDeferArray(block *ast.BlockStmt, resource ResourceInfo) bool {
 	if block == nil || resource.VariableName == "" {
@@ -346,15 +344,15 @@ func (da *DeferAnalyzer) isClosureWithResourceClose(funcLit *ast.FuncLit, resour
 // isValidVariableNamePattern は生成関数と変数名の妥当性をチェックする
 func (da *DeferAnalyzer) isValidVariableNamePattern(creationFunction, varName string) bool {
 	validators := map[string]func(string) bool{
-		"NewClient":              da.isValidClientVariableName,
-		"NewWriter":              da.isValidWriterVariableName,
-		"NewReader":              da.isValidReaderVariableName,
-		"Query":                  da.isValidQueryVariableName,
-		"QueryWithOptions":       da.isValidQueryVariableName,
-		"Read":                   da.isValidQueryVariableName,
-		"ReadWithOptions":        da.isValidQueryVariableName,
-		"ReadWriteTransaction":   da.isValidTransactionVariableName,
-		"ReadOnlyTransaction":    da.isValidTransactionVariableName,
+		"NewClient":            da.isValidClientVariableName,
+		"NewWriter":            da.isValidWriterVariableName,
+		"NewReader":            da.isValidReaderVariableName,
+		"Query":                da.isValidQueryVariableName,
+		"QueryWithOptions":     da.isValidQueryVariableName,
+		"Read":                 da.isValidQueryVariableName,
+		"ReadWithOptions":      da.isValidQueryVariableName,
+		"ReadWriteTransaction": da.isValidTransactionVariableName,
+		"ReadOnlyTransaction":  da.isValidTransactionVariableName,
 	}
 
 	if validator, exists := validators[creationFunction]; exists {

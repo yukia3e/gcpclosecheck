@@ -123,10 +123,6 @@ func (ca *ContextAnalyzer) GetTrackedContextVars() []ContextInfo {
 	return contexts
 }
 
-
-
-
-
 // AnalyzeContextUsage は改良されたcontext使用解析を実行する
 func (ca *ContextAnalyzer) AnalyzeContextUsage(file *ast.File, typeInfo *types.Info) error {
 	if file == nil || typeInfo == nil {

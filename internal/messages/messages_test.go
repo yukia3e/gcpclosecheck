@@ -147,7 +147,7 @@ func TestMessageFormatting(t *testing.T) {
 			name:     "ServiceNameEmpty formatting",
 			template: ServiceNameEmpty,
 			args:     []interface{}{1},
-			expected: "Service[1]: service name is empty",
+			expected: "service[1]: service name is empty",
 		},
 		{
 			name:     "AddDeferStatement formatting",
@@ -415,7 +415,7 @@ func TestMessageEndToEndIntegration(t *testing.T) {
 			template: ConfigLoadFailed,
 			args:     []interface{}{fmt.Errorf("file not found")},
 			validate: func(result string) error {
-				if !strings.Contains(result, "Failed to load") {
+				if !strings.Contains(result, "failed to load") {
 					return fmt.Errorf("missing failure terminology")
 				}
 				if !strings.Contains(result, "file not found") {
@@ -565,10 +565,21 @@ func TestTask15_FormatConsistency(t *testing.T) {
 			continue
 		}
 
-		// Check for consistent capitalization at start
+		// Check for consistent capitalization at start based on message type
 		firstChar := rune(message[0])
-		if !isUpperCase(firstChar) && !isDigit(firstChar) && firstChar != '%' {
-			t.Errorf("Message %s should start with capital letter: %s", name, message)
+
+		// Error messages should start with lowercase (Go convention)
+		if strings.Contains(name, "Error") || strings.Contains(name, "Failed") ||
+			strings.Contains(name, "Empty") || strings.Contains(name, "Invalid") ||
+			strings.Contains(name, "CannotBe") || strings.Contains(name, "Required") {
+			if isUpperCase(firstChar) && firstChar != '%' {
+				t.Errorf("Error message %s should start with lowercase letter (Go convention): %s", name, message)
+			}
+		} else {
+			// Non-error messages can start with uppercase
+			if !isUpperCase(firstChar) && !isDigit(firstChar) && firstChar != '%' {
+				t.Errorf("Message %s should start with capital letter: %s", name, message)
+			}
 		}
 
 		// Check for consistent punctuation at end for error messages

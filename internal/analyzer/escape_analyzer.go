@@ -195,8 +195,6 @@ func (ea *EscapeAnalyzer) isSpannerTransactionMethod(methodName string) bool {
 	return methodName == "ReadWriteTransaction" || methodName == "ReadOnlyTransaction"
 }
 
-// isWrappedSpannerTransaction はラップされたSpannerトランザクションメソッドかをチェック
-
 // findVariableInClosureParams はクロージャのパラメータに指定した変数名があるかを検索する
 func (ea *EscapeAnalyzer) findVariableInClosureParams(funcLit *ast.FuncLit, varName string) bool {
 	if funcLit == nil || funcLit.Type == nil || funcLit.Type.Params == nil {

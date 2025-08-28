@@ -246,9 +246,7 @@ func matchPattern(pattern, str string) bool {
 			after := parts[1]
 
 			// afterの後ろの*も処理
-			if strings.HasSuffix(after, "/*") {
-				after = strings.TrimSuffix(after, "/*")
-			}
+			after = strings.TrimSuffix(after, "/*")
 
 			if before == "" {
 				// "*/after" の形式 - afterが含まれる

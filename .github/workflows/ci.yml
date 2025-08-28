@@ -2,14 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [ main ]  # Only run full CI on main branch pushes
   pull_request:
     branches: [ main, develop ]
+    types: [ opened, synchronize, reopened ]  # Avoid duplicate runs
 
 jobs:
-  # Quality checks - single OS, latest Go only
+  # Quality checks - single OS, latest Go only (run on all events)
   quality:
-    name: Code Quality & Security
+    name: Code Quality & Security  
     runs-on: ubuntu-latest
     
     steps:
@@ -73,15 +74,20 @@ jobs:
       with:
         sarif_file: gosec.sarif
 
-  # Build and test - minimal OS matrix
+  # Build and test - ubuntu for comprehensive testing
   test:
     name: Build & Test
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]  # Removed windows for go vet tool
-        go-version: ["1.21", "1.25"]       # Min and max versions only
+        include:
+          - os: ubuntu-latest
+            go-version: "1.21"
+          - os: ubuntu-latest  
+            go-version: "1.25"
+          - os: macos-latest    # Minimal macOS check for compatibility
+            go-version: "1.25"
     
     steps:
     - name: Checkout code

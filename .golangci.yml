@@ -1,19 +1,52 @@
-linters-settings:
-  cyclop:
-    max-complexity: 15
-
 run:
   timeout: 10m
   tests: true
+  modules-download-mode: readonly
+
+output:
+  format: colored-line-number
 
 linters:
+  disable-all: true
   enable:
-    - cyclop
-    - gocyclo
+    # Essential linters
+    - errcheck    # Check for unchecked errors
+    - gosimple    # Simplify code
+    - govet       # Standard go vet
+    - ineffassign # Detect ineffectual assignments
+    - staticcheck # Advanced static analysis
+    - typecheck   # Type checking
+    - unused      # Check for unused constants, variables, functions and types
+    
+    # Additional quality linters  
+    - cyclop      # Check cyclomatic complexity
+    - gocyclo     # Alternative cyclomatic complexity checker
+    - misspell    # Find commonly misspelled English words
+    - revive      # Fast, configurable linter
+
+linters-settings:
+  cyclop:
+    max-complexity: 15
+  gocyclo:
+    min-complexity: 15
+  revive:
+    min-confidence: 0
+    rules:
+      - name: cyclomatic
+        arguments: [15]
 
 issues:
   exclude-rules:
+    # Exclude some linters from running on tests files
     - path: _test\.go
       linters:
         - gocyclo
         - cyclop
+        - errcheck
+        
+    # Exclude testdata files
+    - path: testdata/
+      linters:
+        - errcheck
+        - govet
+        - staticcheck
