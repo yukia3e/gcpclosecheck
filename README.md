@@ -3,75 +3,77 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/yukia3e/gcpclosecheck)](https://goreportcard.com/report/github.com/yukia3e/gcpclosecheck)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-GCP リソースの解放処理 (`Close`, `Stop`, `Cancel`) 漏れを検出する Go 静的解析ツール
+A Go static analysis tool that detects missing resource cleanup (`Close`, `Stop`, `Cancel`) for GCP resources.
 
-## 🔍 概要
+[日本語版](README.ja.md) | English
 
-`gcpclosecheck` は Google Cloud Platform (GCP) の Go SDK を使用するコードにおいて、適切にリソースが解放されていない箇所を自動検出する静的解析ツールです。
+## 🔍 Overview
 
-### 検出対象
+`gcpclosecheck` is a static analysis tool that automatically detects locations where resources are not properly released in code using the Google Cloud Platform (GCP) Go SDK.
 
-- **GCPクライアント**: `defer client.Close()` の不足
-- **Spanner**: Client, Transaction, RowIterator の解放漏れ
-- **Cloud Storage**: Client, Reader, Writer の解放漏れ  
-- **Pub/Sub**: Client の解放漏れ
-- **Vision API**: Client の解放漏れ
-- **Firebase Admin SDK**: Database, Firestore クライアントの解放漏れ
-- **reCAPTCHA**: Client の解放漏れ
-- **Context**: `context.WithCancel`, `WithTimeout`, `WithDeadline` の `cancel()` 漏れ
+### Detection Targets
 
-## ⚡ 特徴
+- **GCP Clients**: Missing `defer client.Close()`
+- **Spanner**: Missing cleanup for Client, Transaction, RowIterator
+- **Cloud Storage**: Missing cleanup for Client, Reader, Writer  
+- **Pub/Sub**: Missing Client cleanup
+- **Vision API**: Missing Client cleanup
+- **Firebase Admin SDK**: Missing Database, Firestore client cleanup
+- **reCAPTCHA**: Missing Client cleanup
+- **Context**: Missing `cancel()` for `context.WithCancel`, `WithTimeout`, `WithDeadline`
 
-- **高速**: 軽量なAST解析による高速処理
-- **正確**: 偽陽性・偽陰性を最小化するエスケープ解析
-- **包括的**: 6つの GCP サービス + Context 対応
-- **拡張可能**: YAML 設定でカスタムルール追加
-- **go vet 統合**: `-vettool` オプションで既存ワークフローに組込み
-- **自動修正**: SuggestedFix による自動 `defer` 文追加
+## ⚡ Features
 
-## 🚀 インストール
+- **Fast**: High-speed processing with lightweight AST analysis
+- **Accurate**: Minimizes false positives/negatives with escape analysis
+- **Comprehensive**: Supports 6 GCP services + Context
+- **Extensible**: Add custom rules via YAML configuration
+- **go vet Integration**: Integrates into existing workflows with `-vettool` option
+- **Auto-fix**: Automatic `defer` statement addition via SuggestedFix
+
+## 🚀 Installation
 
 ```bash
 go install github.com/yukia3e/gcpclosecheck/cmd/gcpclosecheck@latest
 ```
 
-## 📖 使用方法
+## 📖 Usage
 
-### 基本実行
+### Basic Execution
 
 ```bash
-# 単一ファイルの解析
+# Analyze single file
 gcpclosecheck main.go
 
-# パッケージ全体の解析  
+# Analyze entire package  
 gcpclosecheck ./...
 
-# 特定ディレクトリの解析
+# Analyze specific directory
 gcpclosecheck ./internal/...
 ```
 
-### go vet との統合
+### Integration with go vet
 
 ```bash
 go vet -vettool=$(which gcpclosecheck) ./...
 ```
 
-### オプション
+### Options
 
 ```bash
 gcpclosecheck [options] [packages]
 
 Options:
-  -V, --version          バージョン表示
-  -fix                   自動修正を適用  
-  -json                  JSON 形式で出力
-  -gcpdebug              デバッグモード有効
-  -gcpconfig string      設定ファイルパス指定
+  -V, --version          Show version
+  -fix                   Apply automatic fixes  
+  -json                  Output in JSON format
+  -gcpdebug              Enable debug mode
+  -gcpconfig string      Specify configuration file path
 ```
 
-## 💡 使用例
+## 💡 Examples
 
-### ❌ 問題のあるコード
+### ❌ Problematic Code
 
 ```go
 package main
@@ -86,16 +88,16 @@ func badExample(ctx context.Context) error {
     if err != nil {
         return err
     }
-    // ❌ defer client.Close() が不足
+    // ❌ Missing defer client.Close()
 
     ctx, cancel := context.WithCancel(ctx)  
-    // ❌ defer cancel() が不足
+    // ❌ Missing defer cancel()
     
     return nil
 }
 ```
 
-### ✅ 修正後のコード
+### ✅ Fixed Code
 
 ```go
 package main
@@ -110,26 +112,26 @@ func goodExample(ctx context.Context) error {
     if err != nil {
         return err
     }
-    defer client.Close() // ✅ 正しい
+    defer client.Close() // ✅ Correct
 
     ctx, cancel := context.WithCancel(ctx)
-    defer cancel() // ✅ 正しい
+    defer cancel() // ✅ Correct
     
     return nil  
 }
 ```
 
-### 🔧 実行結果
+### 🔧 Execution Result
 
 ```bash
 $ gcpclosecheck ./examples/bad.go
-./examples/bad.go:12:2: GCP リソース 'client' の解放処理 (Close) が見つかりません
-./examples/bad.go:15:17: context cancel function should be called with defer
+./examples/bad.go:12:2: GCP resource client 'client' missing cleanup method (Close)
+./examples/bad.go:15:17: Context cancel function should be called with defer
 ```
 
-## ⚙️ 設定
+## ⚙️ Configuration
 
-### カスタム設定ファイル
+### Custom Configuration File
 
 ```yaml
 # .gcpclosecheck.yaml
@@ -144,14 +146,14 @@ services:
         cleanup_required: true
 ```
 
-## 🏗️ 開発・ビルド
+## 🏗️ Development & Build
 
-### 前提条件
+### Prerequisites
 
 - Go 1.21+
 - Git
 
-### ビルド
+### Build
 
 ```bash
 git clone https://github.com/yukia3e/gcpclosecheck.git
@@ -159,57 +161,57 @@ cd gcpclosecheck
 make build
 ```
 
-### テスト実行
+### Running Tests
 
 ```bash
-# 全テスト実行
+# Run all tests
 make test
 
-# E2E テスト
+# E2E tests
 make test-e2e  
 
-# ベンチマーク
+# Benchmarks
 make bench
 
-# カバレッジ
+# Coverage
 make test-coverage
 ```
 
-### 品質チェック
+### Quality Checks
 
 ```bash
-# 静的解析 + テスト + カバレッジ
+# Static analysis + tests + coverage
 make quality-gate
 
-# CI パイプライン
+# CI pipeline
 make ci
 ```
 
-## 🎯 設計哲学
+## 🎯 Design Philosophy
 
 - **Test-Driven Development**: RED → GREEN → REFACTOR
-- **高精度**: エスケープ解析による偽陽性最小化
-- **高性能**: AST キャッシュとルールキャッシュの効率化
-- **拡張性**: プラガブルなルールエンジン
-- **統合性**: 既存ツールチェーンとの親和性
+- **High Precision**: Minimize false positives with escape analysis
+- **High Performance**: Efficient AST cache and rule cache optimization
+- **Extensibility**: Pluggable rule engine
+- **Integration**: Compatibility with existing toolchains
 
-## 🏛️ アーキテクチャ
+## 🏛️ Architecture
 
 ```
-├── cmd/gcpclosecheck/          # CLI エントリポイント
+├── cmd/gcpclosecheck/          # CLI entry point
 ├── internal/
-│   ├── analyzer/               # 解析エンジン
-│   │   ├── analyzer.go         # メイン解析器
-│   │   ├── resource_tracker.go # リソース追跡
-│   │   ├── defer_analyzer.go   # defer 文解析
-│   │   ├── context_analyzer.go # context 解析
-│   │   └── escape_analyzer.go  # エスケープ解析
-│   └── config/                 # 設定管理
-├── testdata/                   # E2E テストデータ
-└── rules/                      # デフォルトルール
+│   ├── analyzer/               # Analysis engine
+│   │   ├── analyzer.go         # Main analyzer
+│   │   ├── resource_tracker.go # Resource tracking
+│   │   ├── defer_analyzer.go   # defer statement analysis
+│   │   ├── context_analyzer.go # context analysis
+│   │   └── escape_analyzer.go  # Escape analysis
+│   └── config/                 # Configuration management
+├── testdata/                   # E2E test data
+└── rules/                      # Default rules
 ```
 
-## 🤝 コントリビューション
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/amazing-feature`)
@@ -217,22 +219,18 @@ make ci
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
 
-### 開発ガイドライン
+### Development Guidelines
 
-- TDD でテスト駆動開発
-- golangci-lint による品質チェック
-- 80%+ テストカバレッジ維持
-- パフォーマンス回帰防止
+- Test-driven development with TDD
+- Quality checks with golangci-lint
+- Maintain 80%+ test coverage
+- Prevent performance regressions
 
-## 📄 ライセンス
+## 📄 License
 
-MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照してください。
+MIT License - See [LICENSE](LICENSE) file for details.
 
-## 🙋 サポート
+## 🙋 Support
 
 - **Issues**: [GitHub Issues](https://github.com/yukia3e/gcpclosecheck/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yukia3e/gcpclosecheck/discussions)
-
----
-
-**🤖 Generated with [Claude Code](https://claude.ai/code)**
