@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.25"
+        cache: true
+        
+    - name: Run tests
+      run: go test -v -race ./...
+      
+    - name: Verify go install works
+      run: |
+        # Test that go install will work for users
+        go install ./cmd/gcpclosecheck
+        gcpclosecheck -V
+
+  release:
+    name: Create GitHub Release
+    needs: validate
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Get release tag
+      id: tag
+      run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        
+    - name: Generate release notes
+      run: |
+        cat > release_notes.md << EOF
+        # Release ${{ steps.tag.outputs.tag }}
+        
+        ## Installation
+        
+        Install the latest version using Go:
+        
+        \`\`\`bash
+        go install github.com/yukia3e/gcpclosecheck/cmd/gcpclosecheck@${{ steps.tag.outputs.tag }}
+        \`\`\`
+        
+        Or install the latest version:
+        
+        \`\`\`bash
+        go install github.com/yukia3e/gcpclosecheck/cmd/gcpclosecheck@latest
+        \`\`\`
+        
+        ## Usage
+        
+        ### As go vet plugin
+        
+        \`\`\`bash
+        go vet -vettool=\$(which gcpclosecheck) ./...
+        \`\`\`
+        
+        ### Standalone
+        
+        \`\`\`bash
+        # Analyze current directory
+        gcpclosecheck ./...
+        
+        # Analyze specific files
+        gcpclosecheck main.go
+        
+        # Apply suggested fixes
+        gcpclosecheck -fix ./...
+        \`\`\`
+        
+        ## What's New
+        
+        See the commit history for detailed changes: https://github.com/yukia3e/gcpclosecheck/compare/${{ github.event.before }}...${{ steps.tag.outputs.tag }}
+        EOF
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.tag.outputs.tag }}
+        name: Release ${{ steps.tag.outputs.tag }}
+        body_path: release_notes.md
+        draft: false
+        prerelease: ${{ contains(steps.tag.outputs.tag, '-') }}
+        generate_release_notes: true
