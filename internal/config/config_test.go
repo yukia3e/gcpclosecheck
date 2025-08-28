@@ -509,7 +509,7 @@ func TestMessagesIntegration(t *testing.T) {
 	if !strings.Contains(err.Error(), "Configuration file path is empty") {
 		t.Errorf("Expected English error message from messages package, got: %s", err.Error())
 	}
-	
+
 	// Test LoadConfig with non-existent file - should use ConfigLoadFailed message
 	_, err = LoadConfig("/non/existent/config.yaml")
 	if err == nil {
@@ -518,14 +518,14 @@ func TestMessagesIntegration(t *testing.T) {
 	if !strings.Contains(err.Error(), "Failed to load configuration file") {
 		t.Errorf("Expected English error message from messages package, got: %s", err.Error())
 	}
-	
+
 	// Test invalid YAML - should use ConfigYAMLParseFailed message
 	tmpDir := t.TempDir()
 	invalidFile := filepath.Join(tmpDir, "invalid.yaml")
 	if err := os.WriteFile(invalidFile, []byte("invalid: yaml: content: ["), 0644); err != nil {
 		t.Fatalf("Failed to create invalid YAML file: %v", err)
 	}
-	
+
 	_, err = LoadConfig(invalidFile)
 	if err == nil {
 		t.Error("Expected error for invalid YAML")
@@ -538,9 +538,9 @@ func TestMessagesIntegration(t *testing.T) {
 // TestConfigValidationMessagesIntegration tests validation error messages
 func TestConfigValidationMessagesIntegration(t *testing.T) {
 	tests := []struct {
-		name         string
-		config       Config
-		expectedMsg  string
+		name        string
+		config      Config
+		expectedMsg string
 	}{
 		{
 			name:        "empty_services",
@@ -566,7 +566,7 @@ func TestConfigValidationMessagesIntegration(t *testing.T) {
 			expectedMsg: "Service[0](test): package path is empty",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.config.Validate()

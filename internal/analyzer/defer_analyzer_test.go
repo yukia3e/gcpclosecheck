@@ -165,7 +165,7 @@ func TestDeferAnalyzer_ValidateCleanupPattern(t *testing.T) {
 		},
 		{
 			name:          "Close wrapped in closure (improved pattern)",
-			resourceType:  "storage", 
+			resourceType:  "storage",
 			cleanupMethod: "Close",
 			variableName:  "client",
 			deferCallExpr: "func() { client.Close() }",
@@ -175,7 +175,7 @@ func TestDeferAnalyzer_ValidateCleanupPattern(t *testing.T) {
 			name:          "Wrong method call in closure",
 			resourceType:  "storage",
 			cleanupMethod: "Close",
-			variableName:  "client", 
+			variableName:  "client",
 			deferCallExpr: "func() { client.Start() }",
 			wantValid:     false,
 		},
@@ -710,7 +710,7 @@ func createTestDeferStatement(callExpr string) *ast.DeferStmt {
 	} else {
 		code = "package test\nfunc test() { defer " + callExpr + " }"
 	}
-	
+
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, "test.go", code, 0)
 	if err != nil {
@@ -733,61 +733,61 @@ func createTestDeferStatement(callExpr string) *ast.DeferStmt {
 // TestTask13_DeferAnalyzerTestEnglishUpdate verifies Task 13 completion: defer analyzer test English update
 func TestTask13_DeferAnalyzerTestEnglishUpdate(t *testing.T) {
 	// Test that all Japanese comments and strings in defer analyzer tests are converted to English
-	
+
 	t.Run("EnglishErrorMessages", func(t *testing.T) {
 		// Check that error messages are in English
 		// These messages should now be in English after conversion
 		testedErrorMessages := []string{
-			"Failed to initialize rule engine",         // CONVERTED
-			"Failed to create DeferAnalyzer",       // CONVERTED
-			"tracker is not set correctly",      // CONVERTED
-			"Failed to parse code",               // CONVERTED
+			"Failed to initialize rule engine", // CONVERTED
+			"Failed to create DeferAnalyzer",   // CONVERTED
+			"tracker is not set correctly",     // CONVERTED
+			"Failed to parse code",             // CONVERTED
 			"Function not found",               // CONVERTED
-			"test function not found",           // CONVERTED
-			"Number of diagnostics",                     // CONVERTED
-			"expected",                      // CONVERTED
-			"Function not found in test code",     // CONVERTED
+			"test function not found",          // CONVERTED
+			"Number of diagnostics",            // CONVERTED
+			"expected",                         // CONVERTED
+			"Function not found in test code",  // CONVERTED
 		}
-		
+
 		for _, msg := range testedErrorMessages {
 			if containsJapaneseChars(msg) {
 				t.Errorf("Error message should be in English: %s", msg)
 			}
 		}
 	})
-	
+
 	t.Run("EnglishTestDescriptions", func(t *testing.T) {
 		// Check that test descriptions are in English
 		// These descriptions should now be in English after conversion
 		testedDescriptions := []string{
-			"Single defer statement",                 // Should be: "Single defer statement"
-			"Multiple defer statements",                 // Should be: "Multiple defer statements"
-			"No defer statement",                  // Should be: "No defer statement"
-			"Defer statement in nested block",       // Should be: "Defer statement in nested block"
-			"Correct Spanner client Close",  // Should be: "Correct Spanner client Close"
-			"Wrong method call",            // Should be: "Wrong method call"
-			"Properly closed Spanner client", // Should be: "Properly closed Spanner client"
-			"Unclosed Spanner client",  // Should be: "Unclosed Spanner client"
+			"Single defer statement",          // Should be: "Single defer statement"
+			"Multiple defer statements",       // Should be: "Multiple defer statements"
+			"No defer statement",              // Should be: "No defer statement"
+			"Defer statement in nested block", // Should be: "Defer statement in nested block"
+			"Correct Spanner client Close",    // Should be: "Correct Spanner client Close"
+			"Wrong method call",               // Should be: "Wrong method call"
+			"Properly closed Spanner client",  // Should be: "Properly closed Spanner client"
+			"Unclosed Spanner client",         // Should be: "Unclosed Spanner client"
 		}
-		
+
 		for _, desc := range testedDescriptions {
 			if containsJapaneseChars(desc) {
 				t.Errorf("Test description should be in English: %s", desc)
 			}
 		}
 	})
-	
+
 	t.Run("EnglishComments", func(t *testing.T) {
 		// Check that inline comments are in English
 		// These comments should now be in English after conversion
 		testedComments := []string{
-			"// defer client.Close() missing",     // CONVERTED
-			"// defer txn.Close() missing",      // CONVERTED
-			"// Third (last)",                    // CONVERTED
-			"// Second",                         // CONVERTED
-			"// First",                    // CONVERTED
+			"// defer client.Close() missing", // CONVERTED
+			"// defer txn.Close() missing",    // CONVERTED
+			"// Third (last)",                 // CONVERTED
+			"// Second",                       // CONVERTED
+			"// First",                        // CONVERTED
 		}
-		
+
 		for _, comment := range testedComments {
 			if containsJapaneseChars(comment) {
 				t.Errorf("Inline comment should be in English: %s", comment)
@@ -800,8 +800,8 @@ func TestTask13_DeferAnalyzerTestEnglishUpdate(t *testing.T) {
 func containsJapaneseChars(text string) bool {
 	for _, r := range text {
 		if (r >= 0x3040 && r <= 0x309F) || // Hiragana
-		   (r >= 0x30A0 && r <= 0x30FF) || // Katakana  
-		   (r >= 0x4E00 && r <= 0x9FAF) {  // Kanji
+			(r >= 0x30A0 && r <= 0x30FF) || // Katakana
+			(r >= 0x4E00 && r <= 0x9FAF) { // Kanji
 			return true
 		}
 	}

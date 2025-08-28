@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/yaml.v3"
 	"github.com/yukia3e/gcpclosecheck/internal/messages"
+	"gopkg.in/yaml.v3"
 )
 
 // 有効な例外タイプの定義

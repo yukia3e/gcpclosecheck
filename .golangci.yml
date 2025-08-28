@@ -5,11 +5,15 @@ run:
   modules-download-mode: readonly
 
 output:
-  format: colored-line-number
+  formats:
+    - format: colored-line-number
+      path: stdout
   print-issued-lines: true
   print-linter-name: true
-  uniq-by-line: true
   sort-results: true
+
+issues:
+  uniq-by-line: true
 
 linters:
   disable-all: true

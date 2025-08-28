@@ -76,7 +76,7 @@ func testBasic() {
 
 	// Basic validation - analyzer should run without errors
 	t.Logf("Integration test successful: Analyzer executed and returned %T", result)
-	
+
 	// For this basic test, we don't expect any diagnostics since there are
 	// no GCP resources or context cancellation patterns to detect
 }
@@ -580,7 +580,7 @@ func testSpannerAutoManaged() error {
 			if tt.name == "Package exception effect measurement" {
 				packagePath = "github.com/example/project/cmd/migrate"
 			}
-			
+
 			pkg, err := conf.Check(packagePath, fset, []*ast.File{file}, nil)
 			if err != nil {
 				// Tolerate external dependency type check errors (focus on logic testing)
@@ -990,7 +990,7 @@ func TestPackageExceptionEffectMeasurement(t *testing.T) {
 			name:               "test_patterns - test exception enabled effect",
 			testDataPath:       "testdata/src/test_patterns/test_patterns.go",
 			packagePath:        "github.com/example/project/pkg/util_test.go",
-			expectedDiagBefore: 8,   // Without exception, 8 clients would be diagnosed  
+			expectedDiagBefore: 8,   // Without exception, 8 clients would be diagnosed
 			expectedDiagAfter:  8,   // Same as before due to different package path
 			reductionTarget:    0.0, // 0% reduction
 		},
@@ -1103,26 +1103,26 @@ func TestGoldenPackageExceptionComparison(t *testing.T) {
 // TestTask12_AnalyzerTestEnglishUpdate verifies Task 12 completion: analyzer test English update
 func TestTask12_AnalyzerTestEnglishUpdate(t *testing.T) {
 	// Test that all Japanese comments and strings in analyzer tests are converted to English
-	
+
 	t.Run("EnglishCommentValidation", func(t *testing.T) {
 		// Check that key diagnostic messages are in English
 		englishComments := []string{
-			"defer client.Close() missing", // Updated from Japanese
-			"should be detected as error", // Updated from Japanese
-			"correct pattern", // Updated from Japanese
-			"no defer needed as return value", // Updated from Japanese
+			"defer client.Close() missing",          // Updated from Japanese
+			"should be detected as error",           // Updated from Japanese
+			"correct pattern",                       // Updated from Japanese
+			"no defer needed as return value",       // Updated from Japanese
 			"not detected due to package exception", // Updated from Japanese
-			"Short-lived program exception", // Updated from Japanese
-			"Cloud Functions exception", // Updated from Japanese
+			"Short-lived program exception",         // Updated from Japanese
+			"Cloud Functions exception",             // Updated from Japanese
 		}
-		
+
 		for _, comment := range englishComments {
 			if containsJapaneseText(comment) {
 				t.Errorf("Comment should be in English: %s", comment)
 			}
 		}
 	})
-	
+
 	t.Run("EnglishTestDescriptions", func(t *testing.T) {
 		// Verify test descriptions are in English
 		descriptions := []string{
@@ -1133,7 +1133,7 @@ func TestTask12_AnalyzerTestEnglishUpdate(t *testing.T) {
 			"Package exception effect measurement",
 			"Spanner escape analysis integration",
 		}
-		
+
 		for _, desc := range descriptions {
 			if containsJapaneseText(desc) {
 				t.Errorf("Test description should be in English: %s", desc)
@@ -1143,7 +1143,7 @@ func TestTask12_AnalyzerTestEnglishUpdate(t *testing.T) {
 			}
 		}
 	})
-	
+
 	t.Run("EnglishLogMessages", func(t *testing.T) {
 		// Verify log messages use English patterns
 		logPatterns := []string{
@@ -1154,7 +1154,7 @@ func TestTask12_AnalyzerTestEnglishUpdate(t *testing.T) {
 			"Analyzer.Run failed: %v",
 			"Diagnostic %d: %s",
 		}
-		
+
 		for _, pattern := range logPatterns {
 			if containsJapaneseText(pattern) {
 				t.Errorf("Log pattern should be in English: %s", pattern)
@@ -1167,8 +1167,8 @@ func TestTask12_AnalyzerTestEnglishUpdate(t *testing.T) {
 func containsJapaneseText(text string) bool {
 	for _, r := range text {
 		if (r >= 0x3040 && r <= 0x309F) || // Hiragana
-		   (r >= 0x30A0 && r <= 0x30FF) || // Katakana  
-		   (r >= 0x4E00 && r <= 0x9FAF) {  // Kanji
+			(r >= 0x30A0 && r <= 0x30FF) || // Katakana
+			(r >= 0x4E00 && r <= 0x9FAF) { // Kanji
 			return true
 		}
 	}

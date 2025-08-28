@@ -216,22 +216,22 @@ func (rt *ResourceTracker) extractPackagePath(call *ast.CallExpr, _ *ast.Ident) 
 		// sel.Xの型情報を取得してパッケージパスを推定
 		if rt.typeInfo != nil && rt.typeInfo.Types != nil {
 			if typeAndValue, exists := rt.typeInfo.Types[sel.X]; exists {
-			if typeAndValue.Type != nil {
-				typeName := typeAndValue.Type.String()
-				// 型名からパッケージパスを推定
-				if strings.Contains(typeName, "spanner") {
-					return "cloud.google.com/go/spanner"
+				if typeAndValue.Type != nil {
+					typeName := typeAndValue.Type.String()
+					// 型名からパッケージパスを推定
+					if strings.Contains(typeName, "spanner") {
+						return "cloud.google.com/go/spanner"
+					}
+					if strings.Contains(typeName, "storage") {
+						return "cloud.google.com/go/storage"
+					}
+					if strings.Contains(typeName, "pubsub") {
+						return "cloud.google.com/go/pubsub"
+					}
+					if strings.Contains(typeName, "vision") {
+						return "cloud.google.com/go/vision"
+					}
 				}
-				if strings.Contains(typeName, "storage") {
-					return "cloud.google.com/go/storage"
-				}
-				if strings.Contains(typeName, "pubsub") {
-					return "cloud.google.com/go/pubsub"
-				}
-				if strings.Contains(typeName, "vision") {
-					return "cloud.google.com/go/vision"
-				}
-			}
 			}
 		}
 	}

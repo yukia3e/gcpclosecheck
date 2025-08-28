@@ -17,14 +17,14 @@ func TestMessageConstantsNotEmpty(t *testing.T) {
 		// Diagnostic Messages
 		{"MissingResourceCleanup", MissingResourceCleanup},
 		{"MissingContextCancel", MissingContextCancel},
-		
+
 		// Configuration Errors
 		{"ConfigFileEmpty", ConfigFileEmpty},
 		{"ConfigLoadFailed", ConfigLoadFailed},
 		{"ConfigYAMLParseFailed", ConfigYAMLParseFailed},
 		{"DefaultConfigLoadFailed", DefaultConfigLoadFailed},
 		{"DefaultConfigYAMLParseFailed", DefaultConfigYAMLParseFailed},
-		
+
 		// Validation Errors
 		{"ServicesListEmpty", ServicesListEmpty},
 		{"ServiceNameEmpty", ServiceNameEmpty},
@@ -35,7 +35,7 @@ func TestMessageConstantsNotEmpty(t *testing.T) {
 		{"PackageExceptionNameEmpty", PackageExceptionNameEmpty},
 		{"PackageExceptionPatternEmpty", PackageExceptionPatternEmpty},
 		{"InvalidExceptionType", InvalidExceptionType},
-		
+
 		// Type Validation Errors
 		{"VariableCannotBeNil", VariableCannotBeNil},
 		{"ServiceTypeCannotBeEmpty", ServiceTypeCannotBeEmpty},
@@ -45,12 +45,12 @@ func TestMessageConstantsNotEmpty(t *testing.T) {
 		{"DeferPosInvalid", DeferPosInvalid},
 		{"TransactionTypeMustBeValid", TransactionTypeMustBeValid},
 		{"AutoManagementReasonRequired", AutoManagementReasonRequired},
-		
+
 		// Help Messages
 		{"ToolDescription", ToolDescription},
 		{"UsageExamples", UsageExamples},
 		{"RecommendedPractices", RecommendedPractices},
-		
+
 		// Suggested Fix Messages
 		{"AddDeferStatement", AddDeferStatement},
 		{"AddDeferMethodCall", AddDeferMethodCall},
@@ -178,14 +178,14 @@ func TestMessageConsistencyRules(t *testing.T) {
 	t.Run("GCP terminology consistency", func(t *testing.T) {
 		// Test that messages use consistent GCP-related terminology
 		gcpMessages := []struct {
-			name    string
-			message string
+			name          string
+			message       string
 			expectedTerms []string
 		}{
 			{"MissingResourceCleanup", MissingResourceCleanup, []string{"GCP", "resource"}},
 			{"ToolDescription", ToolDescription, []string{"Close", "Cancel", "GCP"}},
 		}
-		
+
 		for _, msg := range gcpMessages {
 			for _, term := range msg.expectedTerms {
 				if !strings.Contains(msg.message, term) {
@@ -194,12 +194,12 @@ func TestMessageConsistencyRules(t *testing.T) {
 			}
 		}
 	})
-	
+
 	t.Run("Professional tone check", func(t *testing.T) {
 		// Test that messages use appropriate professional language
 		// Check for informal words that should be avoided
 		informalWords := []string{"gonna", "wanna", "gotta", "ain't", "can't", "won't", "don't"}
-		
+
 		allMessages := []struct {
 			name    string
 			message string
@@ -209,7 +209,7 @@ func TestMessageConsistencyRules(t *testing.T) {
 			{"ToolDescription", ToolDescription},
 			{"ConfigFileEmpty", ConfigFileEmpty},
 		}
-		
+
 		for _, msg := range allMessages {
 			lowerMsg := strings.ToLower(msg.message)
 			for _, word := range informalWords {
@@ -224,42 +224,42 @@ func TestMessageConsistencyRules(t *testing.T) {
 // TestComprehensivePlaceholderValidation verifies all placeholder types
 func TestComprehensivePlaceholderValidation(t *testing.T) {
 	placeholderTests := []struct {
-		name        string
-		message     string
+		name         string
+		message      string
 		placeholders []string
-		description string
+		description  string
 	}{
 		{
-			name: "String placeholders", 
-			message: MissingResourceCleanup, 
-			placeholders: []string{"%s"}, 
-			description: "Should contain string placeholders for resource name and cleanup method",
+			name:         "String placeholders",
+			message:      MissingResourceCleanup,
+			placeholders: []string{"%s"},
+			description:  "Should contain string placeholders for resource name and cleanup method",
 		},
 		{
-			name: "Error wrapping placeholders", 
-			message: ConfigLoadFailed, 
-			placeholders: []string{"%w"}, 
-			description: "Should contain error wrapping placeholder",
+			name:         "Error wrapping placeholders",
+			message:      ConfigLoadFailed,
+			placeholders: []string{"%w"},
+			description:  "Should contain error wrapping placeholder",
 		},
 		{
-			name: "Integer placeholders", 
-			message: ServiceNameEmpty, 
-			placeholders: []string{"%d"}, 
-			description: "Should contain integer placeholder for service index",
+			name:         "Integer placeholders",
+			message:      ServiceNameEmpty,
+			placeholders: []string{"%d"},
+			description:  "Should contain integer placeholder for service index",
 		},
 		{
-			name: "Multiple string placeholders", 
-			message: ServicePackagePathEmpty, 
-			placeholders: []string{"%d", "%s"}, 
-			description: "Should contain both integer and string placeholders",
+			name:         "Multiple string placeholders",
+			message:      ServicePackagePathEmpty,
+			placeholders: []string{"%d", "%s"},
+			description:  "Should contain both integer and string placeholders",
 		},
 	}
-	
+
 	for _, test := range placeholderTests {
 		t.Run(test.name, func(t *testing.T) {
 			for _, placeholder := range test.placeholders {
 				if !strings.Contains(test.message, placeholder) {
-					t.Errorf("%s: %s\nMessage: %s\nMissing placeholder: %s", 
+					t.Errorf("%s: %s\nMessage: %s\nMissing placeholder: %s",
 						test.name, test.description, test.message, placeholder)
 				}
 			}
@@ -295,14 +295,14 @@ func TestMessageCategorizationCompleteness(t *testing.T) {
 			examples: []string{AddDeferStatement, AddDeferMethodCall},
 		},
 	}
-	
+
 	for category, test := range categoryTests {
 		t.Run(fmt.Sprintf("Category_%s", category), func(t *testing.T) {
 			if len(test.examples) < test.minCount {
-				t.Errorf("Category %s has %d examples, but requires minimum %d", 
+				t.Errorf("Category %s has %d examples, but requires minimum %d",
 					category, len(test.examples), test.minCount)
 			}
-			
+
 			// Verify examples are not empty
 			for i, example := range test.examples {
 				if strings.TrimSpace(example) == "" {
@@ -322,14 +322,14 @@ func TestAllConstantsUsingReflection(t *testing.T) {
 		"ServicesListEmpty", "ServiceNameEmpty", "VariableCannotBeNil",
 		"ToolDescription", "UsageExamples", "AddDeferStatement",
 	}
-	
+
 	for _, constName := range expectedConstants {
 		// Use reflection to get constant value
 		constValue := getConstantByName(constName)
 		if constValue == "" {
 			t.Errorf("Constant %s is empty", constName)
 		}
-		
+
 		// Verify it's a string type
 		if reflect.TypeOf(constValue).Kind() != reflect.String {
 			t.Errorf("Constant %s is not a string type", constName)
@@ -440,23 +440,23 @@ func TestMessageEndToEndIntegration(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, test := range integrationTests {
 		t.Run(test.name, func(t *testing.T) {
 			// Simulate message formatting as would happen in real usage
 			result := fmt.Sprintf(test.template, test.args...)
-			
+
 			// Validate the result meets integration requirements
 			if err := test.validate(result); err != nil {
-				t.Errorf("Integration test failed for %s: %v\nScenario: %s\nResult: %s", 
+				t.Errorf("Integration test failed for %s: %v\nScenario: %s\nResult: %s",
 					test.name, err, test.scenario, result)
 			}
-			
+
 			// Additional checks for all integration tests
 			if strings.TrimSpace(result) == "" {
 				t.Errorf("Integration test %s produced empty result", test.name)
 			}
-			
+
 			// Verify no Japanese characters in result
 			japanesePattern := regexp.MustCompile("[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]")
 			if japanesePattern.MatchString(result) {
@@ -468,23 +468,23 @@ func TestMessageEndToEndIntegration(t *testing.T) {
 
 // TestTask15_MessageConsistencyValidation verifies Task 15 completion: message consistency validation tests
 func TestTask15_MessageConsistencyValidation(t *testing.T) {
-	
+
 	t.Run("AllMessagesEnglishOnly", func(t *testing.T) {
 		// Test that all message constants contain only English characters
 		// This test should verify Requirements 1.4, 2.1
-		
+
 		// Regular expression to detect non-English characters (including Japanese)
-		nonEnglishPattern := regexp.MustCompile("[\u0080-\uFFFF]") // Any non-ASCII character
+		nonEnglishPattern := regexp.MustCompile("[\u0080-\uFFFF]")                         // Any non-ASCII character
 		japanesePattern := regexp.MustCompile("[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]") // Japanese specific
-		
+
 		allMessages := getAllMessageConstants()
-		
+
 		for name, message := range allMessages {
 			// Check for Japanese characters specifically
 			if japanesePattern.MatchString(message) {
 				t.Errorf("Message %s contains Japanese characters: %s", name, message)
 			}
-			
+
 			// Allow common punctuation and technical symbols, but flag suspicious patterns
 			if nonEnglishPattern.MatchString(message) {
 				// Allow certain technical characters commonly used in English
@@ -495,23 +495,23 @@ func TestTask15_MessageConsistencyValidation(t *testing.T) {
 					}
 					return s
 				})
-				
+
 				if suspiciousText != "" {
-					t.Errorf("Message %s contains suspicious non-English characters: %s (in: %s)", 
+					t.Errorf("Message %s contains suspicious non-English characters: %s (in: %s)",
 						name, suspiciousText, message)
 				}
 			}
 		}
 	})
-	
+
 	t.Run("TerminologyConsistency", func(t *testing.T) {
 		// Test message terminology consistency per Requirements 2.1, 2.2
 		// Verify consistent use of "resource", "client", "cleanup" terms
-		
+
 		terminologyTests := map[string]struct {
-			requiredTerms    []string
-			forbiddenTerms   []string
-			description      string
+			requiredTerms  []string
+			forbiddenTerms []string
+			description    string
 		}{
 			"resource_messages": {
 				requiredTerms:  []string{"resource", "cleanup"},
@@ -524,13 +524,13 @@ func TestTask15_MessageConsistencyValidation(t *testing.T) {
 				description:    "Client-related messages should consistently use 'client'",
 			},
 		}
-		
+
 		allMessages := getAllMessageConstants()
-		
+
 		// Check specific message patterns
 		resourceMessages := []string{"MissingResourceCleanup"}
 		clientMessages := []string{"MissingResourceCleanup", "AddDeferMethodCall"}
-		
+
 		for _, msgName := range resourceMessages {
 			if message, exists := allMessages[msgName]; exists {
 				test := terminologyTests["resource_messages"]
@@ -541,10 +541,10 @@ func TestTask15_MessageConsistencyValidation(t *testing.T) {
 				}
 			}
 		}
-		
+
 		for _, msgName := range clientMessages {
 			if message, exists := allMessages[msgName]; exists {
-				test := terminologyTests["client_messages"] 
+				test := terminologyTests["client_messages"]
 				for _, required := range test.requiredTerms {
 					if !strings.Contains(strings.ToLower(message), required) {
 						t.Errorf("Message %s should contain term '%s': %s", msgName, required, message)
@@ -553,38 +553,38 @@ func TestTask15_MessageConsistencyValidation(t *testing.T) {
 			}
 		}
 	})
-	
+
 	t.Run("FormatConsistency", func(t *testing.T) {
 		// Test message format consistency per Requirements 2.1, 2.2
 		// Check capitalization, punctuation, sentence structure
-		
+
 		allMessages := getAllMessageConstants()
-		
+
 		for name, message := range allMessages {
 			// Test sentence structure consistency
 			if strings.TrimSpace(message) == "" {
 				t.Errorf("Message %s is empty", name)
 				continue
 			}
-			
+
 			// Check for consistent capitalization at start
 			firstChar := rune(message[0])
 			if !isUpperCase(firstChar) && !isDigit(firstChar) && firstChar != '%' {
 				t.Errorf("Message %s should start with capital letter: %s", name, message)
 			}
-			
+
 			// Check for consistent punctuation at end for error messages
-			if strings.Contains(name, "Error") || strings.Contains(name, "Failed") || 
-			   strings.Contains(name, "Empty") || strings.Contains(name, "Invalid") {
+			if strings.Contains(name, "Error") || strings.Contains(name, "Failed") ||
+				strings.Contains(name, "Empty") || strings.Contains(name, "Invalid") {
 				// Error messages should not end with period (for consistency with Go conventions)
 				if strings.HasSuffix(message, ".") {
 					t.Errorf("Error message %s should not end with period: %s", name, message)
 				}
 			}
-			
+
 			// Check for help messages formatting
 			if strings.Contains(name, "Description") || strings.Contains(name, "Usage") ||
-			   strings.Contains(name, "Practices") {
+				strings.Contains(name, "Practices") {
 				// Help messages should be complete sentences
 				if !strings.HasSuffix(message, ".") && !strings.Contains(message, "\n") {
 					// Allow multi-line help messages without period check
@@ -595,57 +595,57 @@ func TestTask15_MessageConsistencyValidation(t *testing.T) {
 			}
 		}
 	})
-	
+
 	t.Run("PlaceholderUsageConsistency", func(t *testing.T) {
 		// Test placeholder and actual usage consistency per Requirements 5.1
 		// Verify placeholder patterns match their intended usage
-		
+
 		placeholderConsistencyTests := map[string]struct {
 			expectedPlaceholders []string
-			usagePattern        string
-			description         string
+			usagePattern         string
+			description          string
 		}{
 			"MissingResourceCleanup": {
 				expectedPlaceholders: []string{"%s", "%s"},
-				usagePattern:        "resource name and cleanup method",
-				description:         "Should have two string placeholders for resource name and method",
+				usagePattern:         "resource name and cleanup method",
+				description:          "Should have two string placeholders for resource name and method",
 			},
 			"MissingContextCancel": {
 				expectedPlaceholders: []string{"%s"},
-				usagePattern:        "cancel function name",
-				description:         "Should have one string placeholder for cancel function name",
+				usagePattern:         "cancel function name",
+				description:          "Should have one string placeholder for cancel function name",
 			},
 			"ServiceNameEmpty": {
 				expectedPlaceholders: []string{"%d"},
-				usagePattern:        "service index",
-				description:         "Should have one integer placeholder for service index",
+				usagePattern:         "service index",
+				description:          "Should have one integer placeholder for service index",
 			},
 			"ConfigLoadFailed": {
 				expectedPlaceholders: []string{"%w"},
-				usagePattern:        "wrapped error",
-				description:         "Should have one error wrapping placeholder",
+				usagePattern:         "wrapped error",
+				description:          "Should have one error wrapping placeholder",
 			},
 		}
-		
+
 		allMessages := getAllMessageConstants()
-		
+
 		for msgName, test := range placeholderConsistencyTests {
 			if message, exists := allMessages[msgName]; exists {
 				// Check that expected placeholders are present
 				for _, placeholder := range test.expectedPlaceholders {
 					if !strings.Contains(message, placeholder) {
-						t.Errorf("Message %s missing expected placeholder %s: %s", 
+						t.Errorf("Message %s missing expected placeholder %s: %s",
 							msgName, placeholder, message)
 					}
 				}
-				
+
 				// Count actual placeholders
 				actualPlaceholders := countPlaceholders(message)
 				if len(actualPlaceholders) != len(test.expectedPlaceholders) {
 					t.Errorf("Message %s has %d placeholders, expected %d: %s",
 						msgName, len(actualPlaceholders), len(test.expectedPlaceholders), message)
 				}
-				
+
 				// Validate placeholder order makes sense
 				if msgName == "MissingResourceCleanup" {
 					// Should be: resource name first, cleanup method second
@@ -666,35 +666,35 @@ func TestTask15_MessageConsistencyValidation(t *testing.T) {
 // Helper function to get all message constants
 func getAllMessageConstants() map[string]string {
 	return map[string]string{
-		"MissingResourceCleanup":         MissingResourceCleanup,
-		"MissingContextCancel":           MissingContextCancel,
-		"ConfigFileEmpty":                ConfigFileEmpty,
-		"ConfigLoadFailed":               ConfigLoadFailed,
-		"ConfigYAMLParseFailed":          ConfigYAMLParseFailed,
-		"DefaultConfigLoadFailed":        DefaultConfigLoadFailed,
-		"DefaultConfigYAMLParseFailed":   DefaultConfigYAMLParseFailed,
-		"ServicesListEmpty":              ServicesListEmpty,
-		"ServiceNameEmpty":               ServiceNameEmpty,
-		"ServicePackagePathEmpty":        ServicePackagePathEmpty,
-		"ServiceCreationFuncsEmpty":      ServiceCreationFuncsEmpty,
-		"ServiceCleanupMethodsEmpty":     ServiceCleanupMethodsEmpty,
-		"CleanupMethodNameEmpty":         CleanupMethodNameEmpty,
-		"PackageExceptionNameEmpty":      PackageExceptionNameEmpty,
-		"PackageExceptionPatternEmpty":   PackageExceptionPatternEmpty,
-		"InvalidExceptionType":           InvalidExceptionType,
-		"VariableCannotBeNil":           VariableCannotBeNil,
-		"ServiceTypeCannotBeEmpty":      ServiceTypeCannotBeEmpty,
-		"CleanupMethodCannotBeEmpty":    CleanupMethodCannotBeEmpty,
-		"CancelFuncCannotBeNil":         CancelFuncCannotBeNil,
-		"CancelVarNameCannotBeEmpty":    CancelVarNameCannotBeEmpty,
-		"DeferPosInvalid":               DeferPosInvalid,
-		"TransactionTypeMustBeValid":    TransactionTypeMustBeValid,
-		"AutoManagementReasonRequired":  AutoManagementReasonRequired,
-		"ToolDescription":               ToolDescription,
-		"UsageExamples":                 UsageExamples,
-		"RecommendedPractices":          RecommendedPractices,
-		"AddDeferStatement":             AddDeferStatement,
-		"AddDeferMethodCall":            AddDeferMethodCall,
+		"MissingResourceCleanup":       MissingResourceCleanup,
+		"MissingContextCancel":         MissingContextCancel,
+		"ConfigFileEmpty":              ConfigFileEmpty,
+		"ConfigLoadFailed":             ConfigLoadFailed,
+		"ConfigYAMLParseFailed":        ConfigYAMLParseFailed,
+		"DefaultConfigLoadFailed":      DefaultConfigLoadFailed,
+		"DefaultConfigYAMLParseFailed": DefaultConfigYAMLParseFailed,
+		"ServicesListEmpty":            ServicesListEmpty,
+		"ServiceNameEmpty":             ServiceNameEmpty,
+		"ServicePackagePathEmpty":      ServicePackagePathEmpty,
+		"ServiceCreationFuncsEmpty":    ServiceCreationFuncsEmpty,
+		"ServiceCleanupMethodsEmpty":   ServiceCleanupMethodsEmpty,
+		"CleanupMethodNameEmpty":       CleanupMethodNameEmpty,
+		"PackageExceptionNameEmpty":    PackageExceptionNameEmpty,
+		"PackageExceptionPatternEmpty": PackageExceptionPatternEmpty,
+		"InvalidExceptionType":         InvalidExceptionType,
+		"VariableCannotBeNil":          VariableCannotBeNil,
+		"ServiceTypeCannotBeEmpty":     ServiceTypeCannotBeEmpty,
+		"CleanupMethodCannotBeEmpty":   CleanupMethodCannotBeEmpty,
+		"CancelFuncCannotBeNil":        CancelFuncCannotBeNil,
+		"CancelVarNameCannotBeEmpty":   CancelVarNameCannotBeEmpty,
+		"DeferPosInvalid":              DeferPosInvalid,
+		"TransactionTypeMustBeValid":   TransactionTypeMustBeValid,
+		"AutoManagementReasonRequired": AutoManagementReasonRequired,
+		"ToolDescription":              ToolDescription,
+		"UsageExamples":                UsageExamples,
+		"RecommendedPractices":         RecommendedPractices,
+		"AddDeferStatement":            AddDeferStatement,
+		"AddDeferMethodCall":           AddDeferMethodCall,
 	}
 }
 

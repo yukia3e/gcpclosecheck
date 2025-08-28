@@ -110,7 +110,7 @@ func testFunction(ctx context.Context) error {
 		t.Errorf("Expected category 'context-leak', got %q", diagnostic.Category)
 	}
 
-	// Expect English message format (updated for Task 15)  
+	// Expect English message format (updated for Task 15)
 	expectedMessage := "Context.WithCancel missing cancel function call 'cancel'"
 	if diagnostic.Message != expectedMessage {
 		t.Errorf("Expected message %q, got %q", expectedMessage, diagnostic.Message)
@@ -317,15 +317,15 @@ func complexFunction(ctx context.Context) error {
 
 	// Test diagnostic generation for multiple resources
 	// In this case, 4 diagnostics are expected (cancel, client.Close, txn.Close, iter.Stop)
-	
+
 	// Note: This is an integration test focusing on DiagnosticGenerator functionality
 	// The actual resource detection is handled by other components
-	
+
 	// Test successful generator creation
 	if generator == nil {
 		t.Error("Expected non-nil DiagnosticGenerator")
 	}
-	
+
 	// Test FileSet accessibility
 	if generator.fset == nil {
 		t.Error("Expected DiagnosticGenerator to have FileSet")

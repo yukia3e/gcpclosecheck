@@ -4,7 +4,7 @@ import (
 	"errors"
 	"go/token"
 	"go/types"
-	
+
 	"github.com/yukia3e/gcpclosecheck/internal/messages"
 )
 

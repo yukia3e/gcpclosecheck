@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-
 // TestCLIBasicExecution tests basic CLI execution
 func TestCLIBasicExecution(t *testing.T) {
 	// Build test executable file
@@ -28,7 +27,7 @@ func TestCLIBasicExecution(t *testing.T) {
 		if !strings.Contains(output, "gcpclosecheck") {
 			t.Errorf("Help output should contain 'gcpclosecheck', got: %s", output)
 		}
-		
+
 		// Expect English help content matching messages constants
 		expectedEnglishPhrases := []string{
 			"Detects missing Close/Stop/Cancel calls for GCP resource clients",
@@ -38,13 +37,13 @@ func TestCLIBasicExecution(t *testing.T) {
 			"Environment Variables:",
 			"Enable debug mode",
 		}
-		
+
 		for _, phrase := range expectedEnglishPhrases {
 			if !strings.Contains(output, phrase) {
 				t.Errorf("Help output should contain English phrase %q, got: %s", phrase, output)
 			}
 		}
-		
+
 		// Should not contain Japanese characters
 		if containsJapanese(output) {
 			t.Errorf("Help output should not contain Japanese characters, got: %s", output)
@@ -56,8 +55,8 @@ func TestCLIBasicExecution(t *testing.T) {
 func containsJapanese(text string) bool {
 	for _, r := range text {
 		if (r >= 0x3040 && r <= 0x309F) || // Hiragana
-		   (r >= 0x30A0 && r <= 0x30FF) || // Katakana  
-		   (r >= 0x4E00 && r <= 0x9FAF) {  // Kanji
+			(r >= 0x30A0 && r <= 0x30FF) || // Katakana
+			(r >= 0x4E00 && r <= 0x9FAF) { // Kanji
 			return true
 		}
 	}

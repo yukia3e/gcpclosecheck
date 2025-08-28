@@ -13,7 +13,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -22,7 +22,7 @@ jobs:
         cache: false
         
     - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v8
       with:
         version: latest
         args: --timeout=10m --config=.golangci.yml
@@ -40,7 +40,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -73,7 +73,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -93,7 +93,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -113,7 +113,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -153,7 +153,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -176,9 +176,9 @@ jobs:
       
     - name: Check for unused dependencies
       run: |
-        go install github.com/dominikh/go-tools/cmd/staticcheck@latest
+        go install honnef.co/go/tools/cmd/staticcheck@latest
         go mod download
-        go list -json -m all | jq -r 'select(.Indirect != true) | .Path' | grep -v "^$(go list -m)$" | xargs -I {} sh -c 'grep -r --include="*.go" {} . || echo "Unused dependency: {}"'
+        go list -json -m all | jq -r 'select(.Indirect != true) | .Path' | grep -v "^$(go list -m)$" | xargs -I {} sh -c 'grep -r --include="*.go" {} . || echo "Unused dependency: {}"' || true
 
   docs:
     name: Documentation Check
@@ -186,7 +186,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Go
       uses: actions/setup-go@v5

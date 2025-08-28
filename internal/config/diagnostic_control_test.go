@@ -246,7 +246,7 @@ func TestTask11_EnglishTestCasesAndMessages(t *testing.T) {
 		if containsJapanese(expectedLogPattern) {
 			t.Error("Log message pattern should be in English")
 		}
-		
+
 		// Configuration validation patterns should be English
 		expectedConfigPattern := "Diagnostic config structure validated"
 		if containsJapanese(expectedConfigPattern) {
@@ -269,7 +269,7 @@ func TestTask11_EnglishTestCasesAndMessages(t *testing.T) {
 			"Low confidence diagnostics are filtered",
 			"Diagnostics with false positive suspicion are filtered",
 		}
-		
+
 		for _, desc := range descriptions {
 			if containsJapanese(desc) {
 				t.Errorf("Test description should be in English: %s", desc)
@@ -285,15 +285,15 @@ func TestTask11_EnglishTestCasesAndMessages(t *testing.T) {
 	t.Run("EnglishErrorMessageValidation", func(t *testing.T) {
 		// Ensure error message templates use proper English
 		errorTemplates := map[string]string{
-			"Confidence expectation": "Expected %v, got %v for level %v",
-			"Message expectation": "Expected %v, got %v for message: %s",
+			"Confidence expectation":   "Expected %v, got %v for level %v",
+			"Message expectation":      "Expected %v, got %v for message: %s",
 			"ShouldReport expectation": "Expected ShouldReport %v, got %v",
-			"Config loading failure": "Failed to load diagnostic config: %v",
-			"Level expectation": "Expected level 'warning', got %s",
-			"Threshold expectation": "Expected confidence threshold 0.8, got %f",
+			"Config loading failure":   "Failed to load diagnostic config: %v",
+			"Level expectation":        "Expected level 'warning', got %s",
+			"Threshold expectation":    "Expected confidence threshold 0.8, got %f",
 			"Filter count expectation": "Expected 2 custom filters, got %d",
 		}
-		
+
 		for description, template := range errorTemplates {
 			if containsJapanese(template) {
 				t.Errorf("%s template should be in English: %s", description, template)
@@ -306,8 +306,8 @@ func TestTask11_EnglishTestCasesAndMessages(t *testing.T) {
 func containsJapanese(text string) bool {
 	for _, r := range text {
 		if (r >= 0x3040 && r <= 0x309F) || // Hiragana
-		   (r >= 0x30A0 && r <= 0x30FF) || // Katakana  
-		   (r >= 0x4E00 && r <= 0x9FAF) {  // Kanji
+			(r >= 0x30A0 && r <= 0x30FF) || // Katakana
+			(r >= 0x4E00 && r <= 0x9FAF) { // Kanji
 			return true
 		}
 	}

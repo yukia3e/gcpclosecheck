@@ -20,9 +20,9 @@ import (
 // TODO: Fix package loading issues with analysistest
 func TestE2EGoldenSuite(t *testing.T) {
 	t.Skip("Skipping E2E tests due to package loading issues with analysistest")
-	
+
 	t.Skip("Skipping E2E tests due to package loading issues with analysistest")
-	
+
 	// Get current file directory and construct testdata path
 	_, currentFile, _, _ := runtime.Caller(0)
 	testdata := filepath.Join(filepath.Dir(currentFile), "testdata")
@@ -68,7 +68,7 @@ func TestE2ESpannerPatterns(t *testing.T) {
 		},
 		{
 			name:          "spanner_invalid - should have issues",
-			packagePath:   "spanner_invalid", 
+			packagePath:   "spanner_invalid",
 			expectIssues:  true,
 			expectedCount: 1, // 少なくとも1つのissueは期待
 		},
@@ -78,7 +78,7 @@ func TestE2ESpannerPatterns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			packageDir := filepath.Join(testdata, tt.packagePath)
 			diagnostics := runAnalyzerOnPackage(t, packageDir)
-			
+
 			if tt.expectIssues {
 				if len(diagnostics) == 0 {
 					t.Errorf("Expected issues but got none")
@@ -124,7 +124,7 @@ func TestE2EPubSubPatterns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			packageDir := filepath.Join(testdata, tt.packagePath)
 			diagnostics := runAnalyzerOnPackage(t, packageDir)
-			
+
 			if tt.expectIssues {
 				if len(diagnostics) == 0 {
 					t.Errorf("Expected issues but got none")
@@ -170,7 +170,7 @@ func TestE2EStoragePatterns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			packageDir := filepath.Join(testdata, tt.packagePath)
 			diagnostics := runAnalyzerOnPackage(t, packageDir)
-			
+
 			if tt.expectIssues {
 				if len(diagnostics) == 0 {
 					t.Errorf("Expected issues but got none")
@@ -189,7 +189,7 @@ func TestE2EStoragePatterns(t *testing.T) {
 // TestE2EVisionPatterns はVisionの包括的なパターンをテストする
 func TestE2EVisionPatterns(t *testing.T) {
 	t.Skip("Skipping E2E tests due to package loading issues with analysistest")
-	
+
 	// Get current file directory and construct testdata path
 	_, currentFile, _, _ := runtime.Caller(0)
 	testdata := filepath.Join(filepath.Dir(currentFile), "testdata")
@@ -203,7 +203,7 @@ func TestE2EVisionPatterns(t *testing.T) {
 // TestE2EAdminPatterns はAdmin SDKの包括的なパターンをテストする
 func TestE2EAdminPatterns(t *testing.T) {
 	t.Skip("Skipping E2E tests due to package loading issues with analysistest")
-	
+
 	// Get current file directory and construct testdata path
 	_, currentFile, _, _ := runtime.Caller(0)
 	testdata := filepath.Join(filepath.Dir(currentFile), "testdata")
@@ -217,7 +217,7 @@ func TestE2EAdminPatterns(t *testing.T) {
 // TestE2EReCAPTCHAPatterns はreCAPTCHAの包括的なパターンをテストする
 func TestE2EReCAPTCHAPatterns(t *testing.T) {
 	t.Skip("Skipping E2E tests due to package loading issues with analysistest")
-	
+
 	// Get current file directory and construct testdata path
 	_, currentFile, _, _ := runtime.Caller(0)
 	testdata := filepath.Join(filepath.Dir(currentFile), "testdata")
@@ -231,7 +231,7 @@ func TestE2EReCAPTCHAPatterns(t *testing.T) {
 // TestE2EContextPatterns はContext処理の包括的なパターンをテストする
 func TestE2EContextPatterns(t *testing.T) {
 	t.Skip("Skipping E2E tests due to package loading issues with analysistest")
-	
+
 	// Get current file directory and construct testdata path
 	_, currentFile, _, _ := runtime.Caller(0)
 	testdata := filepath.Join(filepath.Dir(currentFile), "testdata")
@@ -245,7 +245,7 @@ func TestE2EContextPatterns(t *testing.T) {
 // TestE2EComplexScenarios は複雑な実世界シナリオをテストする
 func TestE2EComplexScenarios(t *testing.T) {
 	t.Skip("Skipping E2E tests due to package loading issues with analysistest")
-	
+
 	// Get current file directory and construct testdata path
 	_, currentFile, _, _ := runtime.Caller(0)
 	testdata := filepath.Join(filepath.Dir(currentFile), "testdata")
@@ -263,7 +263,7 @@ func TestE2EPerformanceOptimization(t *testing.T) {
 	}
 
 	t.Skip("Skipping E2E tests due to package loading issues with analysistest")
-	
+
 	// Get current file directory and construct testdata path
 	_, currentFile, _, _ := runtime.Caller(0)
 	testdata := filepath.Join(filepath.Dir(currentFile), "testdata")
@@ -279,7 +279,7 @@ func TestE2EMemoryUsage(t *testing.T) {
 	}
 
 	t.Skip("Skipping E2E tests due to package loading issues with analysistest")
-	
+
 	// Get current file directory and construct testdata path
 	_, currentFile, _, _ := runtime.Caller(0)
 	testdata := filepath.Join(filepath.Dir(currentFile), "testdata")
@@ -291,7 +291,7 @@ func TestE2EMemoryUsage(t *testing.T) {
 // TestE2ERegressionSuite は回帰テストスイートを実行する
 func TestE2ERegressionSuite(t *testing.T) {
 	t.Skip("Skipping E2E tests due to package loading issues with analysistest")
-	
+
 	// Get current file directory and construct testdata path
 	_, currentFile, _, _ := runtime.Caller(0)
 	testdata := filepath.Join(filepath.Dir(currentFile), "testdata")
@@ -303,20 +303,20 @@ func TestE2ERegressionSuite(t *testing.T) {
 // runAnalyzerOnPackage はパッケージディレクトリに対してanalyzerを実行し、診断結果を返す
 func runAnalyzerOnPackage(t *testing.T, packageDir string) []analysis.Diagnostic {
 	t.Helper()
-	
+
 	// パッケージ内の.goファイルを取得
 	files, err := filepath.Glob(filepath.Join(packageDir, "*.go"))
 	if err != nil {
 		t.Fatalf("Failed to find Go files in %s: %v", packageDir, err)
 	}
-	
+
 	if len(files) == 0 {
 		t.Fatalf("No Go files found in %s", packageDir)
 	}
 
 	// token.FileSetを作成
 	fset := token.NewFileSet()
-	
+
 	// 各ファイルをパース
 	var astFiles []*ast.File
 	for _, file := range files {
@@ -324,15 +324,15 @@ func runAnalyzerOnPackage(t *testing.T, packageDir string) []analysis.Diagnostic
 		if err != nil {
 			t.Fatalf("Failed to read file %s: %v", file, err)
 		}
-		
+
 		astFile, err := parser.ParseFile(fset, file, src, parser.ParseComments)
 		if err != nil {
 			t.Fatalf("Failed to parse file %s: %v", file, err)
 		}
-		
+
 		astFiles = append(astFiles, astFile)
 	}
-	
+
 	// 型チェッカーを設定
 	config := &types.Config{
 		Importer: importer.ForCompiler(fset, "source", nil),
@@ -341,54 +341,54 @@ func runAnalyzerOnPackage(t *testing.T, packageDir string) []analysis.Diagnostic
 			t.Logf("Type check warning: %v", err)
 		},
 	}
-	
+
 	// 型情報を作成
 	info := &types.Info{
 		Types: make(map[ast.Expr]types.TypeAndValue),
 		Uses:  make(map[*ast.Ident]types.Object),
 		Defs:  make(map[*ast.Ident]types.Object),
 	}
-	
+
 	// パッケージ名を決定
 	var pkgName string
 	if len(astFiles) > 0 {
 		pkgName = astFiles[0].Name.Name
 	}
-	
+
 	// 型チェックを実行
 	pkg, err := config.Check(pkgName, fset, astFiles, info)
 	if err != nil && !strings.Contains(err.Error(), "could not import") {
 		t.Logf("Type check completed with warnings: %v", err)
 	}
-	
+
 	// analysis.Pass を作成
 	var diagnostics []analysis.Diagnostic
 	pass := &analysis.Pass{
-		Analyzer:  Analyzer,
-		Fset:      fset,
-		Files:     astFiles,
-		OtherFiles: nil,
+		Analyzer:     Analyzer,
+		Fset:         fset,
+		Files:        astFiles,
+		OtherFiles:   nil,
 		IgnoredFiles: nil,
-		Pkg:       pkg,
-		TypesInfo: info,
-		TypesSizes: types.SizesFor("gc", "amd64"),
-		ResultOf:  make(map[*analysis.Analyzer]interface{}),
+		Pkg:          pkg,
+		TypesInfo:    info,
+		TypesSizes:   types.SizesFor("gc", "amd64"),
+		ResultOf:     make(map[*analysis.Analyzer]interface{}),
 		Report: func(diag analysis.Diagnostic) {
 			diagnostics = append(diagnostics, diag)
 		},
-		ImportObjectFact: func(obj types.Object, fact analysis.Fact) bool { return false },
-		ExportObjectFact: func(obj types.Object, fact analysis.Fact) {},
+		ImportObjectFact:  func(obj types.Object, fact analysis.Fact) bool { return false },
+		ExportObjectFact:  func(obj types.Object, fact analysis.Fact) {},
 		ImportPackageFact: func(pkg *types.Package, fact analysis.Fact) bool { return false },
 		ExportPackageFact: func(fact analysis.Fact) {},
-		AllObjectFacts:   func() []analysis.ObjectFact { return nil },
-		AllPackageFacts:  func() []analysis.PackageFact { return nil },
+		AllObjectFacts:    func() []analysis.ObjectFact { return nil },
+		AllPackageFacts:   func() []analysis.PackageFact { return nil },
 	}
-	
+
 	// Analyzerを実行
 	_, err = Analyzer.Run(pass)
 	if err != nil {
 		t.Fatalf("Analyzer run failed: %v", err)
 	}
-	
+
 	return diagnostics
 }

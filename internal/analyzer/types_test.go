@@ -563,7 +563,7 @@ func TestTask9_EnglishValidationMessages(t *testing.T) {
 		if strings.Contains(err.Error(), "nil であってはいけません") {
 			t.Errorf("Error message should be in English, got: %s", err.Error())
 		}
-		
+
 		// Test empty ServiceType
 		variable := types.NewVar(token.NoPos, nil, "client", nil)
 		resource2 := &ResourceInfo{Variable: variable, ServiceType: "", CleanupMethod: "Close"}
@@ -574,7 +574,7 @@ func TestTask9_EnglishValidationMessages(t *testing.T) {
 		if strings.Contains(err2.Error(), "空であってはいけません") {
 			t.Errorf("Error message should be in English, got: %s", err2.Error())
 		}
-		
+
 		// Test empty CleanupMethod
 		resource3 := &ResourceInfo{Variable: variable, ServiceType: "test", CleanupMethod: ""}
 		err3 := resource3.Validate()
@@ -585,7 +585,7 @@ func TestTask9_EnglishValidationMessages(t *testing.T) {
 			t.Errorf("Error message should be in English, got: %s", err3.Error())
 		}
 	})
-	
+
 	// Test ContextInfo validation messages
 	t.Run("ContextInfo_ValidationMessages", func(t *testing.T) {
 		// Test nil Variable
@@ -597,7 +597,7 @@ func TestTask9_EnglishValidationMessages(t *testing.T) {
 		if strings.Contains(err.Error(), "nil であってはいけません") {
 			t.Errorf("Error message should be in English, got: %s", err.Error())
 		}
-		
+
 		// Test nil CancelFunc
 		context2 := &ContextInfo{Variable: types.NewVar(token.NoPos, nil, "ctx", nil), CancelFunc: nil}
 		err2 := context2.Validate()
@@ -608,7 +608,7 @@ func TestTask9_EnglishValidationMessages(t *testing.T) {
 			t.Errorf("Error message should be in English, got: %s", err2.Error())
 		}
 	})
-	
+
 	// Test DeferCancelInfo validation messages
 	t.Run("DeferCancelInfo_ValidationMessages", func(t *testing.T) {
 		// Test empty CancelVarName
@@ -620,7 +620,7 @@ func TestTask9_EnglishValidationMessages(t *testing.T) {
 		if strings.Contains(err.Error(), "空であってはいけません") {
 			t.Errorf("Error message should be in English, got: %s", err.Error())
 		}
-		
+
 		// Test invalid DeferPos
 		defer2 := &DeferCancelInfo{CancelVarName: "cancel", DeferPos: 0}
 		err2 := defer2.Validate()
@@ -631,7 +631,7 @@ func TestTask9_EnglishValidationMessages(t *testing.T) {
 			t.Errorf("Error message should be in English, got: %s", err2.Error())
 		}
 	})
-	
+
 	// Test SpannerEscapeInfo validation messages
 	t.Run("SpannerEscapeInfo_ValidationMessages", func(t *testing.T) {
 		// Test invalid TransactionType
@@ -643,7 +643,7 @@ func TestTask9_EnglishValidationMessages(t *testing.T) {
 		if strings.Contains(err.Error(), "である必要があります") {
 			t.Errorf("Error message should be in English, got: %s", err.Error())
 		}
-		
+
 		// Test empty AutoManagementReason when IsAutoManaged is true
 		spanner2 := &SpannerEscapeInfo{TransactionType: ReadWriteTransactionType, IsAutoManaged: true, AutoManagementReason: ""}
 		err2 := spanner2.Validate()

@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-
 // TestGoVetIntegration tests integration with go vet
 func TestGoVetIntegration(t *testing.T) {
 	binPath, tmpDir := buildCLI(t)
@@ -348,67 +347,67 @@ type Data` + string(rune(i%10+'0')) + ` struct {
 // TestTask14_IntegrationTestEnglishUpdate verifies Task 14 completion: integration test English update
 func TestTask14_IntegrationTestEnglishUpdate(t *testing.T) {
 	// Test that all Japanese comments and strings in integration tests are converted to English
-	
+
 	t.Run("EnglishComments", func(t *testing.T) {
 		// Check that all comments are in English
 		// These comments should now be in English after conversion
 		testedComments := []string{
-			"// TestGoVetIntegration tests integration with go vet",          // CONVERTED
-			"// Build binary",                                      // CONVERTED
-			"// Create test Go module",                            // CONVERTED
-			"// Create go.mod file (no dependencies)",                     // CONVERTED
-			"// Create test Go file (standard library only)",            // CONVERTED
-			"// defer cancel() missing - should be detected",              // CONVERTED
-			"// Execute with go vet -vettool",                           // CONVERTED
-			"// Set timeout",                                   // CONVERTED
-			"// Important that it doesn't panic even if error occurs",             // CONVERTED
-			"// Basic operation check (may error due to package issues, but",      // CONVERTED
-			"// confirm that integration with analysis framework works)",         // CONVERTED
+			"// TestGoVetIntegration tests integration with go vet", // CONVERTED
+			"// Build binary",                                                                 // CONVERTED
+			"// Create test Go module",                                                        // CONVERTED
+			"// Create go.mod file (no dependencies)",                                         // CONVERTED
+			"// Create test Go file (standard library only)",                                  // CONVERTED
+			"// defer cancel() missing - should be detected",                                  // CONVERTED
+			"// Execute with go vet -vettool",                                                 // CONVERTED
+			"// Set timeout",                                                                  // CONVERTED
+			"// Important that it doesn't panic even if error occurs",                         // CONVERTED
+			"// Basic operation check (may error due to package issues, but",                  // CONVERTED
+			"// confirm that integration with analysis framework works)",                      // CONVERTED
 			"// TestAnalyzerInterfaceCompliance tests analysis.Analyzer interface compliance", // CONVERTED
-			"// Try running in empty directory",                            // CONVERTED
-			"// Test basic analysis framework functionality",                  // CONVERTED
-			"// Confirm help message is displayed properly",                   // CONVERTED
-			"// Basic operation check for analysis.Analyzer compliance",                // CONVERTED
+			"// Try running in empty directory",                                               // CONVERTED
+			"// Test basic analysis framework functionality",                                  // CONVERTED
+			"// Confirm help message is displayed properly",                                   // CONVERTED
+			"// Basic operation check for analysis.Analyzer compliance",                       // CONVERTED
 		}
-		
+
 		for _, comment := range testedComments {
 			if containsJapaneseChars(comment) {
 				t.Errorf("Comment should be in English: %s", comment)
 			}
 		}
 	})
-	
+
 	t.Run("EnglishTestNames", func(t *testing.T) {
 		// Check that test function names are in English
 		japaneseTestNames := []string{
-			"TestGoVetIntegration",           // Already in English
-			"TestAnalyzerInterfaceCompliance", // Already in English  
-			"TestMultiPackageAnalysis",       // Already in English
-			"TestLargeCodebasePerformance",   // Already in English
-			"TestCICDIntegration",           // Already in English
+			"TestGoVetIntegration",            // Already in English
+			"TestAnalyzerInterfaceCompliance", // Already in English
+			"TestMultiPackageAnalysis",        // Already in English
+			"TestLargeCodebasePerformance",    // Already in English
+			"TestCICDIntegration",             // Already in English
 		}
-		
+
 		for _, testName := range japaneseTestNames {
 			if containsJapaneseChars(testName) {
 				t.Errorf("Test name should be in English: %s", testName)
 			}
 		}
 	})
-	
+
 	t.Run("EnglishLogMessages", func(t *testing.T) {
 		// Check that log and error messages are in English
 		japaneseLogMessages := []string{
-			"Failed to build CLI: %v",                    // Already in English
-			"Failed to change directory: %v",             // Already in English
-			"Failed to create go.mod: %v",               // Already in English
-			"Failed to write test file: %v",             // Already in English
-			"go vet integration test timed out",         // Already in English
-			"Failed to kill process: %v",               // Already in English
-			"Multi-package analysis timed out",         // Already in English
-			"Large codebase analysis timed out",        // Already in English
-			"CI/CD integration test timed out",         // Already in English
+			"Failed to build CLI: %v",           // Already in English
+			"Failed to change directory: %v",    // Already in English
+			"Failed to create go.mod: %v",       // Already in English
+			"Failed to write test file: %v",     // Already in English
+			"go vet integration test timed out", // Already in English
+			"Failed to kill process: %v",        // Already in English
+			"Multi-package analysis timed out",  // Already in English
+			"Large codebase analysis timed out", // Already in English
+			"CI/CD integration test timed out",  // Already in English
 		}
-		
+
 		for _, logMsg := range japaneseLogMessages {
 			if containsJapaneseChars(logMsg) {
 				t.Errorf("Log message should be in English: %s", logMsg)
@@ -421,8 +420,8 @@ func TestTask14_IntegrationTestEnglishUpdate(t *testing.T) {
 func containsJapaneseChars(text string) bool {
 	for _, r := range text {
 		if (r >= 0x3040 && r <= 0x309F) || // Hiragana
-		   (r >= 0x30A0 && r <= 0x30FF) || // Katakana  
-		   (r >= 0x4E00 && r <= 0x9FAF) {  // Kanji
+			(r >= 0x30A0 && r <= 0x30FF) || // Katakana
+			(r >= 0x4E00 && r <= 0x9FAF) { // Kanji
 			return true
 		}
 	}
