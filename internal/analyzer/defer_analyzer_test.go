@@ -5,6 +5,7 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
+	"strings"
 	"testing"
 
 	"golang.org/x/tools/go/analysis"
@@ -126,6 +127,7 @@ func TestDeferAnalyzer_ValidateCleanupPattern(t *testing.T) {
 		name          string
 		resourceType  string
 		cleanupMethod string
+		variableName  string
 		deferCallExpr string
 		wantValid     bool
 	}{
@@ -133,6 +135,7 @@ func TestDeferAnalyzer_ValidateCleanupPattern(t *testing.T) {
 			name:          "正しいSpannerクライアントのClose",
 			resourceType:  "spanner",
 			cleanupMethod: "Close",
+			variableName:  "client",
 			deferCallExpr: "client.Close()",
 			wantValid:     true,
 		},
@@ -140,6 +143,7 @@ func TestDeferAnalyzer_ValidateCleanupPattern(t *testing.T) {
 			name:          "正しいRowIteratorのStop",
 			resourceType:  "spanner",
 			cleanupMethod: "Stop",
+			variableName:  "iter",
 			deferCallExpr: "iter.Stop()",
 			wantValid:     true,
 		},
@@ -147,6 +151,7 @@ func TestDeferAnalyzer_ValidateCleanupPattern(t *testing.T) {
 			name:          "間違ったメソッド呼び出し",
 			resourceType:  "spanner",
 			cleanupMethod: "Close",
+			variableName:  "client",
 			deferCallExpr: "client.Start()",
 			wantValid:     false,
 		},
@@ -154,8 +159,25 @@ func TestDeferAnalyzer_ValidateCleanupPattern(t *testing.T) {
 			name:          "正しいStorageクライアントのClose",
 			resourceType:  "storage",
 			cleanupMethod: "Close",
+			variableName:  "client",
 			deferCallExpr: "client.Close()",
 			wantValid:     true,
+		},
+		{
+			name:          "クロージャでラップされたClose（改善されたパターン）",
+			resourceType:  "storage", 
+			cleanupMethod: "Close",
+			variableName:  "client",
+			deferCallExpr: "func() { client.Close() }",
+			wantValid:     true,
+		},
+		{
+			name:          "クロージャ内で間違ったメソッド呼び出し",
+			resourceType:  "storage",
+			cleanupMethod: "Close",
+			variableName:  "client", 
+			deferCallExpr: "func() { client.Start() }",
+			wantValid:     false,
 		},
 	}
 
@@ -167,6 +189,7 @@ func TestDeferAnalyzer_ValidateCleanupPattern(t *testing.T) {
 			resourceInfo := ResourceInfo{
 				ServiceType:   tt.resourceType,
 				CleanupMethod: tt.cleanupMethod,
+				VariableName:  tt.variableName,
 				IsRequired:    true,
 			}
 
@@ -680,7 +703,14 @@ func test() {
 
 // ヘルパー関数: テスト用のdefer文を作成
 func createTestDeferStatement(callExpr string) *ast.DeferStmt {
-	code := "package test\nfunc test() { defer " + callExpr + " }"
+	var code string
+	// クロージャパターンの場合は、defer文内でクロージャを実行する形式にする
+	if strings.HasPrefix(callExpr, "func()") {
+		code = "package test\nfunc test() { defer " + callExpr + "() }"
+	} else {
+		code = "package test\nfunc test() { defer " + callExpr + " }"
+	}
+	
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, "test.go", code, 0)
 	if err != nil {

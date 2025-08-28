@@ -104,47 +104,8 @@ func (da *DeferAnalyzer) ValidateCleanupPattern(resource ResourceInfo, deferStmt
 	// defer文の呼び出しを解析
 	call := deferStmt.Call
 
-	// セレクタ式（obj.Method()）かどうか確認
-	sel, ok := call.Fun.(*ast.SelectorExpr)
-	if !ok {
-		return false
-	}
-
-	// メソッド名が期待されるクリーンアップメソッドかどうか確認
-	methodName := sel.Sel.Name
-	expectedMethod := resource.CleanupMethod
-
-	if methodName != expectedMethod {
-		return false
-	}
-
-	// 変数名の検証を改良
-	if ident, ok := sel.X.(*ast.Ident); ok {
-		varName := ident.Name
-
-		// 1. 実際の変数名での完全一致を最優先
-		if resource.VariableName != "" && varName == resource.VariableName {
-			return true
-		}
-
-		// デバッグ出力を削除（本番では不要）
-
-		// 2. 同一関数内で複数のiteratorがある場合は、変数名の厳密一致を要求
-		if da.isIteratorResource(resource) && resource.VariableName != "" {
-			// iteratorリソースの場合は変数名が完全一致しない限りfalse
-			return false
-		}
-
-		// 3. パターンマッチング（単一iterator等の場合）
-		if da.isValidVariableNamePattern(resource.CreationFunction, varName) {
-			return true
-		}
-
-		// 4. その他の条件での判定
-		return da.isLikelyResourceVariable(resource, varName, ident)
-	}
-
-	return true
+	// 新しいisResourceCloseCallロジックを使用してクロージャパターンも検出
+	return da.isResourceCloseCall(call.Fun, resource)
 }
 
 // FindBestMatchingDefer は位置に基づいてリソースに最適なdefer文を見つける
@@ -349,20 +310,67 @@ func (da *DeferAnalyzer) isAppendToDeferArray(assignStmt *ast.AssignStmt, resour
 
 // isResourceCloseCall は式がリソースのCloseメソッド呼び出しかチェック
 func (da *DeferAnalyzer) isResourceCloseCall(expr ast.Expr, resource ResourceInfo) bool {
-	// resourceVar.Close の形式をチェック
+	// パターン1: 直接的なメソッド呼び出し resourceVar.Close
 	if sel, ok := expr.(*ast.SelectorExpr); ok {
-		// メソッド名がクリーンアップメソッドかチェック
-		if sel.Sel.Name != resource.CleanupMethod {
-			return false
-		}
+		return da.isDirectMethodCall(sel, resource)
+	}
 
-		// 変数名がリソース変数名と一致するかチェック
-		if ident, ok := sel.X.(*ast.Ident); ok {
-			return ident.Name == resource.VariableName
-		}
+	// パターン2: クロージャ func() { resourceVar.Close() }
+	if funcLit, ok := expr.(*ast.FuncLit); ok {
+		return da.isClosureWithResourceClose(funcLit, resource)
 	}
 
 	return false
+}
+
+// isDirectMethodCall は直接的なメソッド呼び出し resourceVar.Close をチェック
+func (da *DeferAnalyzer) isDirectMethodCall(sel *ast.SelectorExpr, resource ResourceInfo) bool {
+	// メソッド名がクリーンアップメソッドかチェック
+	if sel.Sel.Name != resource.CleanupMethod {
+		return false
+	}
+
+	// 変数名がリソース変数名と一致するかチェック
+	if ident, ok := sel.X.(*ast.Ident); ok {
+		return ident.Name == resource.VariableName
+	}
+
+	return false
+}
+
+// isClosureWithResourceClose はクロージャ内でリソースのCloseが呼ばれているかチェック
+func (da *DeferAnalyzer) isClosureWithResourceClose(funcLit *ast.FuncLit, resource ResourceInfo) bool {
+	if funcLit == nil || funcLit.Body == nil {
+		return false
+	}
+
+	// クロージャ内でresourceVar.Close()が呼ばれているかを検索
+	found := false
+	ast.Inspect(funcLit.Body, func(n ast.Node) bool {
+		switch node := n.(type) {
+		case *ast.CallExpr:
+			// メソッド呼び出しをチェック
+			if sel, ok := node.Fun.(*ast.SelectorExpr); ok {
+				if da.isDirectMethodCall(sel, resource) {
+					found = true
+					return false // 見つかったので走査終了
+				}
+			}
+		case *ast.ExprStmt:
+			// 式文内のメソッド呼び出しもチェック
+			if call, ok := node.X.(*ast.CallExpr); ok {
+				if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
+					if da.isDirectMethodCall(sel, resource) {
+						found = true
+						return false // 見つかったので走査終了
+					}
+				}
+			}
+		}
+		return !found // 見つかるまで継続
+	})
+
+	return found
 }
 
 // isSameResourceType は2つのリソースが同じ型かチェックする
