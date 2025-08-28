@@ -209,15 +209,15 @@ func matchPattern(pattern, str string) bool {
 	if strings.Contains(pattern, "**/") {
 		return matchDoubleStarPattern(pattern, str)
 	}
-	
+
 	if strings.Contains(pattern, "*/") && !strings.Contains(pattern, "**/") {
 		return matchSingleStarPattern(pattern, str)
 	}
-	
+
 	if strings.HasPrefix(pattern, "**/") {
 		return matchPrefixStarPattern(pattern, str)
 	}
-	
+
 	return str == pattern
 }
 
@@ -227,20 +227,20 @@ func matchDoubleStarPattern(pattern, str string) bool {
 	if len(beforeAfter) != 2 {
 		return false
 	}
-	
+
 	before := beforeAfter[0]
 	after := beforeAfter[1]
-	
+
 	// Clean up after pattern
 	if strings.HasSuffix(after, "/**") {
 		after = strings.TrimSuffix(after, "/**")
 	} else if strings.HasPrefix(after, "*/") {
 		after = strings.TrimPrefix(after, "*/")
 	}
-	
+
 	hasPrefix := before == "" || strings.HasPrefix(str, before)
 	hasAfter := matchAfterPattern(after, str)
-	
+
 	return hasPrefix && hasAfter
 }
 
@@ -259,10 +259,10 @@ func matchSingleStarPattern(pattern, str string) bool {
 	if len(parts) != 2 {
 		return false
 	}
-	
+
 	before := parts[0]
 	after := strings.TrimSuffix(parts[1], "/*")
-	
+
 	if before == "" {
 		return strings.Contains(str, after)
 	}
