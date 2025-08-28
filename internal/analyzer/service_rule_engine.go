@@ -29,7 +29,7 @@ func (sre *ServiceRuleEngine) LoadDefaultRules() error {
 // configPathが空またはファイルが存在しない場合はデフォルト設定を使用
 func (sre *ServiceRuleEngine) LoadRules(configPath string) error {
 	var err error
-	
+
 	if configPath == "" {
 		// デフォルト設定を読み込み
 		sre.config, err = config.LoadDefaultConfig()
@@ -41,11 +41,11 @@ func (sre *ServiceRuleEngine) LoadRules(configPath string) error {
 			sre.config, err = config.LoadDefaultConfig()
 		}
 	}
-	
+
 	if err != nil {
 		return err
 	}
-	
+
 	// 設定を検証
 	return sre.config.Validate()
 }
@@ -59,7 +59,7 @@ func (sre *ServiceRuleEngine) GetCleanupMethod(serviceType string) (string, bool
 		return method, true
 	}
 	sre.mu.RUnlock()
-	
+
 	// 設定から検索
 	method, found := sre.findCleanupMethodFromConfig(serviceType)
 	if found {
@@ -68,7 +68,7 @@ func (sre *ServiceRuleEngine) GetCleanupMethod(serviceType string) (string, bool
 		sre.cache[serviceType] = method
 		sre.mu.Unlock()
 	}
-	
+
 	return method, found
 }
 
@@ -83,20 +83,20 @@ func (sre *ServiceRuleEngine) GetServiceRule(serviceName string) *ServiceRule {
 	if sre.config == nil {
 		return nil
 	}
-	
+
 	configService := sre.config.GetService(serviceName)
 	if configService == nil {
 		return nil
 	}
-	
+
 	// config.ServiceRule から analyzer.ServiceRule に変換
 	rule := &ServiceRule{
-		ServiceName:     configService.ServiceName,
-		PackagePath:     configService.PackagePath,
-		CreationFuncs:   configService.CreationFuncs,
-		CleanupMethods:  make([]CleanupMethod, len(configService.CleanupMethods)),
+		ServiceName:    configService.ServiceName,
+		PackagePath:    configService.PackagePath,
+		CreationFuncs:  configService.CreationFuncs,
+		CleanupMethods: make([]CleanupMethod, len(configService.CleanupMethods)),
 	}
-	
+
 	for i, cm := range configService.CleanupMethods {
 		rule.CleanupMethods[i] = CleanupMethod{
 			Method:      cm.Method,
@@ -104,7 +104,7 @@ func (sre *ServiceRuleEngine) GetServiceRule(serviceName string) *ServiceRule {
 			Description: cm.Description,
 		}
 	}
-	
+
 	return rule
 }
 
@@ -113,23 +113,23 @@ func (sre *ServiceRuleEngine) findCleanupMethodFromConfig(serviceType string) (s
 	if sre.config == nil {
 		return "", false
 	}
-	
+
 	// サービスタイプから実際のサービス名を推定
 	// 例: "spanner.Client" -> "spanner"
 	serviceName := extractServiceName(serviceType)
-	
+
 	service := sre.config.GetService(serviceName)
 	if service == nil {
 		return "", false
 	}
-	
+
 	// 最初の必須メソッドを返す
 	for _, method := range service.CleanupMethods {
 		if method.Required {
 			return method.Method, true
 		}
 	}
-	
+
 	return "", false
 }
 
@@ -140,14 +140,14 @@ func extractServiceName(serviceType string) string {
 	if len(serviceType) == 0 {
 		return ""
 	}
-	
+
 	// ドットで分割して最初の部分を取得
 	for i, r := range serviceType {
 		if r == '.' {
 			return serviceType[:i]
 		}
 	}
-	
+
 	return serviceType
 }
 
@@ -156,7 +156,7 @@ func (sre *ServiceRuleEngine) ShouldExemptPackage(packagePath string) (bool, str
 	if sre.config == nil {
 		return false, ""
 	}
-	
+
 	return sre.config.ShouldExemptPackage(packagePath)
 }
 

@@ -10,11 +10,11 @@ import (
 
 func TestNewEscapeAnalyzer(t *testing.T) {
 	analyzer := NewEscapeAnalyzer()
-	
+
 	if analyzer == nil {
 		t.Fatal("NewEscapeAnalyzer は nil を返すべきではありません")
 	}
-	
+
 	if analyzer.escapeInfo == nil {
 		t.Error("escapeInfo マップが初期化されていません")
 	}
@@ -22,10 +22,10 @@ func TestNewEscapeAnalyzer(t *testing.T) {
 
 func TestEscapeAnalyzer_IsReturnedValue(t *testing.T) {
 	tests := []struct {
-		name     string
-		code     string
-		varName  string
-		want     bool
+		name    string
+		code    string
+		varName string
+		want    bool
 	}{
 		{
 			name: "関数戻り値として返されるリソース",
@@ -124,10 +124,10 @@ func createMultiple(ctx context.Context) (*spanner.Client, *spanner.ReadOnlyTran
 
 func TestEscapeAnalyzer_IsFieldAssigned(t *testing.T) {
 	tests := []struct {
-		name     string
-		code     string
-		varName  string
-		want     bool
+		name    string
+		code    string
+		varName string
+		want    bool
 	}{
 		{
 			name: "構造体フィールドに代入されるリソース",
@@ -436,11 +436,11 @@ func TestEscapeAnalyzer_ShouldSkipResource(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			shouldSkip, reason := analyzer.ShouldSkipResource(tt.resourceInfo, tt.escapeInfo)
-			
+
 			if shouldSkip != tt.want {
 				t.Errorf("ShouldSkipResource() = %v, want %v", shouldSkip, tt.want)
 			}
-			
+
 			if reason != tt.wantReason {
 				t.Errorf("ShouldSkipResource() reason = %q, want %q", reason, tt.wantReason)
 			}
@@ -450,11 +450,11 @@ func TestEscapeAnalyzer_ShouldSkipResource(t *testing.T) {
 
 func TestEscapeAnalyzer_IntegrationWithDeferAnalyzer(t *testing.T) {
 	tests := []struct {
-		name                 string
-		code                 string
-		varName              string
-		expectDeferRequired  bool
-		reason               string
+		name                string
+		code                string
+		varName             string
+		expectDeferRequired bool
+		reason              string
 	}{
 		{
 			name: "戻り値として返されるクライアントはdefer不要",

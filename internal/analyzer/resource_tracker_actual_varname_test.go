@@ -42,7 +42,7 @@ func testFunction(c *spanner.Client) {
 
 	// ResourceTrackerを作成
 	rt := &ResourceTracker{
-		typeInfo: info,
+		typeInfo:  info,
 		variables: make(map[*types.Var]*ResourceInfo),
 	}
 
@@ -66,7 +66,7 @@ func testFunction(c *spanner.Client) {
 
 	// 実際の変数名を抽出
 	varName := rt.extractActualVariableName(callExpr)
-	
+
 	// 期待値は "transaction" （KultureJPコードと同じ）
 	expected := "transaction"
 	if varName != expected {
@@ -108,7 +108,7 @@ func test() {
 
 	// クロージャパラメータから変数名を抽出
 	varName := rt.extractFromClosureParameters(callExpr)
-	
+
 	expected := "myTransaction"
 	if varName != expected {
 		t.Errorf("Expected variable name '%s', got '%s'", expected, varName)
@@ -146,7 +146,7 @@ func test() {
 
 	// クロージャパラメータから変数名を抽出（空文字列が期待される）
 	varName := rt.extractFromClosureParameters(callExpr)
-	
+
 	if varName != "" {
 		t.Errorf("Expected empty string, got '%s'", varName)
 	}

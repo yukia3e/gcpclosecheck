@@ -33,10 +33,10 @@ func (dg *DiagnosticGenerator) ReportMissingDefer(resource ResourceInfo) analysi
 	)
 
 	return analysis.Diagnostic{
-		Pos:      resource.CreationPos,
-		End:      resource.CreationPos,
-		Category: "resource-leak",
-		Message:  message,
+		Pos:            resource.CreationPos,
+		End:            resource.CreationPos,
+		Category:       "resource-leak",
+		Message:        message,
 		SuggestedFixes: []analysis.SuggestedFix{suggestedFix},
 	}
 }
@@ -53,10 +53,10 @@ func (dg *DiagnosticGenerator) ReportMissingContextCancel(contextInfo ContextInf
 	)
 
 	return analysis.Diagnostic{
-		Pos:      contextInfo.CreationPos,
-		End:      contextInfo.CreationPos,
-		Category: "context-leak",
-		Message:  message,
+		Pos:            contextInfo.CreationPos,
+		End:            contextInfo.CreationPos,
+		Category:       "context-leak",
+		Message:        message,
 		SuggestedFixes: []analysis.SuggestedFix{suggestedFix},
 	}
 }
@@ -99,7 +99,7 @@ func (dg *DiagnosticGenerator) ShouldIgnoreNolint(file *ast.File, pos token.Pos)
 	for _, commentGroup := range file.Comments {
 		for _, comment := range commentGroup.List {
 			commentPos := dg.fset.Position(comment.Pos())
-			
+
 			// 同じ行または直前の行のコメントをチェック
 			if commentPos.Line == targetLine || commentPos.Line == targetLine-1 {
 				if dg.isNolintComment(comment.Text) {

@@ -25,7 +25,7 @@ func NewResourceInfo(variable *types.Var, creationPos token.Pos, serviceType, cr
 	if variable != nil {
 		variableName = variable.Name()
 	}
-	
+
 	return &ResourceInfo{
 		Variable:         variable,
 		VariableName:     variableName,
@@ -78,10 +78,10 @@ func (r *ResourceInfo) ShouldSkipSpannerCleanup() bool {
 
 // ContextInfo は context.WithCancel/WithTimeout の追跡情報を表す
 type ContextInfo struct {
-	Variable    *types.Var       // context 変数
-	CancelFunc  *types.Var       // cancel 関数
-	CreationPos token.Pos        // 生成位置
-	IsDeferred  bool             // defer で呼ばれているかどうか
+	Variable    *types.Var        // context 変数
+	CancelFunc  *types.Var        // cancel 関数
+	CreationPos token.Pos         // 生成位置
+	IsDeferred  bool              // defer で呼ばれているかどうか
 	DeferInfos  []DeferCancelInfo // defer情報のリスト（複数のdeferに対応）
 }
 
@@ -170,10 +170,10 @@ func (d *DeferCancelInfo) Validate() error {
 
 // ServiceRule は GCP サービス固有の解放ルール定義を表す
 type ServiceRule struct {
-	ServiceName    string          `yaml:"service_name"`     // サービス名
-	PackagePath    string          `yaml:"package_path"`     // パッケージパス
+	ServiceName    string          `yaml:"service_name"`       // サービス名
+	PackagePath    string          `yaml:"package_path"`       // パッケージパス
 	CreationFuncs  []string        `yaml:"creation_functions"` // 生成関数一覧
-	CleanupMethods []CleanupMethod `yaml:"cleanup_methods"`  // 解放メソッド一覧
+	CleanupMethods []CleanupMethod `yaml:"cleanup_methods"`    // 解放メソッド一覧
 }
 
 // CleanupMethod は解放メソッドの詳細情報を表す
@@ -246,7 +246,7 @@ func NewSpannerEscapeInfo(transactionType string, isAutoManaged bool, reason str
 	if transactionType != ReadWriteTransactionType && transactionType != ReadOnlyTransactionType {
 		transactionType = ReadWriteTransactionType // デフォルト値
 	}
-	
+
 	return &SpannerEscapeInfo{
 		IsAutoManaged:        isAutoManaged,
 		TransactionType:      transactionType,

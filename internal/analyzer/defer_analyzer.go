@@ -34,22 +34,22 @@ func (da *DeferAnalyzer) AnalyzeDefers(fn *ast.FuncDecl, resources []ResourceInf
 
 	// defer文を検索
 	defers := da.FindDeferStatements(fn.Body)
-	
+
 	// デバッグ出力を削除（本番では不要）
 
 	// 各リソースについてdefer文の存在を確認
 	for _, resource := range resources {
 		if resource.IsRequired {
 			// デバッグコード削除（本番では不要）
-			
+
 			found := false
-			
+
 			// 位置ベースの精密マッチング
 			bestMatchDefer := da.FindBestMatchingDefer(resource, defers)
 			if bestMatchDefer != nil && da.ValidateCleanupPattern(resource, bestMatchDefer) {
 				found = true
 			}
-			
+
 			// 従来の方式による全defer文のチェック（フォールバック）
 			if !found {
 				for _, deferStmt := range defers {
@@ -59,7 +59,7 @@ func (da *DeferAnalyzer) AnalyzeDefers(fn *ast.FuncDecl, resources []ResourceInf
 					}
 				}
 			}
-			
+
 			// defers配列への追加もチェック
 			if !found {
 				found = da.IsAddedToDeferArray(fn.Body, resource)
@@ -103,78 +103,39 @@ func (da *DeferAnalyzer) ValidateCleanupPattern(resource ResourceInfo, deferStmt
 
 	// defer文の呼び出しを解析
 	call := deferStmt.Call
-	
-	// セレクタ式（obj.Method()）かどうか確認
-	sel, ok := call.Fun.(*ast.SelectorExpr)
-	if !ok {
-		return false
-	}
 
-	// メソッド名が期待されるクリーンアップメソッドかどうか確認
-	methodName := sel.Sel.Name
-	expectedMethod := resource.CleanupMethod
-
-	if methodName != expectedMethod {
-		return false
-	}
-
-	// 変数名の検証を改良
-	if ident, ok := sel.X.(*ast.Ident); ok {
-		varName := ident.Name
-		
-		// 1. 実際の変数名での完全一致を最優先
-		if resource.VariableName != "" && varName == resource.VariableName {
-			return true
-		}
-		
-		// デバッグ出力を削除（本番では不要）
-		
-		// 2. 同一関数内で複数のiteratorがある場合は、変数名の厳密一致を要求
-		if da.isIteratorResource(resource) && resource.VariableName != "" {
-			// iteratorリソースの場合は変数名が完全一致しない限りfalse
-			return false
-		}
-		
-		// 3. パターンマッチング（単一iterator等の場合）
-		if da.isValidVariableNamePattern(resource.CreationFunction, varName) {
-			return true
-		}
-		
-		// 4. その他の条件での判定
-		return da.isLikelyResourceVariable(resource, varName, ident)
-	}
-
-	return true
+	// 新しいisResourceCloseCallロジックを使用してクロージャパターンも検出
+	return da.isResourceCloseCall(call.Fun, resource)
 }
 
 // FindBestMatchingDefer は位置に基づいてリソースに最適なdefer文を見つける
 func (da *DeferAnalyzer) FindBestMatchingDefer(resource ResourceInfo, defers []*ast.DeferStmt) *ast.DeferStmt {
 	var bestMatch *ast.DeferStmt
 	bestDistance := int(^uint(0) >> 1) // int の最大値
-	
+
 	for _, deferStmt := range defers {
 		// defer文がリソースの後に来ているかをチェック
 		if deferStmt.Pos() <= resource.CreationPos {
 			continue
 		}
-		
+
 		// 期待されるクリーンアップメソッドかをチェック
 		if !da.IsExpectedCleanupMethod(deferStmt, resource.CleanupMethod) {
 			continue
 		}
-		
+
 		// 変数名が一致するかチェック
 		if !da.HasMatchingVariableName(deferStmt, resource) {
 			continue
 		}
-		
+
 		// iterator系リソースの場合、変数名完全一致を必須とする
 		if da.isIteratorResource(resource) {
 			if resource.VariableName == "" || !da.hasExactVariableName(deferStmt, resource.VariableName) {
 				continue
 			}
 		}
-		
+
 		// 距離を計算（近いほど良い）
 		distance := int(deferStmt.Pos() - resource.CreationPos)
 		if distance < bestDistance {
@@ -182,7 +143,7 @@ func (da *DeferAnalyzer) FindBestMatchingDefer(resource ResourceInfo, defers []*
 			bestMatch = deferStmt
 		}
 	}
-	
+
 	return bestMatch
 }
 
@@ -191,13 +152,13 @@ func (da *DeferAnalyzer) hasExactVariableName(deferStmt *ast.DeferStmt, expected
 	if deferStmt.Call == nil {
 		return false
 	}
-	
+
 	if sel, ok := deferStmt.Call.Fun.(*ast.SelectorExpr); ok {
 		if ident, ok := sel.X.(*ast.Ident); ok {
 			return ident.Name == expectedVarName
 		}
 	}
-	
+
 	return false
 }
 
@@ -206,11 +167,11 @@ func (da *DeferAnalyzer) IsExpectedCleanupMethod(deferStmt *ast.DeferStmt, expec
 	if deferStmt.Call == nil {
 		return false
 	}
-	
+
 	if sel, ok := deferStmt.Call.Fun.(*ast.SelectorExpr); ok {
 		return sel.Sel.Name == expectedMethod
 	}
-	
+
 	return false
 }
 
@@ -219,23 +180,23 @@ func (da *DeferAnalyzer) HasMatchingVariableName(deferStmt *ast.DeferStmt, resou
 	if deferStmt.Call == nil {
 		return false
 	}
-	
+
 	if sel, ok := deferStmt.Call.Fun.(*ast.SelectorExpr); ok {
 		if ident, ok := sel.X.(*ast.Ident); ok {
 			varName := ident.Name
-			
+
 			// 1. 完全一致を最優先
 			if resource.VariableName != "" && varName == resource.VariableName {
 				return true
 			}
-			
+
 			// 2. パターンマッチング
 			if da.isValidVariableNamePattern(resource.CreationFunction, varName) {
 				return true
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -255,7 +216,7 @@ func (da *DeferAnalyzer) isLikelyResourceVariable(resource ResourceInfo, varName
 	if da.isValidVariableNamePattern(resource.CreationFunction, varName) {
 		return true
 	}
-	
+
 	// TypesInfoが利用可能な場合、型情報も確認
 	if da.tracker != nil && da.tracker.typeInfo != nil {
 		if obj, ok := da.tracker.typeInfo.Uses[ident]; ok {
@@ -267,12 +228,12 @@ func (da *DeferAnalyzer) isLikelyResourceVariable(resource ResourceInfo, varName
 			}
 		}
 	}
-	
+
 	// defers配列による管理をチェック
 	if da.isDeferredInArray(resource, varName) {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -349,20 +310,67 @@ func (da *DeferAnalyzer) isAppendToDeferArray(assignStmt *ast.AssignStmt, resour
 
 // isResourceCloseCall は式がリソースのCloseメソッド呼び出しかチェック
 func (da *DeferAnalyzer) isResourceCloseCall(expr ast.Expr, resource ResourceInfo) bool {
-	// resourceVar.Close の形式をチェック
+	// パターン1: 直接的なメソッド呼び出し resourceVar.Close
 	if sel, ok := expr.(*ast.SelectorExpr); ok {
-		// メソッド名がクリーンアップメソッドかチェック
-		if sel.Sel.Name != resource.CleanupMethod {
-			return false
-		}
+		return da.isDirectMethodCall(sel, resource)
+	}
 
-		// 変数名がリソース変数名と一致するかチェック
-		if ident, ok := sel.X.(*ast.Ident); ok {
-			return ident.Name == resource.VariableName
-		}
+	// パターン2: クロージャ func() { resourceVar.Close() }
+	if funcLit, ok := expr.(*ast.FuncLit); ok {
+		return da.isClosureWithResourceClose(funcLit, resource)
 	}
 
 	return false
+}
+
+// isDirectMethodCall は直接的なメソッド呼び出し resourceVar.Close をチェック
+func (da *DeferAnalyzer) isDirectMethodCall(sel *ast.SelectorExpr, resource ResourceInfo) bool {
+	// メソッド名がクリーンアップメソッドかチェック
+	if sel.Sel.Name != resource.CleanupMethod {
+		return false
+	}
+
+	// 変数名がリソース変数名と一致するかチェック
+	if ident, ok := sel.X.(*ast.Ident); ok {
+		return ident.Name == resource.VariableName
+	}
+
+	return false
+}
+
+// isClosureWithResourceClose はクロージャ内でリソースのCloseが呼ばれているかチェック
+func (da *DeferAnalyzer) isClosureWithResourceClose(funcLit *ast.FuncLit, resource ResourceInfo) bool {
+	if funcLit == nil || funcLit.Body == nil {
+		return false
+	}
+
+	// クロージャ内でresourceVar.Close()が呼ばれているかを検索
+	found := false
+	ast.Inspect(funcLit.Body, func(n ast.Node) bool {
+		switch node := n.(type) {
+		case *ast.CallExpr:
+			// メソッド呼び出しをチェック
+			if sel, ok := node.Fun.(*ast.SelectorExpr); ok {
+				if da.isDirectMethodCall(sel, resource) {
+					found = true
+					return false // 見つかったので走査終了
+				}
+			}
+		case *ast.ExprStmt:
+			// 式文内のメソッド呼び出しもチェック
+			if call, ok := node.X.(*ast.CallExpr); ok {
+				if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
+					if da.isDirectMethodCall(sel, resource) {
+						found = true
+						return false // 見つかったので走査終了
+					}
+				}
+			}
+		}
+		return !found // 見つかるまで継続
+	})
+
+	return found
 }
 
 // isSameResourceType は2つのリソースが同じ型かチェックする
@@ -370,11 +378,11 @@ func (da *DeferAnalyzer) isSameResourceType(resource ResourceInfo, variable *typ
 	if resource.Variable == nil || variable == nil {
 		return false
 	}
-	
+
 	// 型文字列の比較（簡易版）
 	resourceType := resource.Variable.Type().String()
 	variableType := variable.Type().String()
-	
+
 	// Storage Writer の場合：*cloud.google.com/go/storage.Writer
 	// Spanner Transaction の場合：*cloud.google.com/go/spanner.ReadWriteTransaction
 	return resourceType == variableType
@@ -391,7 +399,7 @@ func (da *DeferAnalyzer) isValidVariableNamePattern(creationFunction, varName st
 		return strings.Contains(varName, "writer") || strings.Contains(varName, "Writer") ||
 			varName == "dst" || varName == "w"
 	case "NewReader":
-		// reader, src, r, xxxReader パターン  
+		// reader, src, r, xxxReader パターン
 		return strings.Contains(varName, "reader") || strings.Contains(varName, "Reader") ||
 			varName == "src" || varName == "r"
 	case "Query", "QueryWithOptions", "Read", "ReadWithOptions":
@@ -402,7 +410,7 @@ func (da *DeferAnalyzer) isValidVariableNamePattern(creationFunction, varName st
 			varName == "it" || varName == "rs"
 	case "ReadWriteTransaction", "ReadOnlyTransaction":
 		// tx, txn, transaction, xxxTx パターン
-		return varName == "tx" || varName == "txn" || 
+		return varName == "tx" || varName == "txn" ||
 			strings.Contains(varName, "transaction") || strings.Contains(varName, "Transaction") ||
 			strings.Contains(varName, "tx") || strings.Contains(varName, "Tx")
 	default:
@@ -445,7 +453,7 @@ func (da *DeferAnalyzer) analyzeFunction(fn *ast.FuncDecl) {
 	if da.tracker != nil {
 		// 追跡状態をクリア
 		da.tracker.ClearTrackedResources()
-		
+
 		// 関数内を走査してリソース生成を検出
 		ast.Inspect(fn, func(n ast.Node) bool {
 			if call, ok := n.(*ast.CallExpr); ok {
@@ -454,12 +462,11 @@ func (da *DeferAnalyzer) analyzeFunction(fn *ast.FuncDecl) {
 			}
 			return true
 		})
-		
+
 		// 追跡されたリソースを取得
 		da.resources = da.tracker.GetTrackedResources()
 	}
 }
-
 
 // collectDeferStatements は文を再帰的に走査してdefer文を収集する
 func (da *DeferAnalyzer) collectDeferStatements(stmt ast.Stmt, defers *[]*ast.DeferStmt) {
@@ -541,7 +548,7 @@ func (da *DeferAnalyzer) identifyResourceTypeFromDefer(deferStmt *ast.DeferStmt)
 	call := deferStmt.Call
 	if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
 		methodName := sel.Sel.Name
-		
+
 		// メソッド名からリソースタイプを推定
 		switch methodName {
 		case "Close":
@@ -574,10 +581,10 @@ func (da *DeferAnalyzer) extractMethodFromDefer(deferStmt *ast.DeferStmt) string
 func (da *DeferAnalyzer) isValidDeferOrder(_ []string) bool {
 	// 簡単な実装：現在は常にtrueを返す
 	// 実際の実装では、依存関係を考慮した順序チェックを行う
-	
+
 	// 例：Client -> Transaction -> Iterator の逆順（defer実行順序）
 	// defer client.Close() -> defer txn.Close() -> defer iter.Stop()
-	
+
 	return true // 現在は順序チェックをスキップ
 }
 
@@ -588,7 +595,7 @@ func (da *DeferAnalyzer) generateDiagnosticMessage(resource ResourceInfo) string
 		varName = "リソース"
 	}
 	method := resource.CleanupMethod
-	
+
 	return "GCP リソース '" + varName + "' の解放処理 (" + method + ") が見つかりません"
 }
 
@@ -637,11 +644,11 @@ func (da *DeferAnalyzer) processStatementForDeferPrecision(stmt ast.Stmt, scopeD
 			IsValid:      da.validateDeferInScope(s, scopeDepth),
 		}
 		*deferInfos = append(*deferInfos, deferInfo)
-		
+
 	case *ast.BlockStmt:
 		// ネストしたブロック
 		da.analyzeDeferStatementsWithScope(s, scopeDepth+1, deferInfos)
-		
+
 	case *ast.IfStmt:
 		if s.Body != nil {
 			da.analyzeDeferStatementsWithScope(s.Body, scopeDepth+1, deferInfos)
@@ -649,17 +656,17 @@ func (da *DeferAnalyzer) processStatementForDeferPrecision(stmt ast.Stmt, scopeD
 		if s.Else != nil {
 			da.processStatementForDeferPrecision(s.Else, scopeDepth+1, deferInfos)
 		}
-		
+
 	case *ast.ForStmt:
 		if s.Body != nil {
 			da.analyzeDeferStatementsWithScope(s.Body, scopeDepth+1, deferInfos)
 		}
-		
+
 	case *ast.RangeStmt:
 		if s.Body != nil {
 			da.analyzeDeferStatementsWithScope(s.Body, scopeDepth+1, deferInfos)
 		}
-		
+
 	case *ast.GoStmt:
 		// goroutine内のdeferも解析
 		if call := s.Call; call != nil {
@@ -678,14 +685,14 @@ func (da *DeferAnalyzer) validateDeferInScope(deferStmt *ast.DeferStmt, scopeDep
 
 	// defer文のコール先が有効かチェック
 	call := deferStmt.Call
-	
+
 	// 関数呼び出しの場合（cancel()など）
 	if ident, ok := call.Fun.(*ast.Ident); ok {
 		// 変数名の妥当性をチェック（簡易版）
 		varName := ident.Name
 		return da.isValidCancelVariableName(varName)
 	}
-	
+
 	// メソッド呼び出しの場合（client.Close()など）
 	if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
 		methodName := sel.Sel.Name
@@ -698,36 +705,36 @@ func (da *DeferAnalyzer) validateDeferInScope(deferStmt *ast.DeferStmt, scopeDep
 // isValidCancelVariableName はcancel変数名が妥当かチェック
 func (da *DeferAnalyzer) isValidCancelVariableName(varName string) bool {
 	validCancelNames := []string{
-		"cancel", "Cancel", 
+		"cancel", "Cancel",
 		"timeoutCancel", "deadlineCancel",
 		"ctx1Cancel", "ctx2Cancel", "ctx3Cancel", "ctx4Cancel",
 		"cancel1", "cancel2", "cancel3", "cancel4",
 	}
-	
+
 	for _, validName := range validCancelNames {
 		if varName == validName {
 			return true
 		}
 	}
-	
+
 	// パターンマッチング（*cancel, *Cancel）
 	if strings.Contains(varName, "cancel") || strings.Contains(varName, "Cancel") {
 		return true
 	}
-	
+
 	return false
 }
 
 // isValidCleanupMethodName はクリーンアップメソッド名が妥当かチェック
 func (da *DeferAnalyzer) isValidCleanupMethodName(methodName string) bool {
 	validMethods := []string{"Close", "Stop", "Shutdown", "Cleanup"}
-	
+
 	for _, validMethod := range validMethods {
 		if methodName == validMethod {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -736,16 +743,16 @@ func (da *DeferAnalyzer) ValidateDeferScope(block *ast.BlockStmt) bool {
 	if block == nil {
 		return true
 	}
-	
+
 	// 精密解析を実行
 	deferInfos := da.AnalyzeDefersPrecision(block)
-	
+
 	// 全てのdefer文が有効かチェック
 	for _, deferInfo := range deferInfos {
 		if !deferInfo.IsValid {
 			return false
 		}
 	}
-	
+
 	return true
 }

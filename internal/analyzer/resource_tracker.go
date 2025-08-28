@@ -375,7 +375,7 @@ func (rt *ResourceTracker) extractActualVariableName(call *ast.CallExpr) string 
 func (rt *ResourceTracker) extractFromClosureParameters(call *ast.CallExpr) string {
 	// ReadWriteTransaction(ctx, func(ctx context.Context, transaction *spanner.ReadWriteTransaction) error { ... })
 	// のパターンを検出
-	
+
 	if len(call.Args) < 2 {
 		return ""
 	}
@@ -390,7 +390,7 @@ func (rt *ResourceTracker) extractFromClosureParameters(call *ast.CallExpr) stri
 			}
 		}
 	}
-	
+
 	return ""
 }
 
@@ -401,7 +401,7 @@ func (rt *ResourceTracker) extractFromAssignmentStatement(call *ast.CallExpr) st
 	if actualVarName != "" {
 		return actualVarName
 	}
-	
+
 	// ReadOnlyTransactionの直接呼び出しパターンを特別処理
 	if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
 		if sel.Sel.Name == "ReadOnlyTransaction" {
@@ -409,7 +409,7 @@ func (rt *ResourceTracker) extractFromAssignmentStatement(call *ast.CallExpr) st
 			return "tx"
 		}
 	}
-	
+
 	return ""
 }
 
@@ -417,11 +417,11 @@ func (rt *ResourceTracker) extractFromAssignmentStatement(call *ast.CallExpr) st
 func (rt *ResourceTracker) findActualAssignmentVariable(call *ast.CallExpr) string {
 	// この実装では AST の親ノードを辿る必要があるため、
 	// 一旦、analysis.Pass の Fset と Files を使用して代入文を検索する
-	// 
+	//
 	// 簡易実装：通常のパターンをサポート
 	// dst := obj.NewWriter(ctx)
 	// writer := client.NewWriter(...)
-	// 
+	//
 	// より完全な実装は別途追加予定
 	return ""
 }
@@ -526,7 +526,6 @@ func (rt *ResourceTracker) initializeSpannerEscapeInfo(funcName string) *Spanner
 	return escapeInfo
 }
 
-
 // isWrappedSpannerTransactionCall はラップされたSpannerトランザクションの呼び出しかチェック
 func (rt *ResourceTracker) isWrappedSpannerTransactionCall(callExpr *ast.CallExpr) bool {
 	// c.ReadWriteTransaction(ctx, func(ctx context.Context) error { ... })
@@ -554,7 +553,7 @@ func (rt *ResourceTracker) isNotDirectSpannerClient(expr ast.Expr) bool {
 			return false // 直接的なSpannerClientなので除外しない
 		}
 	}
-	
+
 	// その他の場合（c.ReadWriteTransaction等）はラップされたものとして除外
 	return true
 }
@@ -623,7 +622,7 @@ func (rt *ResourceTracker) shouldTrackMultipleReturnValues(call *ast.CallExpr) b
 	if funcIdent == nil {
 		return false
 	}
-	
+
 	return strings.Contains(funcIdent.Name, "ReadWriteTransaction")
 }
 

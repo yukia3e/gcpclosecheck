@@ -9,9 +9,9 @@ import (
 
 // ContextAnalyzer はcontext.WithCancel/WithTimeout検出とキャンセレーション検証を行う
 type ContextAnalyzer struct {
-	contextVars   map[*types.Var]*ContextInfo
-	cancelVarNames map[string]*ContextInfo // 変数名 -> ContextInfo のマッピング
-	scopeStack    []map[string]*ContextInfo // スコープ境界を跨ぐ変数名解決用
+	contextVars    map[*types.Var]*ContextInfo
+	cancelVarNames map[string]*ContextInfo   // 変数名 -> ContextInfo のマッピング
+	scopeStack     []map[string]*ContextInfo // スコープ境界を跨ぐ変数名解決用
 }
 
 // NewContextAnalyzer は新しいContextAnalyzerを作成する
@@ -41,7 +41,7 @@ func (ca *ContextAnalyzer) TrackContextCreation(call *ast.CallExpr, typeInfo *ty
 			if pkg, ok := obj.(*types.PkgName); ok {
 				if pkg.Imported().Path() == "context" {
 					funcName := sel.Sel.Name
-					
+
 					// キャンセル関数を返すcontext関数かどうか確認
 					if ca.IsContextWithCancel(funcName) {
 						// ContextInfoを作成
@@ -75,7 +75,7 @@ func (ca *ContextAnalyzer) FindMissingCancels(pass *analysis.Pass) []analysis.Di
 	for _, file := range pass.Files {
 		// 改良された解析を実行
 		ca.AnalyzeContextUsage(file, pass.TypesInfo)
-		
+
 		// 各contextについてdefer文の存在を確認
 		for _, contextInfo := range ca.contextVars {
 			if !contextInfo.IsDeferred {
@@ -87,7 +87,7 @@ func (ca *ContextAnalyzer) FindMissingCancels(pass *analysis.Pass) []analysis.Di
 				diagnostics = append(diagnostics, diag)
 			}
 		}
-		
+
 		// 次のファイル用にリセット
 		ca.contextVars = make(map[*types.Var]*ContextInfo)
 		ca.cancelVarNames = make(map[string]*ContextInfo)
@@ -110,7 +110,7 @@ func (ca *ContextAnalyzer) IsContextWithCancel(funcName string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -132,7 +132,6 @@ func (ca *ContextAnalyzer) analyzeContextCreations(file *ast.File, typeInfo *typ
 		return true
 	})
 }
-
 
 // analyzeDeferStatementsWithFileScope はより精密なスコープ解析でdefer文を確認する
 func (ca *ContextAnalyzer) analyzeDeferStatementsWithFileScope(file *ast.File) {
@@ -311,7 +310,7 @@ func (ca *ContextAnalyzer) processGoStatementWithTracking(goStmt *ast.GoStmt, ty
 // handleImprovedAssignment は改良された代入文解析
 func (ca *ContextAnalyzer) handleImprovedAssignment(assign *ast.AssignStmt, typeInfo *types.Info) {
 	_ = typeInfo // 未使用警告回避
-	
+
 	if len(assign.Rhs) != 1 {
 		return
 	}
@@ -331,7 +330,7 @@ func (ca *ContextAnalyzer) handleImprovedAssignment(assign *ast.AssignStmt, type
 		// cancel関数（第2戻り値）
 		if cancelIdent, ok := assign.Lhs[1].(*ast.Ident); ok {
 			cancelVarName := cancelIdent.Name
-			
+
 			// ContextInfoを作成
 			contextInfo := &ContextInfo{
 				CreationPos: call.Pos(),
@@ -368,7 +367,7 @@ func (ca *ContextAnalyzer) handleImprovedDefer(defer_stmt *ast.DeferStmt) {
 	// defer call() パターンの識別
 	if ident, ok := defer_stmt.Call.Fun.(*ast.Ident); ok {
 		cancelVarName := ident.Name
-		
+
 		// スコープ境界を跨ぐ変数名解決
 		if contextInfo := ca.resolveCancelVar(cancelVarName); contextInfo != nil {
 			contextInfo.IsDeferred = true
@@ -407,8 +406,7 @@ func (ca *ContextAnalyzer) resolveCancelVar(name string) *ContextInfo {
 			return contextInfo
 		}
 	}
-	
+
 	// グローバルマップからも検索
 	return ca.cancelVarNames[name]
 }
-

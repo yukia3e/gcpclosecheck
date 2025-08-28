@@ -1,9 +1,9 @@
 package config
 
 import (
-	"strings"
 	"golang.org/x/tools/go/analysis"
 	"gopkg.in/yaml.v2"
+	"strings"
 )
 
 // DiagnosticLevel は診断の重要度レベル
@@ -33,10 +33,10 @@ func (d DiagnosticLevel) String() string {
 type DiagnosticConfig struct {
 	Level                           string         `yaml:"level"`
 	IncludeSuggestions              bool           `yaml:"include_suggestions"`
-	IncludeEscapeReasons           bool           `yaml:"include_escape_reasons"`
-	ConfidenceThreshold            float64        `yaml:"confidence_threshold"`
+	IncludeEscapeReasons            bool           `yaml:"include_escape_reasons"`
+	ConfidenceThreshold             float64        `yaml:"confidence_threshold"`
 	PotentialFalsePositiveDetection bool           `yaml:"potential_false_positive_detection"`
-	CustomFilters                  []CustomFilter `yaml:"custom_filters"`
+	CustomFilters                   []CustomFilter `yaml:"custom_filters"`
 }
 
 // CustomFilter はカスタムフィルタ設定
@@ -59,13 +59,13 @@ func NewDiagnosticFilter(level DiagnosticLevel) *DiagnosticFilter {
 func (f *DiagnosticFilter) ShouldIncludeDiagnostic(diag analysis.Diagnostic) bool {
 	// メッセージ内容により重要度を判定
 	message := strings.ToLower(diag.Message)
-	
+
 	// エラーレベルの判定
 	if strings.Contains(message, "critical") || strings.Contains(message, "leak detected") {
 		diagLevel := ErrorLevel
 		return f.level <= diagLevel
 	}
-	
+
 	// 警告レベルの判定（"potential false positive"を含む場合は除外）
 	if strings.Contains(message, "potential") || strings.Contains(message, "possible") {
 		if strings.Contains(message, "potential false positive") {
@@ -74,8 +74,8 @@ func (f *DiagnosticFilter) ShouldIncludeDiagnostic(diag analysis.Diagnostic) boo
 		diagLevel := WarningLevel
 		return f.level <= diagLevel
 	}
-	
-	// 情報レベル（デフォルト）  
+
+	// 情報レベル（デフォルト）
 	diagLevel := InfoLevel
 	return f.level <= diagLevel
 }
@@ -91,24 +91,24 @@ func NewPotentialFalsePositiveDetector() *PotentialFalsePositiveDetector {
 		"potential false positive",
 		"uncertain",
 		"unclear",
-		"possible", 
+		"possible",
 		"may be",
 		"might be",
 	}
-	
+
 	return &PotentialFalsePositiveDetector{patterns: patterns}
 }
 
 // IsPotentialFalsePositive は偽陽性の疑いがあるかを判定
 func (d *PotentialFalsePositiveDetector) IsPotentialFalsePositive(message string) bool {
 	lowerMessage := strings.ToLower(message)
-	
+
 	for _, pattern := range d.patterns {
 		if strings.Contains(lowerMessage, pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -118,14 +118,14 @@ func LoadDiagnosticConfigFromYAML(data []byte) (*DiagnosticConfig, error) {
 	var fullConfig struct {
 		Diagnostics DiagnosticConfig `yaml:"diagnostics"`
 	}
-	
+
 	err := yaml.Unmarshal(data, &fullConfig)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	config := &fullConfig.Diagnostics
-	
+
 	// デフォルト値の設定（空の場合）
 	if config.Level == "" {
 		config.Level = "warning"
@@ -133,16 +133,16 @@ func LoadDiagnosticConfigFromYAML(data []byte) (*DiagnosticConfig, error) {
 	if config.ConfidenceThreshold == 0 {
 		config.ConfidenceThreshold = 0.7
 	}
-	
+
 	return config, nil
 }
 
 // DiagnosticProcessingResult は診断処理結果
 type DiagnosticProcessingResult struct {
-	ShouldReport   bool
-	FilterReason   string
+	ShouldReport    bool
+	FilterReason    string
 	ModifiedMessage string
-	Confidence     float64
+	Confidence      float64
 }
 
 // IntegratedDiagnosticProcessor は統合診断処理
@@ -166,7 +166,7 @@ func NewIntegratedDiagnosticProcessor(config *DiagnosticConfig) *IntegratedDiagn
 	default:
 		level = WarningLevel
 	}
-	
+
 	return &IntegratedDiagnosticProcessor{
 		config:   config,
 		filter:   NewDiagnosticFilter(level),
@@ -182,27 +182,27 @@ func (p *IntegratedDiagnosticProcessor) ProcessDiagnostic(diag analysis.Diagnost
 		ModifiedMessage: diag.Message,
 		Confidence:      confidence,
 	}
-	
+
 	// 信頼度チェック
 	if confidence < p.config.ConfidenceThreshold {
 		result.ShouldReport = false
 		result.FilterReason = "Low confidence below threshold"
 		return result
 	}
-	
+
 	// レベルフィルタリング
 	if !p.filter.ShouldIncludeDiagnostic(diag) {
 		result.ShouldReport = false
 		result.FilterReason = "Level filtered"
 		return result
 	}
-	
+
 	// 偽陽性検出
 	if p.config.PotentialFalsePositiveDetection && p.detector.IsPotentialFalsePositive(diag.Message) {
 		result.ShouldReport = false
 		result.FilterReason = "Potential false positive detected"
 		return result
 	}
-	
+
 	return result
 }
