@@ -10,21 +10,21 @@ import (
 	"time"
 )
 
-// buildCLI builds the CLI binary for testing and returns the binary path and temp directory
-func buildCLI(t *testing.T) (string, string) {
-	tmpDir := t.TempDir()
-	binPath := filepath.Join(tmpDir, "gcpclosecheck")
-
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build CLI: %v", err)
-	}
-	return binPath, tmpDir
-}
 
 // TestGoVetIntegration tests integration with go vet
 func TestGoVetIntegration(t *testing.T) {
 	binPath, tmpDir := buildCLI(t)
+
+	// Store original directory for restoration
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get current directory: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Logf("Failed to restore original directory: %v", err)
+		}
+	}()
 
 	// Create test Go module
 	if err := os.Chdir(tmpDir); err != nil {
@@ -149,6 +149,17 @@ func TestMultiPackageAnalysis(t *testing.T) {
 
 	binPath, tmpDir := buildCLI(t)
 
+	// Store original directory for restoration
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get current directory: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Logf("Failed to restore original directory: %v", err)
+		}
+	}()
+
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("Failed to change directory: %v", err)
 	}
@@ -236,6 +247,17 @@ func TestLargeCodebasePerformance(t *testing.T) {
 	}
 
 	binPath, tmpDir := buildCLI(t)
+
+	// Store original directory for restoration
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get current directory: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Logf("Failed to restore original directory: %v", err)
+		}
+	}()
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("Failed to change directory: %v", err)
@@ -410,6 +432,17 @@ func containsJapaneseChars(text string) bool {
 // TestCICDIntegration はCI/CDパイプライン統合をテストする
 func TestCICDIntegration(t *testing.T) {
 	binPath, tmpDir := buildCLI(t)
+
+	// Store original directory for restoration
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get current directory: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Logf("Failed to restore original directory: %v", err)
+		}
+	}()
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("Failed to change directory: %v", err)

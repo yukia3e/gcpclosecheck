@@ -1,0 +1,7 @@
+module gcpclosecheck/testdata/spanner_valid
+
+go 1.21
+
+require (
+	cloud.google.com/go/spanner v1.50.0
+)

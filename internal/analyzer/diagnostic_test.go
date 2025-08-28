@@ -55,8 +55,8 @@ func testFunction(ctx context.Context) error {
 		t.Errorf("Expected category 'resource-leak', got %q", diagnostic.Category)
 	}
 
-	// Expect English message format
-	expectedMessage := "GCP resource 'client' missing cleanup method (Close)"
+	// Expect English message format (updated for Task 15)
+	expectedMessage := "GCP resource client 'client' missing cleanup method (Close)"
 	if diagnostic.Message != expectedMessage {
 		t.Errorf("Expected message %q, got %q", expectedMessage, diagnostic.Message)
 	}
@@ -66,9 +66,9 @@ func testFunction(ctx context.Context) error {
 		t.Error("Expected at least one SuggestedFix")
 	}
 
-	// Expect English suggested fix message
+	// Expect English suggested fix message (updated for Task 15)
 	fix := diagnostic.SuggestedFixes[0]
-	expectedFixMessage := "Add defer client.Close()"
+	expectedFixMessage := "Add defer client.Close() for client cleanup"
 	if fix.Message != expectedFixMessage {
 		t.Errorf("Expected SuggestedFix message %q, got %q", expectedFixMessage, fix.Message)
 	}
@@ -110,8 +110,8 @@ func testFunction(ctx context.Context) error {
 		t.Errorf("Expected category 'context-leak', got %q", diagnostic.Category)
 	}
 
-	// Expect English message format
-	expectedMessage := "context.WithCancel missing cancel function call 'cancel'"
+	// Expect English message format (updated for Task 15)  
+	expectedMessage := "Context.WithCancel missing cancel function call 'cancel'"
 	if diagnostic.Message != expectedMessage {
 		t.Errorf("Expected message %q, got %q", expectedMessage, diagnostic.Message)
 	}
@@ -172,8 +172,8 @@ func testFunction(ctx context.Context) error {
 
 	suggestedFix := generator.CreateSuggestedFix("client", "Close", creationPos)
 
-	// Expect English SuggestedFix message
-	expectedMessage := "Add defer client.Close()"
+	// Expect English SuggestedFix message (updated for Task 15)
+	expectedMessage := "Add defer client.Close() for client cleanup"
 	if suggestedFix.Message != expectedMessage {
 		t.Errorf("Expected SuggestedFix message %q, got %q", expectedMessage, suggestedFix.Message)
 	}

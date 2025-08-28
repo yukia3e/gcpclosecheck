@@ -203,16 +203,19 @@ func (rt *ResourceTracker) extractPackagePath(call *ast.CallExpr, _ *ast.Ident) 
 		// パッケージ関数の場合（pkg.Function）
 		if pkgIdent, ok := sel.X.(*ast.Ident); ok {
 			// 型情報からパッケージパスを取得
-			if obj := rt.typeInfo.Uses[pkgIdent]; obj != nil {
-				if pkg, ok := obj.(*types.PkgName); ok {
-					return pkg.Imported().Path()
+			if rt.typeInfo != nil && rt.typeInfo.Uses != nil {
+				if obj := rt.typeInfo.Uses[pkgIdent]; obj != nil {
+					if pkg, ok := obj.(*types.PkgName); ok {
+						return pkg.Imported().Path()
+					}
 				}
 			}
 		}
 
 		// メソッド呼び出しの場合（obj.Method）
 		// sel.Xの型情報を取得してパッケージパスを推定
-		if typeAndValue, exists := rt.typeInfo.Types[sel.X]; exists {
+		if rt.typeInfo != nil && rt.typeInfo.Types != nil {
+			if typeAndValue, exists := rt.typeInfo.Types[sel.X]; exists {
 			if typeAndValue.Type != nil {
 				typeName := typeAndValue.Type.String()
 				// 型名からパッケージパスを推定
@@ -228,6 +231,7 @@ func (rt *ResourceTracker) extractPackagePath(call *ast.CallExpr, _ *ast.Ident) 
 				if strings.Contains(typeName, "vision") {
 					return "cloud.google.com/go/vision"
 				}
+			}
 			}
 		}
 	}
