@@ -12,11 +12,11 @@ import (
 
 func TestNewContextAnalyzer(t *testing.T) {
 	analyzer := NewContextAnalyzer()
-	
+
 	if analyzer == nil {
 		t.Fatal("NewContextAnalyzer は nil を返すべきではありません")
 	}
-	
+
 	if analyzer.contextVars == nil {
 		t.Error("contextVars マップが初期化されていません")
 	}
@@ -139,9 +139,9 @@ func test() {
 
 func TestContextAnalyzer_FindMissingCancels(t *testing.T) {
 	tests := []struct {
-		name               string
-		code               string
-		expectDiagnostics  int
+		name              string
+		code              string
+		expectDiagnostics int
 	}{
 		{
 			name: "適切にキャンセルされているcontext",
@@ -282,10 +282,10 @@ func TestContextAnalyzer_IsContextWithCancel(t *testing.T) {
 // タスク11: Context変数名追跡の改良実装テスト
 func TestContextAnalyzer_ImprovedVariableTracking(t *testing.T) {
 	tests := []struct {
-		name                 string
-		code                 string
-		expectedCancelVars   []string
-		expectMissingDefers  int
+		name                string
+		code                string
+		expectedCancelVars  []string
+		expectMissingDefers int
 	}{
 		{
 			name: "複数戻り値代入での変数名追跡精度向上",
@@ -444,10 +444,10 @@ func testMissingDeferInAnonymous() {
 
 func TestContextAnalyzer_AnalyzeContextUsage(t *testing.T) {
 	tests := []struct {
-		name      string
-		code      string
-		wantErr   bool
-		wantVars  int
+		name     string
+		code     string
+		wantErr  bool
+		wantVars int
 	}{
 		{
 			name: "基本的なcontext使用解析",
@@ -533,12 +533,12 @@ func setupContextPackageInfo(file *ast.File, typeInfo *types.Info) {
 		if imp.Path == nil {
 			continue
 		}
-		
+
 		path := imp.Path.Value
 		if path == "\"context\"" {
 			// contextパッケージ情報を設定
 			pkg := types.NewPackage("context", "context")
-			
+
 			// ファイル内でcontextパッケージを使用している箇所を特定
 			ast.Inspect(file, func(n ast.Node) bool {
 				if ident, ok := n.(*ast.Ident); ok && ident.Name == "context" {
@@ -814,47 +814,47 @@ func anonymousFunctionLeak() {
 			}{contexts: 2, defers: 1, valid: false},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Logf("Description: %s", tt.description)
 			t.Logf("Expected - Contexts: %d, Defers: %d, Valid: %v",
 				tt.expected.contexts, tt.expected.defers, tt.expected.valid)
-			
+
 			// コードを解析（現在は構文解析のみ）
 			fset := token.NewFileSet()
 			file, err := parser.ParseFile(fset, "test.go", tt.code, parser.ParseComments)
 			if err != nil {
 				t.Fatalf("Failed to parse code: %v", err)
 			}
-			
+
 			// TypeInfo を設定
 			typeInfo := &types.Info{
-				Uses:  make(map[*ast.Ident]types.Object),
-				Defs:  make(map[*ast.Ident]types.Object),
+				Uses: make(map[*ast.Ident]types.Object),
+				Defs: make(map[*ast.Ident]types.Object),
 			}
 			setupContextPackageInfo(file, typeInfo)
-			
+
 			// ContextAnalyzer で解析
 			analyzer := NewContextAnalyzer()
 			err = analyzer.AnalyzeContextUsage(file, typeInfo)
-			
+
 			if err != nil {
 				t.Logf("Analysis error (may be expected during development): %v", err)
 			}
-			
+
 			// 追跡結果を確認
 			trackedVars := analyzer.GetTrackedContextVars()
 			t.Logf("Tracked contexts: %d", len(trackedVars))
-			
+
 			// 将来の実装で使用する予定の検証ロジック
 			// TODO: 実装完了時に有効化
 			/*
-			if len(trackedVars) != tt.expected.contexts {
-				t.Errorf("Context count = %v, want %v", len(trackedVars), tt.expected.contexts)
-			}
+				if len(trackedVars) != tt.expected.contexts {
+					t.Errorf("Context count = %v, want %v", len(trackedVars), tt.expected.contexts)
+				}
 			*/
-			
+
 			// テストデータが正しく解析できることを確認
 			if file == nil {
 				t.Error("Failed to create AST for test data")
@@ -862,4 +862,3 @@ func anonymousFunctionLeak() {
 		})
 	}
 }
-

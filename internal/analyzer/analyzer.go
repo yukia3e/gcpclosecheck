@@ -26,7 +26,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				break
 			}
 		}
-		
+
 		if foundDependencyError {
 			// 依存関係の問題を示唆する診断メッセージを出力
 			pass.Report(analysis.Diagnostic{
@@ -46,12 +46,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	// パッケージ例外判定を実行
 	packagePath := getPackagePath(pass)
 	shouldExempt, exemptReason := serviceRuleEngine.ShouldExemptPackage(packagePath)
-	
+
 	// パッケージが例外対象でない場合、ファイルパスベースの例外判定も実行
 	if !shouldExempt {
 		shouldExempt, exemptReason = checkFileBasedExemptions(pass, serviceRuleEngine)
 	}
-	
+
 	// パッケージまたはファイルが例外対象の場合は診断を生成せずに終了
 	if shouldExempt {
 		// デバッグログ出力（将来的にログレベル制御可能にする）
@@ -84,7 +84,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 					// 関数内のリソースを収集・フィルタリング
 					functionResources := collectAndFilterFunctionResources(
 						resources, fn, pass, escapeAnalyzer)
-					
+
 					// 自動管理リソースの最終フィルタリング
 					functionResources = applyAutoManagedResourceFiltering(
 						functionResources, resourceTracker)
@@ -190,28 +190,28 @@ func collectAndFilterFunctionResources(
 	fn *ast.FuncDecl,
 	pass *analysis.Pass,
 	escapeAnalyzer *EscapeAnalyzer) []ResourceInfo {
-	
+
 	var functionResources []ResourceInfo
-	
+
 	for _, resource := range resources {
 		// 関数スコープ内のリソースのみを対象とする
 		if !isResourceInFunction(resource, fn, pass) {
 			continue
 		}
-		
+
 		// Spannerエスケープ解析統合
 		resource = integrateSpannerEscapeAnalysis(resource, escapeAnalyzer, fn)
-		
+
 		// エスケープ分析
 		escapeInfo := escapeAnalyzer.AnalyzeEscape(resource.Variable, fn)
-		
+
 		// スキップ判定（Spanner自動管理判定を含む）
 		shouldSkip, _ := shouldSkipResourceWithSpannerIntegration(resource, escapeInfo, escapeAnalyzer)
 		if !shouldSkip {
 			functionResources = append(functionResources, resource)
 		}
 	}
-	
+
 	return functionResources
 }
 
@@ -219,13 +219,13 @@ func collectAndFilterFunctionResources(
 func applyAutoManagedResourceFiltering(
 	resources []ResourceInfo,
 	resourceTracker *ResourceTracker) []ResourceInfo {
-	
+
 	// ポインタスライスに変換
 	resourcePtrs := convertToPointerSlice(resources)
-	
+
 	// ResourceTrackerでフィルタリング
 	filteredResourcePtrs := resourceTracker.FilterAutoManagedResources(resourcePtrs)
-	
+
 	// 元の形式に戻す
 	return convertFromPointerSlice(filteredResourcePtrs)
 }
@@ -240,10 +240,10 @@ func getPackagePath(pass *analysis.Pass) string {
 
 // isUndefinedIdentifierError は未定義識別子エラーかどうかを判定する
 func isUndefinedIdentifierError(errMsg string) bool {
-	return strings.Contains(errMsg, "undefined:") || 
-	       strings.Contains(errMsg, "undeclared name:") ||
-	       strings.Contains(errMsg, "not declared") ||
-	       strings.Contains(errMsg, "could not import")
+	return strings.Contains(errMsg, "undefined:") ||
+		strings.Contains(errMsg, "undeclared name:") ||
+		strings.Contains(errMsg, "not declared") ||
+		strings.Contains(errMsg, "could not import")
 }
 
 // checkFileBasedExemptions はファイルパスベースの例外判定を行う
@@ -253,11 +253,11 @@ func checkFileBasedExemptions(pass *analysis.Pass, serviceRuleEngine *ServiceRul
 		if pass.Fset == nil {
 			continue
 		}
-		
+
 		// ファイル位置からファイルパスを取得
 		position := pass.Fset.Position(file.Pos())
 		filePath := position.Filename
-		
+
 		// ファイルパスベースの例外判定
 		if serviceRuleEngine.config != nil {
 			isExempt, reason := serviceRuleEngine.config.ShouldExemptFilePath(filePath)
@@ -266,6 +266,6 @@ func checkFileBasedExemptions(pass *analysis.Pass, serviceRuleEngine *ServiceRul
 			}
 		}
 	}
-	
+
 	return false, ""
 }

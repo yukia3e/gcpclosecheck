@@ -247,18 +247,18 @@ func TestResourceTracker_IsResourceType(t *testing.T) {
 			// 簡単な型を作成（実際の実装では types.Type を使用）
 			// ここでは名前ベースでテスト
 			isGCP, service := tracker.IsResourceType(nil) // TODO: 実際の型を渡す
-			
+
 			// 現在は名前ベースのテスト用ヘルパーメソッドを使用
 			isGCPByName, serviceByName := tracker.IsResourceTypeByName(tt.typeName)
-			
+
 			if isGCPByName != tt.wantIsGCP {
 				t.Errorf("IsResourceTypeByName() isGCP = %v, want %v", isGCPByName, tt.wantIsGCP)
 			}
-			
+
 			if serviceByName != tt.wantService {
 				t.Errorf("IsResourceTypeByName() service = %v, want %v", serviceByName, tt.wantService)
 			}
-			
+
 			// 型による判定もテスト（実装後）
 			_ = isGCP
 			_ = service
@@ -318,8 +318,8 @@ func CreateSpannerClient() {
 	}
 
 	pass := &analysis.Pass{
-		Fset:     fset,
-		Files:    []*ast.File{file},
+		Fset:      fset,
+		Files:     []*ast.File{file},
 		TypesInfo: typeInfo,
 	}
 
@@ -397,11 +397,11 @@ func TestResourceTracker_GetPackageInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			isGCP, service := tracker.GetPackageInfo(tt.packagePath)
-			
+
 			if isGCP != tt.wantIsGCP {
 				t.Errorf("GetPackageInfo() isGCP = %v, want %v", isGCP, tt.wantIsGCP)
 			}
-			
+
 			if service != tt.wantService {
 				t.Errorf("GetPackageInfo() service = %v, want %v", service, tt.wantService)
 			}
@@ -412,8 +412,8 @@ func TestResourceTracker_GetPackageInfo(t *testing.T) {
 // ゴールデンテスト: testdataを使用した統合テスト
 func TestResourceTracker_GoldenTest(t *testing.T) {
 	tests := []struct {
-		name     string
-		filename string
+		name              string
+		filename          string
 		wantResourceCount int
 	}{
 		{
@@ -442,7 +442,7 @@ func TestResourceTracker_GoldenTest(t *testing.T) {
 			wantResourceCount: 7, // リソース生成数を実際の数に合わせて調整
 		},
 		{
-			name:              "Invalid Storage code", 
+			name:              "Invalid Storage code",
 			filename:          "testdata/invalid/storage_missing_close.go",
 			wantResourceCount: 4, // リソース生成数を実際の数に合わせて調整
 		},
@@ -470,11 +470,11 @@ func TestResourceTracker_GoldenTest(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ワーキングディレクトリの取得に失敗: %v", err)
 			}
-			
+
 			// プロジェクトルートからの相対パスに変換
 			projectRoot := filepath.Join(wd, "../..")
 			fullPath := filepath.Join(projectRoot, tt.filename)
-			
+
 			// ファイルをパース
 			fset := token.NewFileSet()
 			file, err := parser.ParseFile(fset, fullPath, nil, parser.ParseComments)
@@ -514,11 +514,11 @@ func TestResourceTracker_GoldenTest(t *testing.T) {
 			// 結果を検証
 			if len(resources) != tt.wantResourceCount {
 				t.Errorf("検出されたリソース数 = %v, 期待値 = %v", len(resources), tt.wantResourceCount)
-				
+
 				// デバッグ情報を出力
 				t.Logf("検出されたリソース:")
 				for i, resource := range resources {
-					t.Logf("  [%d] ServiceType: %s, CleanupMethod: %s, Required: %v", 
+					t.Logf("  [%d] ServiceType: %s, CleanupMethod: %s, Required: %v",
 						i, resource.ServiceType, resource.CleanupMethod, resource.IsRequired)
 				}
 			}
@@ -533,10 +533,10 @@ func setupPackageInfo(file *ast.File, typeInfo *types.Info) {
 		if imp.Path == nil {
 			continue
 		}
-		
+
 		path := strings.Trim(imp.Path.Value, "\"")
 		var pkgName string
-		
+
 		switch {
 		case strings.Contains(path, "spanner"):
 			pkgName = "spanner"
@@ -552,7 +552,7 @@ func setupPackageInfo(file *ast.File, typeInfo *types.Info) {
 
 		// パッケージ情報を設定
 		pkg := types.NewPackage(path, pkgName)
-		
+
 		// ファイル内でこのパッケージを使用している箇所を特定
 		ast.Inspect(file, func(n ast.Node) bool {
 			if ident, ok := n.(*ast.Ident); ok && ident.Name == pkgName {
@@ -561,7 +561,7 @@ func setupPackageInfo(file *ast.File, typeInfo *types.Info) {
 			return true
 		})
 	}
-	
+
 	// メソッド呼び出し（client.ReadOnlyTransaction等）の型情報を模擬的に設定
 	ast.Inspect(file, func(n ast.Node) bool {
 		if sel, ok := n.(*ast.SelectorExpr); ok {
@@ -570,13 +570,13 @@ func setupPackageInfo(file *ast.File, typeInfo *types.Info) {
 				if ident.Name == "client" {
 					clientType := &mockSpannerType{name: "*spanner.Client"}
 					typeInfo.Types[sel.X] = types.TypeAndValue{
-						Type: clientType,
+						Type:  clientType,
 						Value: nil,
 					}
 				} else if ident.Name == "txn" {
 					txnType := &mockSpannerType{name: "*spanner.ReadOnlyTransaction"}
 					typeInfo.Types[sel.X] = types.TypeAndValue{
-						Type: txnType,
+						Type:  txnType,
 						Value: nil,
 					}
 				}
@@ -592,7 +592,7 @@ type mockSpannerType struct {
 }
 
 func (m *mockSpannerType) Underlying() types.Type { return m }
-func (m *mockSpannerType) String() string { return m.name }
+func (m *mockSpannerType) String() string         { return m.name }
 
 // ベンチマークテスト: ResourceTrackerのパフォーマンス測定
 func BenchmarkResourceTracker_FindResourceCreation(b *testing.B) {
@@ -631,7 +631,7 @@ func BenchmarkResourceTracker_FindResourceCreation(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		resources := tracker.FindResourceCreation(pass)
-		
+
 		// 結果が期待通りかを簡単に確認
 		if len(resources) != 1000 {
 			b.Errorf("期待されるリソース数と異なります: got %d, want 1000", len(resources))
@@ -649,7 +649,7 @@ func test() {
 	spanner.NewClient(ctx, "test")
 }
 `
-	
+
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, "test.go", testCode, parser.ParseComments)
 	if err != nil {
@@ -835,7 +835,7 @@ func testFunction(ctx context.Context) error {
 
 			// テスト用のリソースを手動で作成（実際の型解析の代わり）
 			var resources []ResourceInfo
-			
+
 			// spanner.NewClientの場合
 			if strings.Contains(tt.code, "spanner.NewClient") {
 				resources = append(resources, ResourceInfo{
@@ -845,7 +845,7 @@ func testFunction(ctx context.Context) error {
 					IsRequired:       true,
 				})
 			}
-			
+
 			// ReadWriteTransactionの場合
 			if strings.Contains(tt.code, "ReadWriteTransaction") {
 				resources = append(resources, ResourceInfo{
@@ -856,7 +856,7 @@ func testFunction(ctx context.Context) error {
 					SpannerEscape:    NewSpannerEscapeInfo(ReadWriteTransactionType, true, "クロージャ内で自動管理"),
 				})
 			}
-			
+
 			// ReadOnlyTransactionの場合
 			if strings.Contains(tt.code, "ReadOnlyTransaction") {
 				resources = append(resources, ResourceInfo{

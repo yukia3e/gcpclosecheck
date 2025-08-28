@@ -26,10 +26,10 @@ var validExceptionTypes = []string{
 
 // ServiceRule は GCP サービス固有の解放ルール定義を表す
 type ServiceRule struct {
-	ServiceName    string          `yaml:"service_name"`     // サービス名
-	PackagePath    string          `yaml:"package_path"`     // パッケージパス
+	ServiceName    string          `yaml:"service_name"`       // サービス名
+	PackagePath    string          `yaml:"package_path"`       // パッケージパス
 	CreationFuncs  []string        `yaml:"creation_functions"` // 生成関数一覧
-	CleanupMethods []CleanupMethod `yaml:"cleanup_methods"`  // 解放メソッド一覧
+	CleanupMethods []CleanupMethod `yaml:"cleanup_methods"`    // 解放メソッド一覧
 }
 
 // CleanupMethod は解放メソッドの詳細情報を表す
@@ -57,8 +57,8 @@ type PackageExceptionRule struct {
 
 // Config はツール全体の設定を表す
 type Config struct {
-	Services          []ServiceRule            `yaml:"services"`
-	PackageExceptions []PackageExceptionRule   `yaml:"package_exceptions,omitempty"`
+	Services          []ServiceRule          `yaml:"services"`
+	PackageExceptions []PackageExceptionRule `yaml:"package_exceptions,omitempty"`
 }
 
 // LoadConfig は指定されたパスから設定ファイルを読み込む
@@ -134,10 +134,10 @@ func (c *Config) Validate() error {
 		if exception.Pattern == "" {
 			return fmt.Errorf("パッケージ例外[%d](%s): パターンが空です", i, exception.Name)
 		}
-		
+
 		// 例外条件タイプの検証
 		if !isValidExceptionType(exception.Condition.Type) {
-			return fmt.Errorf("パッケージ例外[%d](%s): 不正な条件タイプです: %s (有効なタイプ: %v)", 
+			return fmt.Errorf("パッケージ例外[%d](%s): 不正な条件タイプです: %s (有効なタイプ: %v)",
 				i, exception.Name, exception.Condition.Type, validExceptionTypes)
 		}
 	}
@@ -176,13 +176,13 @@ func (c *Config) ShouldExemptPackage(packagePath string) (bool, string) {
 		if !exception.Condition.Enabled {
 			continue
 		}
-		
+
 		// パターンマッチング（簡単なglob実装）
 		if matchPattern(exception.Pattern, packagePath) {
 			return true, exception.Condition.Description
 		}
 	}
-	
+
 	return false, ""
 }
 
@@ -192,13 +192,13 @@ func (c *Config) ShouldExemptFilePath(filePath string) (bool, string) {
 		if !exception.Condition.Enabled {
 			continue
 		}
-		
+
 		// ファイルパスパターンマッチング
 		if matchPattern(exception.Pattern, filePath) {
 			return true, exception.Condition.Description
 		}
 	}
-	
+
 	return false, ""
 }
 
@@ -212,18 +212,18 @@ func matchPattern(pattern, str string) bool {
 		if len(beforeAfter) == 2 {
 			before := beforeAfter[0]
 			after := beforeAfter[1]
-			
+
 			// afterの**も処理
 			if strings.HasSuffix(after, "/**") {
 				after = strings.TrimSuffix(after, "/**")
 			} else if strings.HasPrefix(after, "*/") {
 				after = strings.TrimPrefix(after, "*/")
 			}
-			
+
 			// beforeで始まり、afterが含まれる
 			hasPrefix := before == "" || strings.HasPrefix(str, before)
 			var hasAfter bool
-			
+
 			// afterがワイルドカードを含む場合の特別処理
 			if strings.HasPrefix(after, "*") {
 				suffix := strings.TrimPrefix(after, "*")
@@ -231,24 +231,24 @@ func matchPattern(pattern, str string) bool {
 			} else {
 				hasAfter = after == "" || strings.Contains(str, after)
 			}
-			
+
 			return hasPrefix && hasAfter
 		}
 	}
-	
-	// */ パターン（単一ディレクトリ階層） 
+
+	// */ パターン（単一ディレクトリ階層）
 	// 例: "*/cmd/*" は "github.com/example/project/cmd/server" にマッチ
 	if strings.Contains(pattern, "*/") && !strings.Contains(pattern, "**/") {
 		parts := strings.Split(pattern, "*/")
 		if len(parts) == 2 {
 			before := parts[0]
 			after := parts[1]
-			
+
 			// afterの後ろの*も処理
 			if strings.HasSuffix(after, "/*") {
 				after = strings.TrimSuffix(after, "/*")
 			}
-			
+
 			if before == "" {
 				// "*/after" の形式 - afterが含まれる
 				return strings.Contains(str, after)
@@ -259,7 +259,7 @@ func matchPattern(pattern, str string) bool {
 			}
 		}
 	}
-	
+
 	// **/*_test.go のようなパターン
 	if strings.HasPrefix(pattern, "**/") {
 		suffix := strings.TrimPrefix(pattern, "**/")
@@ -270,7 +270,7 @@ func matchPattern(pattern, str string) bool {
 		}
 		return strings.HasSuffix(str, suffix)
 	}
-	
+
 	// 単純な文字列マッチ
 	return str == pattern
 }

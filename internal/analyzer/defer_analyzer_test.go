@@ -38,8 +38,8 @@ func TestNewDeferAnalyzer(t *testing.T) {
 
 func TestDeferAnalyzer_FindDeferStatements(t *testing.T) {
 	tests := []struct {
-		name       string
-		code       string
+		name        string
+		code        string
 		expectDefer int
 	}{
 		{
@@ -123,39 +123,39 @@ func test() {
 
 func TestDeferAnalyzer_ValidateCleanupPattern(t *testing.T) {
 	tests := []struct {
-		name           string
-		resourceType   string
-		cleanupMethod  string
-		deferCallExpr  string
-		wantValid      bool
+		name          string
+		resourceType  string
+		cleanupMethod string
+		deferCallExpr string
+		wantValid     bool
 	}{
 		{
-			name:           "正しいSpannerクライアントのClose",
-			resourceType:   "spanner",
-			cleanupMethod:  "Close",
-			deferCallExpr:  "client.Close()",
-			wantValid:      true,
+			name:          "正しいSpannerクライアントのClose",
+			resourceType:  "spanner",
+			cleanupMethod: "Close",
+			deferCallExpr: "client.Close()",
+			wantValid:     true,
 		},
 		{
-			name:           "正しいRowIteratorのStop",
-			resourceType:   "spanner",
-			cleanupMethod:  "Stop",
-			deferCallExpr:  "iter.Stop()",
-			wantValid:      true,
+			name:          "正しいRowIteratorのStop",
+			resourceType:  "spanner",
+			cleanupMethod: "Stop",
+			deferCallExpr: "iter.Stop()",
+			wantValid:     true,
 		},
 		{
-			name:           "間違ったメソッド呼び出し",
-			resourceType:   "spanner",
-			cleanupMethod:  "Close",
-			deferCallExpr:  "client.Start()",
-			wantValid:      false,
+			name:          "間違ったメソッド呼び出し",
+			resourceType:  "spanner",
+			cleanupMethod: "Close",
+			deferCallExpr: "client.Start()",
+			wantValid:     false,
 		},
 		{
-			name:           "正しいStorageクライアントのClose",
-			resourceType:   "storage",
-			cleanupMethod:  "Close",
-			deferCallExpr:  "client.Close()",
-			wantValid:      true,
+			name:          "正しいStorageクライアントのClose",
+			resourceType:  "storage",
+			cleanupMethod: "Close",
+			deferCallExpr: "client.Close()",
+			wantValid:     true,
 		},
 	}
 
@@ -185,9 +185,9 @@ func TestDeferAnalyzer_ValidateCleanupPattern(t *testing.T) {
 
 func TestDeferAnalyzer_AnalyzeDefers(t *testing.T) {
 	tests := []struct {
-		name               string
-		code               string
-		expectDiagnostics  int
+		name              string
+		code              string
+		expectDiagnostics int
 	}{
 		{
 			name: "適切にクローズされているSpannerクライアント",
@@ -279,7 +279,7 @@ func test(ctx context.Context) {
 
 			// リソースを追跡
 			_ = tracker.FindResourceCreation(pass)
-			
+
 			// 関数を探す
 			var fn *ast.FuncDecl
 			for _, decl := range file.Decls {
@@ -308,7 +308,7 @@ func test(ctx context.Context) {
 				for i, res := range resources {
 					t.Logf("  リソース[%d]: Type=%s, Method=%s, Required=%v", i, res.ServiceType, res.CleanupMethod, res.IsRequired)
 				}
-				
+
 				// AST内の全CallExprを確認
 				ast.Inspect(fn, func(n ast.Node) bool {
 					if call, ok := n.(*ast.CallExpr); ok {
@@ -504,7 +504,7 @@ func testMultipleContextHandling() {
 			// 改良されたAnalyzeDefersPrecision()メソッドを呼び出し（まだ実装されていない）
 			defers := analyzer.FindDeferStatements(fn.Body)
 			improvedDefers := analyzer.AnalyzeDefersPrecision(fn.Body)
-			
+
 			// defer文の数を検証
 			if len(defers) != tt.expectedDeferFound {
 				t.Errorf("Found defers = %v, want %v", len(defers), tt.expectedDeferFound)

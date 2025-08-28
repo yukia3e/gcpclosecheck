@@ -89,12 +89,12 @@ func TestLoadDefaultConfig(t *testing.T) {
 			t.Errorf("期待されるサービス %s が見つかりません", serviceName)
 		}
 	}
-	
+
 	// パッケージ例外が設定されているかチェック
 	if len(config.PackageExceptions) < 3 {
 		t.Errorf("期待されるパッケージ例外数が不足: got %d, want >= 3", len(config.PackageExceptions))
 	}
-	
+
 	// デフォルト例外の存在確認
 	expectedExceptions := []string{"cmd_short_lived", "cloud_functions", "test_files"}
 	for _, exceptionName := range expectedExceptions {
@@ -501,8 +501,8 @@ func findExceptionByName(exceptions []PackageExceptionRule, name string) *Packag
 
 // ヘルパー関数: 文字列が含まれているかチェック
 func containsString(s, substr string) bool {
-	return len(substr) > 0 && len(s) >= len(substr) && 
-		(s == substr || 
-			(len(s) > len(substr) && 
+	return len(substr) > 0 && len(s) >= len(substr) &&
+		(s == substr ||
+			(len(s) > len(substr) &&
 				(strings.Contains(s, substr))))
 }

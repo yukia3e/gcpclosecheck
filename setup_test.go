@@ -17,7 +17,7 @@ func TestProjectStructure(t *testing.T) {
 	// 必要なディレクトリ構造のテスト
 	requiredDirs := []string{
 		"cmd/gcpclosecheck",
-		"internal/analyzer", 
+		"internal/analyzer",
 		"internal/rules",
 		"internal/config",
 		"testdata/valid",
@@ -48,7 +48,7 @@ func TestGoModuleConfiguration(t *testing.T) {
 	// go.mod の内容検証
 	wd, _ := os.Getwd()
 	goModPath := filepath.Join(wd, "go.mod")
-	
+
 	content, err := os.ReadFile(goModPath)
 	if err != nil {
 		t.Fatalf("go.mod ファイルを読み込めません: %v", err)
@@ -64,7 +64,7 @@ func TestMainGoCompiles(t *testing.T) {
 	// main.go がコンパイル可能かテスト
 	wd, _ := os.Getwd()
 	pkgDir := filepath.Join(wd, "cmd/gcpclosecheck")
-	
+
 	pkg, err := build.ImportDir(pkgDir, 0)
 	if err != nil {
 		t.Fatalf("cmd/gcpclosecheck パッケージをインポートできません: %v", err)

@@ -240,11 +240,11 @@ func createClient(ctx context.Context) (*spanner.Client, error) {
 // TestAnalyzer_SpannerEscapeIntegration - Spannerエスケープ分析統合のテスト（RED: 失敗テスト）
 func TestAnalyzer_SpannerEscapeIntegration(t *testing.T) {
 	tests := []struct {
-		name                      string
-		code                      string
-		expectedDiagnostics       int
-		expectedSpannerSkipCount  int
-		description               string
+		name                     string
+		code                     string
+		expectedDiagnostics      int
+		expectedSpannerSkipCount int
+		description              string
 	}{
 		{
 			name: "ReadWriteTransactionクロージャ自動管理",
@@ -334,16 +334,16 @@ func testMixedPattern(ctx context.Context) error {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// 簡易的なSpanner統合テスト（型情報無しで統合ロジックのみテスト）
-			
+
 			// ServiceRuleEngineとResourceTrackerを直接初期化
 			serviceRuleEngine := NewServiceRuleEngine()
 			if err := serviceRuleEngine.LoadDefaultRules(); err != nil {
 				t.Fatalf("Failed to load rules: %v", err)
 			}
-			
+
 			// テスト用のResourceInfoを手動作成
 			var mockResources []ResourceInfo
-			
+
 			// コードパターンに基づいてモックリソースを生成
 			if strings.Contains(tt.code, "ReadWriteTransaction") {
 				mockResources = append(mockResources, ResourceInfo{
@@ -354,17 +354,17 @@ func testMixedPattern(ctx context.Context) error {
 					SpannerEscape:    NewSpannerEscapeInfo(ReadWriteTransactionType, true, "クロージャ内自動管理"),
 				})
 			}
-			
+
 			if strings.Contains(tt.code, "ReadOnlyTransaction") {
 				mockResources = append(mockResources, ResourceInfo{
 					ServiceType:      "spanner",
-					CreationFunction: "ReadOnlyTransaction", 
+					CreationFunction: "ReadOnlyTransaction",
 					CleanupMethod:    "Close",
 					IsRequired:       true,
 					SpannerEscape:    nil, // 手動管理
 				})
 			}
-			
+
 			if strings.Contains(tt.code, "spanner.NewClient") {
 				mockResources = append(mockResources, ResourceInfo{
 					ServiceType:      "spanner",
@@ -374,42 +374,42 @@ func testMixedPattern(ctx context.Context) error {
 					SpannerEscape:    nil,
 				})
 			}
-			
+
 			// ResourceTrackerでフィルタリングテスト
 			resourceTracker := NewResourceTracker(nil, serviceRuleEngine)
 			resourcePtrs := make([]*ResourceInfo, len(mockResources))
 			for i := range mockResources {
 				resourcePtrs[i] = &mockResources[i]
 			}
-			
+
 			filteredResources := resourceTracker.FilterAutoManagedResources(resourcePtrs)
-			
+
 			// フィルタリング結果の検証
 			finalDiagnosticCount := len(filteredResources)
-			
+
 			// 期待する診断数と比較
 			if finalDiagnosticCount != tt.expectedDiagnostics {
 				// ReadWriteTransactionが期待通りフィルタされているかチェック
 				autoManagedFiltered := false
 				for _, res := range mockResources {
-					if res.CreationFunction == "ReadWriteTransaction" && 
-					   res.SpannerEscape != nil && 
-					   res.SpannerEscape.IsAutoManaged {
+					if res.CreationFunction == "ReadWriteTransaction" &&
+						res.SpannerEscape != nil &&
+						res.SpannerEscape.IsAutoManaged {
 						autoManagedFiltered = true
 						break
 					}
 				}
-				
+
 				if tt.name == "ReadWriteTransactionクロージャ自動管理" && autoManagedFiltered {
 					t.Logf("✓ ReadWriteTransaction correctly marked as auto-managed")
 				} else {
-					t.Errorf("%s: expected %d diagnostics after filtering, got %d", 
+					t.Errorf("%s: expected %d diagnostics after filtering, got %d",
 						tt.description, tt.expectedDiagnostics, finalDiagnosticCount)
 				}
 			} else {
 				t.Logf("✓ %s: diagnostic count matches expectation (%d)", tt.name, finalDiagnosticCount)
 			}
-			
+
 			// Spannerスキップ数の検証
 			skipCount := len(mockResources) - len(filteredResources)
 			if skipCount == tt.expectedSpannerSkipCount {
@@ -493,18 +493,18 @@ func testSpannerDiagnosticExclusion(ctx context.Context) error {
 	// 期待値: ReadOnlyTransaction(1) + Iterator(1) = 2つの診断
 	// ReadWriteTransactionは自動管理で除外される予定
 	expectedDiagnostics := 2
-	
+
 	// 現在は正しく動作しないため、失敗することを記録
 	if len(diagnostics) == expectedDiagnostics {
 		t.Log("Diagnostic exclusion is working correctly")
 	} else {
-		t.Logf("Expected %d diagnostics, got %d (This failure is expected before integration)", 
+		t.Logf("Expected %d diagnostics, got %d (This failure is expected before integration)",
 			expectedDiagnostics, len(diagnostics))
 		for i, d := range diagnostics {
 			t.Logf("Diagnostic %d: %s", i+1, d.Message)
 		}
 	}
-	
+
 	// Spanner例外理由の明記機能テスト（統合後に実装予定）
 	hasSpannerExceptionReason := false
 	for _, d := range diagnostics {
@@ -513,7 +513,7 @@ func testSpannerDiagnosticExclusion(ctx context.Context) error {
 			break
 		}
 	}
-	
+
 	t.Logf("Spanner exception reason in diagnostics: %v (not implemented yet)", hasSpannerExceptionReason)
 }
 
@@ -521,13 +521,13 @@ func testSpannerDiagnosticExclusion(ctx context.Context) error {
 func containsSpannerExceptionReason(message string) bool {
 	spannerKeywords := []string{
 		"automatically managed",
-		"framework managed", 
+		"framework managed",
 		"closure managed",
 		"自動管理",
 		"フレームワーク管理",
 		"クロージャ管理",
 	}
-	
+
 	for _, keyword := range spannerKeywords {
 		if len(message) > 0 && len(keyword) > 0 {
 			// 簡単な含有チェック（実際の実装では改善）
@@ -540,12 +540,12 @@ func containsSpannerExceptionReason(message string) bool {
 // TestAnalyzer_EnhancedIntegration は改良されたE2E統合テスト
 func TestAnalyzer_EnhancedIntegration(t *testing.T) {
 	// Task 16: 偽陽性削減効果の統合検証テスト実装
-	
+
 	tests := []struct {
-		name             string
-		code             string 
+		name                string
+		code                string
 		expectedDiagnostics int
-		description      string
+		description         string
 	}{
 		{
 			name: "Context cancel detection improvement",
@@ -567,7 +567,7 @@ func correctCancel(ctx context.Context) error {
 	return nil
 }`,
 			expectedDiagnostics: 1, // missingCancel()の1件のみ
-			description: "Context cancel関数の改良された検出",
+			description:         "Context cancel関数の改良された検出",
 		},
 		{
 			name: "Package exception effect measurement",
@@ -582,7 +582,7 @@ func main() {
 	_ = cancel
 }`,
 			expectedDiagnostics: 0, // package例外により検出されない
-			description: "cmdパッケージでの例外効果測定",
+			description:         "cmdパッケージでの例外効果測定",
 		},
 		{
 			name: "Spanner escape analysis integration",
@@ -612,14 +612,14 @@ func testSpannerAutoManaged() error {
 	})
 }`,
 			expectedDiagnostics: 0, // Spannerエスケープ分析により検出されない
-			description: "Spanner自動管理パターンのエスケープ分析",
+			description:         "Spanner自動管理パターンのエスケープ分析",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Logf("Testing: %s", tt.description)
-			
+
 			// パースと型チェック
 			fset := token.NewFileSet()
 			file, err := parser.ParseFile(fset, "test.go", tt.code, parser.ParseComments)
@@ -673,7 +673,7 @@ func testSpannerAutoManaged() error {
 	}
 }
 
-// TestAnalyzer_AnalysisTest uses the standard analysistest package  
+// TestAnalyzer_AnalysisTest uses the standard analysistest package
 func TestAnalyzer_AnalysisTest(t *testing.T) {
 	// analysistest環境が整うまでスキップ
 	t.Skip("Skipping analysistest until testdata structure is ready")
@@ -684,18 +684,18 @@ func TestAnalyzer_AnalysisTest(t *testing.T) {
 // TestFalsePositiveReductionQuantitative は偽陽性削減の定量的検証テスト
 func TestFalsePositiveReductionQuantitative(t *testing.T) {
 	// Task 16: 124件→25件以下(80%削減)の定量的検証
-	
-	testCases := []struct{
-		name string
-		beforePatterns []string // 修正前に誤検出されたパターン  
-		afterPatterns []string  // 修正後に適切に除外されたパターン
-		expectedReduction float64 // 期待される削減率
+
+	testCases := []struct {
+		name              string
+		beforePatterns    []string // 修正前に誤検出されたパターン
+		afterPatterns     []string // 修正後に適切に除外されたパターン
+		expectedReduction float64  // 期待される削減率
 	}{
 		{
 			name: "Spanner transaction false positive reduction",
 			beforePatterns: []string{
 				"ReadWriteTransaction closure pattern",
-				"ReadOnlyTransaction automatic management", 
+				"ReadOnlyTransaction automatic management",
 				"Batch transaction framework handling",
 			},
 			afterPatterns: []string{
@@ -704,7 +704,7 @@ func TestFalsePositiveReductionQuantitative(t *testing.T) {
 			expectedReduction: 0.80, // 80%削減目標
 		},
 		{
-			name: "Client creation package exception reduction", 
+			name: "Client creation package exception reduction",
 			beforePatterns: []string{
 				"cmd/ package short-lived programs",
 				"function/ package Cloud Functions",
@@ -719,7 +719,7 @@ func TestFalsePositiveReductionQuantitative(t *testing.T) {
 			name: "Context cancel detection improvement",
 			beforePatterns: []string{
 				"Multiple return value assignment tracking",
-				"Anonymous function scope boundary",  
+				"Anonymous function scope boundary",
 				"Nested function defer resolution",
 			},
 			afterPatterns: []string{
@@ -728,30 +728,30 @@ func TestFalsePositiveReductionQuantitative(t *testing.T) {
 			expectedReduction: 0.80, // 80%削減目標
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			beforeCount := len(tc.beforePatterns)
-			afterCount := len(tc.afterPatterns) 
-			
+			afterCount := len(tc.afterPatterns)
+
 			if beforeCount == 0 {
 				t.Skip("Skipping empty test case")
 				return
 			}
-			
-			actualReduction := float64(beforeCount - afterCount) / float64(beforeCount)
-			
+
+			actualReduction := float64(beforeCount-afterCount) / float64(beforeCount)
+
 			t.Logf("Pattern category: %s", tc.name)
 			t.Logf("Before: %d patterns, After: %d patterns", beforeCount, afterCount)
-			t.Logf("Actual reduction: %.1f%%, Expected: %.1f%%", 
+			t.Logf("Actual reduction: %.1f%%, Expected: %.1f%%",
 				actualReduction*100, tc.expectedReduction*100)
-			
+
 			if actualReduction >= tc.expectedReduction {
-				t.Logf("✅ Reduction target achieved: %.1f%% >= %.1f%%", 
+				t.Logf("✅ Reduction target achieved: %.1f%% >= %.1f%%",
 					actualReduction*100, tc.expectedReduction*100)
 			} else {
 				// 現在は実装段階のためwarning扱い
-				t.Logf("⚠️ Reduction target not yet achieved: %.1f%% < %.1f%%", 
+				t.Logf("⚠️ Reduction target not yet achieved: %.1f%% < %.1f%%",
 					actualReduction*100, tc.expectedReduction*100)
 			}
 		})
@@ -761,12 +761,12 @@ func TestFalsePositiveReductionQuantitative(t *testing.T) {
 // TestTruePositivePreservation は真陽性保持率のテスト
 func TestTruePositivePreservation(t *testing.T) {
 	// Task 16: 真陽性維持率95%以上の回帰テスト
-	
-	truePositiveCases := []struct{
-		name string
-		code string
+
+	truePositiveCases := []struct {
+		name         string
+		code         string
 		shouldDetect bool
-		description string
+		description  string
 	}{
 		{
 			name: "Actual resource leak in cmd package",
@@ -783,10 +783,10 @@ func longRunningServer() {
 	}
 }`,
 			shouldDetect: true,
-			description: "cmdパッケージでも長時間実行の場合は検出すべき",
+			description:  "cmdパッケージでも長時間実行の場合は検出すべき",
 		},
 		{
-			name: "Manual Spanner transaction management", 
+			name: "Manual Spanner transaction management",
 			code: `package test
 
 type ManualTransaction struct{}
@@ -799,17 +799,17 @@ func manualSpannerUsage() error {
 	return nil
 }`,
 			shouldDetect: true,
-			description: "手動管理のSpannerリソースは検出を維持",
+			description:  "手動管理のSpannerリソースは検出を維持",
 		},
 	}
-	
+
 	preservedCount := 0
 	totalCount := len(truePositiveCases)
-	
+
 	for _, tc := range truePositiveCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Logf("Testing true positive preservation: %s", tc.description)
-			
+
 			// 実際のAnalyzer実行は省略（他のテストで実行済み）
 			// ここでは分類の正確性を確認
 			if tc.shouldDetect {
@@ -820,15 +820,15 @@ func manualSpannerUsage() error {
 			}
 		})
 	}
-	
+
 	preservationRate := float64(preservedCount) / float64(totalCount)
 	targetRate := 0.95 // 95%以上の保持率
-	
-	t.Logf("True positive preservation rate: %.1f%% (%d/%d)", 
+
+	t.Logf("True positive preservation rate: %.1f%% (%d/%d)",
 		preservationRate*100, preservedCount, totalCount)
-	
+
 	if preservationRate >= targetRate {
-		t.Logf("✅ True positive preservation target achieved: %.1f%% >= %.1f%%", 
+		t.Logf("✅ True positive preservation target achieved: %.1f%% >= %.1f%%",
 			preservationRate*100, targetRate*100)
 	} else {
 		t.Logf("⚠️ True positive preservation needs attention: %.1f%% < %.1f%%",
@@ -838,12 +838,12 @@ func manualSpannerUsage() error {
 
 func TestAnalyzer_PackageExceptionIntegration(t *testing.T) {
 	tests := []struct {
-		name            string
-		packagePath     string
-		testCode        string
-		expectedDiag    int
-		expectExempt    bool
-		exemptReason    string
+		name         string
+		packagePath  string
+		testCode     string
+		expectedDiag int
+		expectExempt bool
+		exemptReason string
 	}{
 		{
 			name:        "cmd パッケージ - 例外適用",
@@ -1012,35 +1012,35 @@ func TestStorageAccess(t *testing.T) {
 
 func TestPackageExceptionEffectMeasurement(t *testing.T) {
 	tests := []struct {
-		name                string
-		testDataPath        string
-		packagePath         string
-		expectedDiagBefore  int // パッケージ例外適用前の診断数
-		expectedDiagAfter   int // パッケージ例外適用後の診断数
-		reductionTarget     float64 // 期待される削減率（例：0.8 = 80%削減）
+		name               string
+		testDataPath       string
+		packagePath        string
+		expectedDiagBefore int     // パッケージ例外適用前の診断数
+		expectedDiagAfter  int     // パッケージ例外適用後の診断数
+		reductionTarget    float64 // 期待される削減率（例：0.8 = 80%削減）
 	}{
 		{
 			name:               "cmd_short_lived - 短命プログラム例外効果",
 			testDataPath:       "testdata/src/cmd_short_lived/cmd_short_lived.go",
 			packagePath:        "github.com/example/project/cmd/server",
-			expectedDiagBefore: 4, // 例外なしでは4つのクライアントで診断される
-			expectedDiagAfter:  0, // 例外により全て削減される
+			expectedDiagBefore: 4,   // 例外なしでは4つのクライアントで診断される
+			expectedDiagAfter:  0,   // 例外により全て削減される
 			reductionTarget:    1.0, // 100%削減
 		},
 		{
 			name:               "function_faas - Cloud Functions例外効果",
-			testDataPath:       "testdata/src/function_faas/function_faas.go", 
+			testDataPath:       "testdata/src/function_faas/function_faas.go",
 			packagePath:        "github.com/example/project/internal/function/handler",
-			expectedDiagBefore: 5, // 例外なしでは5つのクライアントで診断される
-			expectedDiagAfter:  0, // 例外により全て削減される
+			expectedDiagBefore: 5,   // 例外なしでは5つのクライアントで診断される
+			expectedDiagAfter:  0,   // 例外により全て削減される
 			reductionTarget:    1.0, // 100%削減
 		},
 		{
 			name:               "test_patterns - テスト例外無効効果",
 			testDataPath:       "testdata/src/test_patterns/test_patterns.go",
 			packagePath:        "github.com/example/project/pkg/util_test.go",
-			expectedDiagBefore: 8, // 例外なしでは8つのクライアントで診断される
-			expectedDiagAfter:  8, // デフォルト無効なので削減されない
+			expectedDiagBefore: 8,   // 例外なしでは8つのクライアントで診断される
+			expectedDiagAfter:  8,   // デフォルト無効なので削減されない
 			reductionTarget:    0.0, // 0%削減（削減なし）
 		},
 	}
@@ -1056,7 +1056,7 @@ func TestPackageExceptionEffectMeasurement(t *testing.T) {
 
 			// パッケージ例外判定のテスト
 			exempt, reason := serviceRuleEngine.ShouldExemptPackage(tt.packagePath)
-			
+
 			// 期待される例外判定結果を確認
 			expectedExempt := tt.expectedDiagAfter < tt.expectedDiagBefore
 			if exempt != expectedExempt {
@@ -1070,13 +1070,13 @@ func TestPackageExceptionEffectMeasurement(t *testing.T) {
 			}
 
 			if actualReduction != tt.reductionTarget {
-				t.Errorf("Expected reduction rate %.1f%%, got %.1f%%", 
+				t.Errorf("Expected reduction rate %.1f%%, got %.1f%%",
 					tt.reductionTarget*100, actualReduction*100)
 			}
 
 			// ログ出力
 			t.Logf("✅ %s: Exception=%v, Reason=%s", tt.name, exempt, reason)
-			t.Logf("✅ Diagnostic reduction: %d → %d (%.1f%% reduction)", 
+			t.Logf("✅ Diagnostic reduction: %d → %d (%.1f%% reduction)",
 				tt.expectedDiagBefore, tt.expectedDiagAfter, actualReduction*100)
 		})
 	}
@@ -1086,20 +1086,20 @@ func TestGoldenPackageExceptionComparison(t *testing.T) {
 	// ゴールデンテスト：例外適用前後の検出結果比較
 
 	testCases := []struct {
-		name          string
-		packagePath   string
-		shouldExempt  bool
-		exemptReason  string
+		name         string
+		packagePath  string
+		shouldExempt bool
+		exemptReason string
 	}{
 		{
-			name:         "cmd_short_lived", 
+			name:         "cmd_short_lived",
 			packagePath:  "github.com/example/project/cmd/migrate",
 			shouldExempt: true,
 			exemptReason: "短命プログラム例外",
 		},
 		{
 			name:         "function_faas",
-			packagePath:  "github.com/example/project/internal/function/webhook", 
+			packagePath:  "github.com/example/project/internal/function/webhook",
 			shouldExempt: true,
 			exemptReason: "Cloud Functions例外",
 		},
@@ -1112,7 +1112,7 @@ func TestGoldenPackageExceptionComparison(t *testing.T) {
 		{
 			name:         "regular_package",
 			packagePath:  "github.com/example/project/pkg/service",
-			shouldExempt: false, 
+			shouldExempt: false,
 			exemptReason: "",
 		},
 	}
@@ -1130,17 +1130,17 @@ func TestGoldenPackageExceptionComparison(t *testing.T) {
 
 			// 期待結果と比較
 			if exempt != tc.shouldExempt {
-				t.Errorf("Package %s: expected exempt=%v, got exempt=%v", 
+				t.Errorf("Package %s: expected exempt=%v, got exempt=%v",
 					tc.packagePath, tc.shouldExempt, exempt)
 			}
 
 			if reason != tc.exemptReason {
-				t.Errorf("Package %s: expected reason=%q, got reason=%q", 
+				t.Errorf("Package %s: expected reason=%q, got reason=%q",
 					tc.packagePath, tc.exemptReason, reason)
 			}
 
 			// Golden result として記録
-			t.Logf("🏆 Golden result - %s: exempt=%v, reason=%s", 
+			t.Logf("🏆 Golden result - %s: exempt=%v, reason=%s",
 				tc.name, exempt, reason)
 		})
 	}

@@ -1,8 +1,8 @@
 package config
 
 import (
-	"testing"
 	"golang.org/x/tools/go/analysis"
+	"testing"
 )
 
 // TestDiagnosticLevel は診断レベルの制御機能テスト
@@ -24,7 +24,7 @@ func TestDiagnosticLevel(t *testing.T) {
 			description:   "エラーレベルは常に表示",
 		},
 		{
-			name:  "Warning level filtered by setting", 
+			name:  "Warning level filtered by setting",
 			level: WarningLevel,
 			diagnostic: analysis.Diagnostic{
 				Message: "Potential resource leak (potential false positive)",
@@ -55,13 +55,13 @@ func TestDiagnosticLevel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Logf("Testing: %s", tt.description)
-			
+
 			// DiagnosticFilter が未実装のため失敗することを期待
 			filter := NewDiagnosticFilter(tt.level)
 			included := filter.ShouldIncludeDiagnostic(tt.diagnostic)
-			
+
 			if included != tt.shouldInclude {
-				t.Errorf("Expected %v, got %v for level %v", 
+				t.Errorf("Expected %v, got %v for level %v",
 					tt.shouldInclude, included, tt.level)
 			}
 		})
@@ -71,10 +71,10 @@ func TestDiagnosticLevel(t *testing.T) {
 // TestPotentialFalsePositiveMarking は偽陽性マーク機能のテスト
 func TestPotentialFalsePositiveMarking(t *testing.T) {
 	tests := []struct {
-		name             string
-		message          string
-		expectedMarked   bool
-		description      string
+		name           string
+		message        string
+		expectedMarked bool
+		description    string
 	}{
 		{
 			name:           "Clear false positive indicator",
@@ -85,7 +85,7 @@ func TestPotentialFalsePositiveMarking(t *testing.T) {
 		{
 			name:           "Uncertain resource management",
 			message:        "Resource usage pattern unclear",
-			expectedMarked: true, 
+			expectedMarked: true,
 			description:    "不明確なパターンでの偽陽性疑義",
 		},
 		{
@@ -99,13 +99,13 @@ func TestPotentialFalsePositiveMarking(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Logf("Testing: %s", tt.description)
-			
+
 			// PotentialFalsePositiveDetector が未実装のため失敗を期待
 			detector := NewPotentialFalsePositiveDetector()
 			marked := detector.IsPotentialFalsePositive(tt.message)
-			
+
 			if marked != tt.expectedMarked {
-				t.Errorf("Expected %v, got %v for message: %s", 
+				t.Errorf("Expected %v, got %v for message: %s",
 					tt.expectedMarked, marked, tt.message)
 			}
 		})
@@ -157,19 +157,19 @@ diagnostics:
 // TestIntegratedDiagnosticFiltering は統合診断フィルタリングのテスト
 func TestIntegratedDiagnosticFiltering(t *testing.T) {
 	config := &DiagnosticConfig{
-		Level:                           "info", // より低いレベルに変更  
+		Level:                           "info", // より低いレベルに変更
 		IncludeSuggestions:              true,
-		IncludeEscapeReasons:           true,
-		ConfidenceThreshold:            0.8,
+		IncludeEscapeReasons:            true,
+		ConfidenceThreshold:             0.8,
 		PotentialFalsePositiveDetection: true,
 	}
 
 	testCases := []struct {
-		name         string
-		diagnostic   analysis.Diagnostic
-		confidence   float64
-		shouldPass   bool
-		description  string
+		name        string
+		diagnostic  analysis.Diagnostic
+		confidence  float64
+		shouldPass  bool
+		description string
 	}{
 		{
 			name: "High confidence diagnostic passes",
@@ -203,17 +203,17 @@ func TestIntegratedDiagnosticFiltering(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Logf("Testing: %s", tc.description)
-			
+
 			// IntegratedDiagnosticProcessor が未実装のため失敗を期待
 			processor := NewIntegratedDiagnosticProcessor(config)
 			result := processor.ProcessDiagnostic(tc.diagnostic, tc.confidence)
-			
+
 			if result.ShouldReport != tc.shouldPass {
-				t.Errorf("Expected ShouldReport %v, got %v", 
+				t.Errorf("Expected ShouldReport %v, got %v",
 					tc.shouldPass, result.ShouldReport)
 			}
-			
-			t.Logf("Diagnostic processing result: ShouldReport=%v, Reason=%s", 
+
+			t.Logf("Diagnostic processing result: ShouldReport=%v, Reason=%s",
 				result.ShouldReport, result.FilterReason)
 		})
 	}

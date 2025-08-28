@@ -31,11 +31,11 @@ func main() {
 		},
 		{
 			name: "medium_file",
-			src: generateMediumFile(),
+			src:  generateMediumFile(),
 		},
 		{
-			name: "large_file", 
-			src: generateLargeFile(),
+			name: "large_file",
+			src:  generateLargeFile(),
 		},
 	}
 
@@ -69,7 +69,7 @@ func main() {
 // BenchmarkMemoryUsage はメモリ使用量をベンチマークする
 func BenchmarkMemoryUsage(b *testing.B) {
 	src := generateLargeFile()
-	
+
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, "test.go", src, parser.ParseComments)
 	if err != nil {
@@ -77,14 +77,14 @@ func BenchmarkMemoryUsage(b *testing.B) {
 	}
 
 	pass := &analysis.Pass{
-		Fset:  fset,
-		Files: []*ast.File{file},
+		Fset:   fset,
+		Files:  []*ast.File{file},
 		Report: func(analysis.Diagnostic) {},
 	}
 
 	b.ResetTimer()
 	b.ReportAllocs()
-	
+
 	for i := 0; i < b.N; i++ {
 		_, err := Analyzer.Run(pass)
 		if err != nil {
@@ -105,15 +105,15 @@ func BenchmarkConcurrentAnalysis(b *testing.B) {
 		for pb.Next() {
 			for i, src := range testFiles {
 				fset := token.NewFileSet()
-				file, err := parser.ParseFile(fset, 
+				file, err := parser.ParseFile(fset,
 					"test"+string(rune(i))+".go", src, parser.ParseComments)
 				if err != nil {
 					b.Fatalf("Failed to parse test file: %v", err)
 				}
 
 				pass := &analysis.Pass{
-					Fset:  fset,
-					Files: []*ast.File{file},
+					Fset:   fset,
+					Files:  []*ast.File{file},
 					Report: func(analysis.Diagnostic) {},
 				}
 
@@ -139,7 +139,7 @@ func main() {
 }`
 }
 
-// generateMediumFile は中程度のテストファイルを生成する  
+// generateMediumFile は中程度のテストファイルを生成する
 func generateMediumFile() string {
 	var sb strings.Builder
 	sb.WriteString(`package main

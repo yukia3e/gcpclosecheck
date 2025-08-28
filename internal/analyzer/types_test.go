@@ -10,7 +10,7 @@ func TestResourceInfo(t *testing.T) {
 	// ResourceInfo 構造体のテスト
 	variable := types.NewVar(token.NoPos, nil, "client", nil)
 	scope := types.NewScope(nil, token.NoPos, token.NoPos, "test")
-	
+
 	resource := ResourceInfo{
 		Variable:      variable,
 		CreationPos:   token.Pos(100),
@@ -35,9 +35,9 @@ func TestResourceInfoConstructor(t *testing.T) {
 	// NewResourceInfo コンストラクタのテスト
 	variable := types.NewVar(token.NoPos, nil, "client", nil)
 	scope := types.NewScope(nil, token.NoPos, token.NoPos, "test")
-	
+
 	resource := NewResourceInfo(variable, token.Pos(100), "storage", "NewClient", "Close", true, scope)
-	
+
 	if resource == nil {
 		t.Fatal("NewResourceInfo が nil を返しました")
 	}
@@ -53,7 +53,7 @@ func TestContextInfo(t *testing.T) {
 	// ContextInfo 構造体のテスト
 	variable := types.NewVar(token.NoPos, nil, "ctx", nil)
 	cancelFunc := types.NewVar(token.NoPos, nil, "cancel", nil)
-	
+
 	contextInfo := ContextInfo{
 		Variable:    variable,
 		CancelFunc:  cancelFunc,
@@ -78,7 +78,7 @@ func TestServiceRule(t *testing.T) {
 		{Method: "Close", Required: true, Description: "クライアント接続のクローズ"},
 		{Method: "Stop", Required: true, Description: "RowIterator の停止"},
 	}
-	
+
 	rule := ServiceRule{
 		ServiceName:    "spanner",
 		PackagePath:    "cloud.google.com/go/spanner",
@@ -104,7 +104,7 @@ func TestServiceRuleMethods(t *testing.T) {
 		{Method: "Flush", Required: false, Description: "バッファフラッシュ"},
 		{Method: "Stop", Required: true, Description: "RowIterator の停止"},
 	}
-	
+
 	rule := ServiceRule{
 		ServiceName:    "spanner",
 		PackagePath:    "cloud.google.com/go/spanner",
@@ -195,19 +195,19 @@ func TestResourceInfoValidation(t *testing.T) {
 	// ResourceInfo バリデーションのテスト
 	variable := types.NewVar(token.NoPos, nil, "client", nil)
 	scope := types.NewScope(nil, token.NoPos, token.NoPos, "test")
-	
+
 	// 正常なケース
 	resource := NewResourceInfo(variable, token.Pos(100), "spanner", "NewClient", "Close", true, scope)
 	if err := resource.Validate(); err != nil {
 		t.Errorf("正常なResourceInfoでバリデーションエラー: %v", err)
 	}
-	
+
 	// Variable が nil のケース
 	invalidResource := NewResourceInfo(nil, token.Pos(100), "spanner", "NewClient", "Close", true, scope)
 	if err := invalidResource.Validate(); err == nil {
 		t.Errorf("Variable が nil の場合にバリデーションエラーになるべき")
 	}
-	
+
 	// ServiceType が空のケース
 	invalidResource2 := NewResourceInfo(variable, token.Pos(100), "", "NewClient", "Close", true, scope)
 	if err := invalidResource2.Validate(); err == nil {
@@ -219,13 +219,13 @@ func TestResourceInfoValidation(t *testing.T) {
 func TestSpannerEscapeInfo(t *testing.T) {
 	// SpannerEscapeInfo 構造体の基本テスト
 	spannerEscape := SpannerEscapeInfo{
-		IsAutoManaged:      true,
-		TransactionType:    "ReadWriteTransaction",
-		IsClosureManaged:   true,
-		ClosureDetected:    true,
+		IsAutoManaged:        true,
+		TransactionType:      "ReadWriteTransaction",
+		IsClosureManaged:     true,
+		ClosureDetected:      true,
 		AutoManagementReason: "フレームワーク自動管理",
 	}
-	
+
 	if !spannerEscape.IsAutoManaged {
 		t.Errorf("IsAutoManaged が期待値と異なります")
 	}
@@ -240,7 +240,7 @@ func TestSpannerEscapeInfo(t *testing.T) {
 func TestSpannerEscapeInfoConstructor(t *testing.T) {
 	// NewSpannerEscapeInfo コンストラクタのテスト
 	spannerEscape := NewSpannerEscapeInfo("ReadOnlyTransaction", true, "クロージャ内自動管理")
-	
+
 	if spannerEscape == nil {
 		t.Fatal("NewSpannerEscapeInfo が nil を返しました")
 	}
@@ -269,13 +269,13 @@ func TestResourceInfoWithSpannerEscape(t *testing.T) {
 	// ResourceInfo に SpannerEscape 情報が連携されるテスト
 	variable := types.NewVar(token.NoPos, nil, "txn", nil)
 	scope := types.NewScope(nil, token.NoPos, token.NoPos, "test")
-	
+
 	resource := NewResourceInfo(variable, token.Pos(100), "spanner", "ReadWriteTransaction", "Close", true, scope)
 	spannerEscape := NewSpannerEscapeInfo("ReadWriteTransaction", true, "クロージャ管理")
-	
+
 	// SpannerEscape 情報を設定
 	resource.SetSpannerEscape(spannerEscape)
-	
+
 	retrievedEscape := resource.GetSpannerEscape()
 	if retrievedEscape == nil {
 		t.Fatal("SpannerEscape 情報が取得できません")
@@ -283,13 +283,13 @@ func TestResourceInfoWithSpannerEscape(t *testing.T) {
 	if !retrievedEscape.IsAutoManaged {
 		t.Errorf("SpannerEscape の IsAutoManaged が期待値と異なります")
 	}
-	
+
 	// HasSpannerEscape のテスト
 	if !resource.HasSpannerEscape() {
 		t.Errorf("HasSpannerEscape() が false を返しましたが、SpannerEscape が設定されています")
 	}
-	
-	// ShouldSkipSpannerCleanup のテスト  
+
+	// ShouldSkipSpannerCleanup のテスト
 	if !resource.ShouldSkipSpannerCleanup() {
 		t.Errorf("自動管理リソースの場合、ShouldSkipSpannerCleanup() は true を返すべきです")
 	}
@@ -297,13 +297,13 @@ func TestResourceInfoWithSpannerEscape(t *testing.T) {
 
 func TestSpannerEscapeInfoValidation(t *testing.T) {
 	// SpannerEscapeInfo バリデーションのテスト
-	
+
 	// 正常なケース
 	validEscape := NewSpannerEscapeInfo(ReadWriteTransactionType, true, "フレームワーク自動管理")
 	if err := validEscape.Validate(); err != nil {
 		t.Errorf("正常なSpannerEscapeInfoでバリデーションエラー: %v", err)
 	}
-	
+
 	// 不正なTransactionTypeのケース
 	invalidEscape := &SpannerEscapeInfo{
 		IsAutoManaged:        true,
@@ -313,7 +313,7 @@ func TestSpannerEscapeInfoValidation(t *testing.T) {
 	if err := invalidEscape.Validate(); err == nil {
 		t.Errorf("不正なTransactionTypeの場合にバリデーションエラーになるべき")
 	}
-	
+
 	// 自動管理なのにReasonが空のケース
 	invalidEscape2 := &SpannerEscapeInfo{
 		IsAutoManaged:        true,
@@ -327,13 +327,13 @@ func TestSpannerEscapeInfoValidation(t *testing.T) {
 
 func TestSpannerEscapeInfoShouldSkipCleanup(t *testing.T) {
 	// ShouldSkipCleanup のテスト
-	
+
 	// 自動管理の場合
 	autoManaged := NewSpannerEscapeInfo(ReadWriteTransactionType, true, "自動管理")
 	if !autoManaged.ShouldSkipCleanup() {
 		t.Errorf("自動管理の場合、ShouldSkipCleanup() は true を返すべき")
 	}
-	
+
 	// 手動管理の場合
 	manualManaged := NewSpannerEscapeInfo(ReadWriteTransactionType, false, "")
 	if manualManaged.ShouldSkipCleanup() {
@@ -343,13 +343,13 @@ func TestSpannerEscapeInfoShouldSkipCleanup(t *testing.T) {
 
 func TestNewSpannerEscapeInfoValidation(t *testing.T) {
 	// NewSpannerEscapeInfo のバリデーション動作テスト
-	
+
 	// 不正なTransactionTypeを指定した場合はデフォルト値に修正
 	spannerEscape := NewSpannerEscapeInfo("InvalidType", true, "テスト")
 	if spannerEscape.TransactionType != ReadWriteTransactionType {
 		t.Errorf("不正なTransactionTypeはデフォルト値に修正されるべき: %s", spannerEscape.TransactionType)
 	}
-	
+
 	// 正常なTransactionTypeの場合はそのまま
 	spannerEscape2 := NewSpannerEscapeInfo(ReadOnlyTransactionType, false, "")
 	if spannerEscape2.TransactionType != ReadOnlyTransactionType {
@@ -397,7 +397,7 @@ func TestDeferCancelInfo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// DeferCancelInfoを作成（まだ実装されていない）
 			deferInfo := NewDeferCancelInfo(tt.cancelVarName, tt.deferPos, tt.scopeDepth, tt.isValid)
-			
+
 			if deferInfo == nil {
 				t.Fatal("NewDeferCancelInfo should not return nil")
 			}
@@ -434,9 +434,9 @@ func TestContextInfoWithDeferInfo(t *testing.T) {
 	// ContextInfoとDeferCancelInfoの連携テスト
 	variable := types.NewVar(token.NoPos, nil, "ctx", nil)
 	cancelFunc := types.NewVar(token.NoPos, nil, "cancel", nil)
-	
+
 	contextInfo := NewContextInfo(variable, cancelFunc, token.Pos(100), false)
-	
+
 	// DeferCancelInfoを設定（まだ実装されていない）
 	deferInfo := NewDeferCancelInfo("cancel", token.Pos(200), 1, true)
 	contextInfo.SetDeferInfo(deferInfo)
@@ -501,11 +501,11 @@ func TestDeferCancelInfoValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.deferInfo.Validate()
-			
+
 			if tt.wantErr && err == nil {
 				t.Error("Expected error, but got nil")
 			}
-			
+
 			if !tt.wantErr && err != nil {
 				t.Errorf("Unexpected error: %v", err)
 			}
@@ -517,34 +517,34 @@ func TestContextInfoIntegration(t *testing.T) {
 	// Context情報管理の統合テスト
 	variable := types.NewVar(token.NoPos, nil, "ctx", nil)
 	cancelFunc := types.NewVar(token.NoPos, nil, "cancel", nil)
-	
+
 	// ContextInfoを作成
 	contextInfo := NewContextInfo(variable, cancelFunc, token.Pos(100), false)
-	
+
 	// DeferCancelInfoを作成して設定
 	deferInfo1 := NewDeferCancelInfo("cancel", token.Pos(200), 1, true)
 	deferInfo2 := NewDeferCancelInfo("cancel", token.Pos(300), 2, true)
-	
+
 	contextInfo.SetDeferInfo(deferInfo1)
-	
+
 	// 最初のDeferInfoが設定されることを確認
 	if !contextInfo.HasDeferInfo() {
 		t.Error("ContextInfo should have DeferInfo")
 	}
-	
+
 	firstDefer := contextInfo.GetDeferInfo()
 	if firstDefer.DeferPos != token.Pos(200) {
 		t.Errorf("First defer pos = %v, want %v", firstDefer.DeferPos, token.Pos(200))
 	}
-	
+
 	// 複数のDeferInfoを追加（まだ実装されていない）
 	contextInfo.AddDeferInfo(deferInfo2)
-	
+
 	// 複数のDeferInfoが管理されることを確認
 	allDefers := contextInfo.GetAllDeferInfos()
 	if len(allDefers) != 2 {
 		t.Errorf("Expected 2 defer infos, got %d", len(allDefers))
 	}
-	
+
 	t.Logf("✓ Context cancel information integration test completed")
 }

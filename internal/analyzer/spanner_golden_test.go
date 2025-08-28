@@ -82,33 +82,33 @@ func testMixedPatterns(ctx context.Context, client *spanner.Client) {
 			description:    "混在パターンで適切な検出選択が行われる",
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// 統合されたエスケープ分析を含むAnalyzerを使用
 			a := Analyzer
-			
+
 			// コード解析を実行
 			fset := token.NewFileSet()
 			pass := createTestPass(fset, tc.code, t)
-			
+
 			result, err := a.Run(pass)
 			if err != nil {
 				t.Fatalf("Analysis failed: %v", err)
 			}
-			
+
 			diagnostics := getDiagnosticsFromResult(result, pass)
-			
+
 			// 診断数の検証
 			if len(diagnostics) != tc.expectedIssues {
 				t.Errorf("Expected %d diagnostics, got %d for %s", tc.expectedIssues, len(diagnostics), tc.description)
-				
+
 				// 実際の診断内容をログ出力（デバッグ用）
 				for i, diag := range diagnostics {
 					t.Logf("  Diagnostic %d: %s", i+1, diag.Message)
 				}
 			}
-			
+
 			t.Logf("✅ %s: Expected=%d, Actual=%d", tc.description, tc.expectedIssues, len(diagnostics))
 		})
 	}
@@ -151,26 +151,26 @@ func complexSpannerOperations(ctx context.Context, client *spanner.Client) {
 			reductionRate: 1.0,
 		},
 	}
-	
+
 	for _, tc := range beforeAfterTests {
 		t.Run(tc.name, func(t *testing.T) {
 			fset := token.NewFileSet()
 			pass := createTestPass(fset, tc.code, t)
-			
+
 			result, err := Analyzer.Run(pass)
 			if err != nil {
 				t.Fatalf("Analysis failed: %v", err)
 			}
-			
+
 			diagnostics := getDiagnosticsFromResult(result, pass)
 			actualCount := len(diagnostics)
 			actualReduction := float64(tc.beforeCount-actualCount) / float64(tc.beforeCount)
-			
+
 			if actualCount != tc.afterCount {
 				t.Errorf("Expected %d diagnostics after Spanner integration, got %d", tc.afterCount, actualCount)
 			}
-			
-			t.Logf("✅ %s: Reduced from %d to %d diagnostics (%.1f%% reduction)", 
+
+			t.Logf("✅ %s: Reduced from %d to %d diagnostics (%.1f%% reduction)",
 				tc.name, tc.beforeCount, actualCount, actualReduction*100)
 		})
 	}
@@ -183,10 +183,10 @@ func createTestPass(fset *token.FileSet, code string, t *testing.T) *analysis.Pa
 	if err != nil {
 		t.Fatalf("Failed to parse test code: %v", err)
 	}
-	
+
 	// 型情報を作成（簡素化）
 	pkg := types.NewPackage("test", "test")
-	
+
 	return &analysis.Pass{
 		Analyzer: Analyzer,
 		Fset:     fset,
@@ -203,7 +203,7 @@ func getDiagnosticsFromResult(result interface{}, pass *analysis.Pass) []analysi
 	// 実際の実装では、結果から診断情報を抽出
 	// ここでは簡素化のため、テストコード内のパターンから推定
 	var diagnostics []analysis.Diagnostic
-	
+
 	for _, file := range pass.Files {
 		ast.Inspect(file, func(n ast.Node) bool {
 			switch node := n.(type) {
@@ -227,7 +227,7 @@ func getDiagnosticsFromResult(result interface{}, pass *analysis.Pass) []analysi
 			return true
 		})
 	}
-	
+
 	return diagnostics
 }
 

@@ -137,23 +137,23 @@ func TestCLIExitCodes(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		args     []string
+		name          string
+		args          []string
 		expectNonZero bool
 	}{
 		{
-			name: "No arguments (help)",
-			args: []string{},
+			name:          "No arguments (help)",
+			args:          []string{},
 			expectNonZero: false, // ヘルプ表示は正常終了
 		},
 		{
-			name: "Invalid flag",
-			args: []string{"-invalid-flag"},
+			name:          "Invalid flag",
+			args:          []string{"-invalid-flag"},
 			expectNonZero: true, // 無効なフラグはエラー
 		},
 		{
-			name: "Non-existent file",
-			args: []string{"/non/existent/file.go"},
+			name:          "Non-existent file",
+			args:          []string{"/non/existent/file.go"},
 			expectNonZero: true, // 存在しないファイルはエラー
 		},
 	}
@@ -221,7 +221,7 @@ func main() {
 
 	_ = cmd.Run()
 	output := out.String()
-	
+
 	// 正常なコードの場合は出力が少ない、またはエラーメッセージがないことを期待
 	if strings.Contains(output, "panic") || strings.Contains(output, "fatal") {
 		t.Errorf("Unexpected panic or fatal error in output: %s", output)

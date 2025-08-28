@@ -88,7 +88,7 @@ services:
 func TestServiceRuleEngine_GetCleanupMethod(t *testing.T) {
 	// テスト用ルール設定
 	engine := NewServiceRuleEngine()
-	
+
 	// デフォルト設定を読み込み
 	err := engine.LoadRules("")
 	if err != nil {
@@ -124,11 +124,11 @@ func TestServiceRuleEngine_GetCleanupMethod(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			method, found := engine.GetCleanupMethod(tt.serviceType)
-			
+
 			if found != tt.wantFound {
 				t.Errorf("found = %v, want %v", found, tt.wantFound)
 			}
-			
+
 			if method != tt.wantMethod {
 				t.Errorf("method = %v, want %v", method, tt.wantMethod)
 			}
@@ -138,7 +138,7 @@ func TestServiceRuleEngine_GetCleanupMethod(t *testing.T) {
 
 func TestServiceRuleEngine_IsCleanupRequired(t *testing.T) {
 	engine := NewServiceRuleEngine()
-	
+
 	// デフォルト設定を読み込み
 	err := engine.LoadRules("")
 	if err != nil {
@@ -179,7 +179,7 @@ func TestServiceRuleEngine_IsCleanupRequired(t *testing.T) {
 
 func TestServiceRuleEngine_CachePerformance(t *testing.T) {
 	engine := NewServiceRuleEngine()
-	
+
 	// デフォルト設定を読み込み
 	err := engine.LoadRules("")
 	if err != nil {
@@ -187,19 +187,19 @@ func TestServiceRuleEngine_CachePerformance(t *testing.T) {
 	}
 
 	serviceType := "spanner.Client"
-	
+
 	// 初回アクセス
 	method1, found1 := engine.GetCleanupMethod(serviceType)
 	if !found1 {
 		t.Fatal("サービスが見つかりません")
 	}
-	
+
 	// 2回目アクセス（キャッシュから取得）
 	method2, found2 := engine.GetCleanupMethod(serviceType)
 	if !found2 {
 		t.Fatal("キャッシュからの取得に失敗")
 	}
-	
+
 	if method1 != method2 {
 		t.Errorf("キャッシュの一貫性が保たれていません: %v != %v", method1, method2)
 	}
@@ -207,7 +207,7 @@ func TestServiceRuleEngine_CachePerformance(t *testing.T) {
 
 func TestServiceRuleEngine_GetServiceRule(t *testing.T) {
 	engine := NewServiceRuleEngine()
-	
+
 	// デフォルト設定を読み込み
 	err := engine.LoadRules("")
 	if err != nil {
@@ -240,11 +240,11 @@ func TestServiceRuleEngine_GetServiceRule(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rule := engine.GetServiceRule(tt.serviceName)
 			found := rule != nil
-			
+
 			if found != tt.wantFound {
 				t.Errorf("found = %v, want %v", found, tt.wantFound)
 			}
-			
+
 			if found && rule.ServiceName != tt.serviceName {
 				t.Errorf("ServiceName = %v, want %v", rule.ServiceName, tt.serviceName)
 			}
@@ -254,7 +254,7 @@ func TestServiceRuleEngine_GetServiceRule(t *testing.T) {
 
 func TestServiceRuleEngine_ShouldExemptPackage(t *testing.T) {
 	engine := NewServiceRuleEngine()
-	
+
 	// デフォルト設定を読み込み（package_exceptionsを含む）
 	err := engine.LoadDefaultRules()
 	if err != nil {
@@ -308,11 +308,11 @@ func TestServiceRuleEngine_ShouldExemptPackage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			exempt, reason := engine.ShouldExemptPackage(tt.packagePath)
-			
+
 			if exempt != tt.wantExempt {
 				t.Errorf("ShouldExemptPackage() exempt = %v, want %v", exempt, tt.wantExempt)
 			}
-			
+
 			if reason != tt.wantReason {
 				t.Errorf("ShouldExemptPackage() reason = %v, want %v", reason, tt.wantReason)
 			}
