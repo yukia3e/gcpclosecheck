@@ -10,17 +10,21 @@ import (
 	"time"
 )
 
-// TestGoVetIntegration tests integration with go vet
-func TestGoVetIntegration(t *testing.T) {
+// buildCLI builds the CLI binary for testing and returns the binary path and temp directory
+func buildCLI(t *testing.T) (string, string) {
 	tmpDir := t.TempDir()
 	binPath := filepath.Join(tmpDir, "gcpclosecheck")
 
-	// Build binary
 	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
 	if err := buildCmd.Run(); err != nil {
 		t.Fatalf("Failed to build CLI: %v", err)
 	}
+	return binPath, tmpDir
+}
+
+// TestGoVetIntegration tests integration with go vet
+func TestGoVetIntegration(t *testing.T) {
+	binPath, tmpDir := buildCLI(t)
 
 	// Create test Go module
 	if err := os.Chdir(tmpDir); err != nil {
@@ -99,15 +103,18 @@ func main() {
 
 // TestAnalyzerInterfaceCompliance tests analysis.Analyzer interface compliance
 func TestAnalyzerInterfaceCompliance(t *testing.T) {
-	tmpDir := t.TempDir()
-	binPath := filepath.Join(tmpDir, "gcpclosecheck")
+	binPath, tmpDir := buildCLI(t)
 
-	// Build binary
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build CLI: %v", err)
+	// Store current directory for later restoration
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get current directory: %v", err)
 	}
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Logf("Failed to restore original directory: %v", err)
+		}
+	}()
 
 	// Try running in empty directory
 	if err := os.Chdir(tmpDir); err != nil {
@@ -120,7 +127,7 @@ func TestAnalyzerInterfaceCompliance(t *testing.T) {
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 
-	err := cmd.Run()
+	err = cmd.Run()
 	output := out.String()
 
 	// Confirm help message is displayed properly
@@ -140,15 +147,7 @@ func TestMultiPackageAnalysis(t *testing.T) {
 		t.Skip("Skipping multi-package test in short mode")
 	}
 
-	tmpDir := t.TempDir()
-	binPath := filepath.Join(tmpDir, "gcpclosecheck")
-
-	// Build binary
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build CLI: %v", err)
-	}
+	binPath, tmpDir := buildCLI(t)
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("Failed to change directory: %v", err)
@@ -236,15 +235,7 @@ func TestLargeCodebasePerformance(t *testing.T) {
 		t.Skip("Skipping performance test in short mode")
 	}
 
-	tmpDir := t.TempDir()
-	binPath := filepath.Join(tmpDir, "gcpclosecheck")
-
-	// Build binary
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build CLI: %v", err)
-	}
+	binPath, tmpDir := buildCLI(t)
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("Failed to change directory: %v", err)
@@ -418,15 +409,7 @@ func containsJapaneseChars(text string) bool {
 
 // TestCICDIntegration はCI/CDパイプライン統合をテストする
 func TestCICDIntegration(t *testing.T) {
-	tmpDir := t.TempDir()
-	binPath := filepath.Join(tmpDir, "gcpclosecheck")
-
-	// Build binary
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build CLI: %v", err)
-	}
+	binPath, tmpDir := buildCLI(t)
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("Failed to change directory: %v", err)

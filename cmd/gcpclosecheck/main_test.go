@@ -10,17 +10,22 @@ import (
 	"time"
 )
 
-// TestCLIBasicExecution tests basic CLI execution
-func TestCLIBasicExecution(t *testing.T) {
-	// Build test executable file
+// buildCLIForMainTest builds the CLI binary for testing and returns the binary path and temp directory  
+func buildCLIForMainTest(t *testing.T) (string, string) {
 	tmpDir := t.TempDir()
 	binPath := filepath.Join(tmpDir, "gcpclosecheck")
 
 	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
 	if err := buildCmd.Run(); err != nil {
 		t.Fatalf("Failed to build CLI: %v", err)
 	}
+	return binPath, tmpDir
+}
+
+// TestCLIBasicExecution tests basic CLI execution
+func TestCLIBasicExecution(t *testing.T) {
+	// Build test executable file
+	binPath, _ := buildCLIForMainTest(t)
 
 	// Test help option
 	helpCmd := exec.Command(binPath, "-h")
@@ -72,14 +77,7 @@ func containsJapanese(text string) bool {
 
 // TestCLIVersionFlag tests the version flag
 func TestCLIVersionFlag(t *testing.T) {
-	tmpDir := t.TempDir()
-	binPath := filepath.Join(tmpDir, "gcpclosecheck")
-
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build CLI: %v", err)
-	}
+	binPath, _ := buildCLIForMainTest(t)
 
 	// Test version flag
 	versionCmd := exec.Command(binPath, "-V")
@@ -95,14 +93,7 @@ func TestCLIVersionFlag(t *testing.T) {
 
 // TestCLIAnalysisExecution tests actual analysis execution
 func TestCLIAnalysisExecution(t *testing.T) {
-	tmpDir := t.TempDir()
-	binPath := filepath.Join(tmpDir, "gcpclosecheck")
-
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build CLI: %v", err)
-	}
+	binPath, tmpDir := buildCLIForMainTest(t)
 
 	// Create test Go file
 	testFile := filepath.Join(tmpDir, "test.go")
@@ -160,14 +151,7 @@ func main() {
 
 // TestCLIExitCodes tests exit codes in different scenarios
 func TestCLIExitCodes(t *testing.T) {
-	tmpDir := t.TempDir()
-	binPath := filepath.Join(tmpDir, "gcpclosecheck")
-
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build CLI: %v", err)
-	}
+	binPath, _ := buildCLIForMainTest(t)
 
 	tests := []struct {
 		name          string
@@ -212,14 +196,7 @@ func TestCLIExitCodes(t *testing.T) {
 
 // TestCLIOutputFormat tests output format
 func TestCLIOutputFormat(t *testing.T) {
-	tmpDir := t.TempDir()
-	binPath := filepath.Join(tmpDir, "gcpclosecheck")
-
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build CLI: %v", err)
-	}
+	binPath, tmpDir := buildCLIForMainTest(t)
 
 	// Test output format with valid Go file
 	testFile := filepath.Join(tmpDir, "valid.go")
@@ -267,14 +244,7 @@ func TestCLIPerformance(t *testing.T) {
 		t.Skip("Skipping performance test in short mode")
 	}
 
-	tmpDir := t.TempDir()
-	binPath := filepath.Join(tmpDir, "gcpclosecheck")
-
-	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
-	buildCmd.Dir = "."
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build CLI: %v", err)
-	}
+	binPath, tmpDir := buildCLIForMainTest(t)
 
 	// Create medium-scale test file
 	testFile := filepath.Join(tmpDir, "large_test.go")
