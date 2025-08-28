@@ -567,13 +567,14 @@ func setupPackageInfo(file *ast.File, typeInfo *types.Info) {
 		if sel, ok := n.(*ast.SelectorExpr); ok {
 			if ident, ok := sel.X.(*ast.Ident); ok {
 				// clientなどの変数がspannerの型を持つように設定
-				if ident.Name == "client" {
+				switch ident.Name {
+				case "client":
 					clientType := &mockSpannerType{name: "*spanner.Client"}
 					typeInfo.Types[sel.X] = types.TypeAndValue{
 						Type:  clientType,
 						Value: nil,
 					}
-				} else if ident.Name == "txn" {
+				case "txn":
 					txnType := &mockSpannerType{name: "*spanner.ReadOnlyTransaction"}
 					typeInfo.Types[sel.X] = types.TypeAndValue{
 						Type:  txnType,

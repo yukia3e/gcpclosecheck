@@ -269,14 +269,14 @@ func (rt *ResourceTracker) createResourceInfo(call *ast.CallExpr, serviceName st
 
 	// 関数名に基づいてクリーンアップメソッドを決定
 	var cleanupMethod string
-	var isRequired bool = true
+	isRequired := true
 
 	// 特定の関数に対する特別なクリーンアップメソッド
-	switch {
-	case funcName == "ReadOnlyTransaction" || funcName == "ReadWriteTransaction" || funcName == "BatchReadOnlyTransaction":
+	switch funcName {
+	case "ReadOnlyTransaction", "ReadWriteTransaction", "BatchReadOnlyTransaction":
 		cleanupMethod = "Close" // Transactionは必ずClose
 		isRequired = true
-	case funcName == "Query" || funcName == "Read":
+	case "Query", "Read":
 		cleanupMethod = "Stop" // IteratorはStop
 		isRequired = true
 	default:
