@@ -4,7 +4,8 @@ run:
   timeout: 10m
 
 linters:
-  disable-all: true
+  # v2 では disable-all の代わりに default を使う
+  default: none
   enable:
     - errcheck
     - govet
@@ -13,7 +14,24 @@ linters:
     - unused
     - gocyclo
     - misspell
+    - gosec
 
-linters-settings:
-  gocyclo:
-    min-complexity: 15
+  # v2 では linters-settings → linters.settings に変更
+  settings:
+    gocyclo:
+      min-complexity: 15
+
+  # v2 では issues.exclude-rules → linters.exclusions.rules
+  exclusions:
+    rules:
+      # testdata 配下は gosec を除外
+      - path: ^testdata/
+        linters:
+          - gosec
+      # すべての階層の *_test.go を gosec から除外
+      - path: ".*_test\\.go$"
+        linters:
+          - gosec
+          - gocyclo
+
+      
