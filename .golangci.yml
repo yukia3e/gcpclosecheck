@@ -17,9 +17,3 @@ linters:
 linters-settings:
   gocyclo:
     min-complexity: 15
-
-issues:
-  exclude-rules:
-    - path: testdata
-      linters:
-        - gosec
