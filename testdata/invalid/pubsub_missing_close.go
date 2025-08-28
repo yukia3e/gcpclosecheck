@@ -48,7 +48,7 @@ func PubSubMessageProcessingMissingClose(ctx context.Context) error { // want `p
 	result := topic.Publish(ctx, &pubsub.Message{
 		Data: []byte("test message"),
 	})
-	
+
 	_, err = result.Get(ctx)
 	return err
 }

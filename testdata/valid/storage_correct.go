@@ -19,7 +19,7 @@ func StorageCorrectUsage(ctx context.Context) error {
 	// バケットからオブジェクトを読み取り
 	bucket := client.Bucket("test-bucket")
 	obj := bucket.Object("test-object")
-	
+
 	reader, err := obj.NewReader(ctx)
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func StorageWriteCorrectUsage(ctx context.Context) error {
 
 	bucket := client.Bucket("test-bucket")
 	obj := bucket.Object("test-object")
-	
+
 	writer := obj.NewWriter(ctx)
 	defer writer.Close() // 正しくクローズ処理
 
@@ -59,7 +59,7 @@ func StorageMultipleResources(ctx context.Context) error {
 	defer client.Close()
 
 	bucket := client.Bucket("test-bucket")
-	
+
 	// 複数のリーダー
 	reader1, err := bucket.Object("object1").NewReader(ctx)
 	if err != nil {

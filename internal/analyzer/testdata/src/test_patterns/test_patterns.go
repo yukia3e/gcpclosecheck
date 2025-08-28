@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"cloud.google.com/go/spanner"
-	"cloud.google.com/go/storage"
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/spanner"
+	"cloud.google.com/go/storage"
 )
 
 // テストコード内でのクライアント利用パターン
@@ -88,7 +88,7 @@ func TestPubSubClientUsage(t *testing.T) {
 
 	// テスト用のトピック操作
 	topic := client.Topic("test-topic")
-	
+
 	// テスト処理をシミュレート
 	_ = topic
 	t.Log("Pub/Sub test completed")
@@ -106,11 +106,11 @@ func BenchmarkSpannerQuery(b *testing.B) {
 	// defer client.Close() が必要 - 診断されるべき
 
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		txn := client.ReadOnlyTransaction()
 		// defer txn.Close() が必要 - 診断されるべき
-		
+
 		// ベンチマーク処理をシミュレート
 		_ = txn
 	}

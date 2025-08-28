@@ -1,9 +1,10 @@
 package config
 
 import (
+	"strings"
+
 	"golang.org/x/tools/go/analysis"
 	"gopkg.in/yaml.v2"
-	"strings"
 )
 
 // DiagnosticLevel represents the importance level of diagnostics

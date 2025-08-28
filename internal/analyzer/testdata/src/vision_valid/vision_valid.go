@@ -2,6 +2,7 @@ package vision_valid
 
 import (
 	"context"
+
 	vision "cloud.google.com/go/vision/apiv1"
 )
 

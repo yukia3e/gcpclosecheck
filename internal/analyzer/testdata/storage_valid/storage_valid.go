@@ -2,6 +2,7 @@ package storage_valid
 
 import (
 	"context"
+
 	"cloud.google.com/go/storage"
 )
 
@@ -20,7 +21,7 @@ func correctStorageClient(ctx context.Context) error {
 func correctStorageReader(ctx context.Context, client *storage.Client) error {
 	bucket := client.Bucket("test-bucket")
 	obj := bucket.Object("test-object")
-	
+
 	reader, err := obj.NewReader(ctx)
 	if err != nil {
 		return err
@@ -34,7 +35,7 @@ func correctStorageReader(ctx context.Context, client *storage.Client) error {
 func correctStorageWriter(ctx context.Context, client *storage.Client) error {
 	bucket := client.Bucket("test-bucket")
 	obj := bucket.Object("test-object")
-	
+
 	writer := obj.NewWriter(ctx)
 	defer writer.Close() // 正しいパターン
 

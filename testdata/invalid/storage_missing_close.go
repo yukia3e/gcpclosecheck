@@ -28,7 +28,7 @@ func StorageReaderMissingClose(ctx context.Context) error { // want `storage rea
 
 	bucket := client.Bucket("test-bucket")
 	obj := bucket.Object("test-object")
-	
+
 	reader, err := obj.NewReader(ctx)
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func StorageWriterMissingClose(ctx context.Context) error { // want `storage wri
 
 	bucket := client.Bucket("test-bucket")
 	obj := bucket.Object("test-object")
-	
+
 	writer := obj.NewWriter(ctx)
 	// defer writer.Close() が漏れている！
 
@@ -66,7 +66,7 @@ func StorageMultipleMissingClose(ctx context.Context) error { // want multiple e
 	// defer client.Close() が漏れている！
 
 	bucket := client.Bucket("test-bucket")
-	
+
 	reader1, err := bucket.Object("object1").NewReader(ctx)
 	if err != nil {
 		return err

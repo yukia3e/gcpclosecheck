@@ -1,8 +1,9 @@
 package config
 
 import (
-	"golang.org/x/tools/go/analysis"
 	"testing"
+
+	"golang.org/x/tools/go/analysis"
 )
 
 // TestDiagnosticLevel tests diagnostic level control functionality

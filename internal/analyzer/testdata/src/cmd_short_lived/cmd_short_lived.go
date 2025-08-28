@@ -5,10 +5,10 @@ import (
 	"log"
 	"os"
 
-	"cloud.google.com/go/spanner"
-	"cloud.google.com/go/storage" 
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/spanner"
+	"cloud.google.com/go/storage"
 )
 
 // main関数でのクライアント生成 - 短命プログラムなので例外対象
@@ -45,16 +45,16 @@ func main() {
 
 	// 短時間の処理を実行
 	processData(spannerClient, storageClient, bqClient, pubsubClient)
-	
+
 	// プログラム終了時に自動的にリソースが解放される
 	os.Exit(0)
 }
 
-func processData(spannerClient *spanner.Client, storageClient *storage.Client, 
+func processData(spannerClient *spanner.Client, storageClient *storage.Client,
 	bqClient *bigquery.Client, pubsubClient *pubsub.Client) {
 	// 実際の処理をシミュレート
 	log.Println("Processing data with clients...")
-	
+
 	// 短時間の処理後、プログラム終了
 	// リソースは OS により自動的に解放される
 }
