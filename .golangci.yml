@@ -4,6 +4,7 @@ run:
   timeout: 10m
 
 linters:
+  disable-all: true
   enable:
     - errcheck
     - govet
@@ -13,10 +14,12 @@ linters:
     - gocyclo
     - misspell
 
-settings:
+linters-settings:
   gocyclo:
     min-complexity: 15
 
 issues:
-  exclude-dirs:
-    - testdata
+  exclude-rules:
+    - path: testdata
+      linters:
+        - gosec
