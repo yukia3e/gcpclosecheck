@@ -1,6 +1,6 @@
 # gcpclosecheck
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/yukia3e/gcpclosecheck)](https://goreportcard.com/report/github.com/yukia3e/gcpclosecheck)
+[![Go Report Card](https://goreportcard.com/badge/github.com/yukia3e/gcpclosecheck?style=flat-square)](https://goreportcard.com/report/github.com/yukia3e/gcpclosecheck)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Go static analysis tool that detects missing resource cleanup (`Close`, `Stop`, `Cancel`) for GCP resources.
