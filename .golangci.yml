@@ -6,8 +6,7 @@ run:
   modules-download-mode: readonly
 
 output:
-  formats:
-    - format: colored-line-number
+  format: colored-line-number
 
 linters:
   disable-all: true
