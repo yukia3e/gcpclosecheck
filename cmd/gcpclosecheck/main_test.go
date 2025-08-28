@@ -37,9 +37,9 @@ func TestCLIBasicExecution(t *testing.T) {
 		
 		// Expect English help content matching messages constants
 		expectedEnglishPhrases := []string{
-			"Detects missing Close/Stop/Cancel calls for GCP resources",
-			"Usage Examples:",
-			"Best Practices:",
+			"Detects missing Close/Stop/Cancel calls for GCP resource clients",
+			"Usage Examples",
+			"Best Practices",
 			"Flags:",
 			"Environment Variables:",
 			"Enable debug mode",

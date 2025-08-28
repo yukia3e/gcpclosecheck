@@ -506,7 +506,7 @@ func TestMessagesIntegration(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error for empty config path")
 	}
-	if !strings.Contains(err.Error(), "configuration file path is empty") {
+	if !strings.Contains(err.Error(), "Configuration file path is empty") {
 		t.Errorf("Expected English error message from messages package, got: %s", err.Error())
 	}
 	
@@ -515,7 +515,7 @@ func TestMessagesIntegration(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error for non-existent config file")
 	}
-	if !strings.Contains(err.Error(), "failed to load configuration file") {
+	if !strings.Contains(err.Error(), "Failed to load configuration file") {
 		t.Errorf("Expected English error message from messages package, got: %s", err.Error())
 	}
 	
@@ -530,7 +530,7 @@ func TestMessagesIntegration(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error for invalid YAML")
 	}
-	if !strings.Contains(err.Error(), "failed to parse YAML configuration") {
+	if !strings.Contains(err.Error(), "Failed to parse YAML configuration") {
 		t.Errorf("Expected English error message from messages package, got: %s", err.Error())
 	}
 }
@@ -545,7 +545,7 @@ func TestConfigValidationMessagesIntegration(t *testing.T) {
 		{
 			name:        "empty_services",
 			config:      Config{Services: []ServiceRule{}},
-			expectedMsg: "services definition is empty",
+			expectedMsg: "Services definition is empty",
 		},
 		{
 			name: "empty_service_name",
@@ -554,7 +554,7 @@ func TestConfigValidationMessagesIntegration(t *testing.T) {
 					{ServiceName: "", PackagePath: "test", CreationFuncs: []string{"test"}, CleanupMethods: []CleanupMethod{{Method: "Close", Required: true}}},
 				},
 			},
-			expectedMsg: "service[0]: service name is empty",
+			expectedMsg: "Service[0]: service name is empty",
 		},
 		{
 			name: "empty_package_path",
@@ -563,7 +563,7 @@ func TestConfigValidationMessagesIntegration(t *testing.T) {
 					{ServiceName: "test", PackagePath: "", CreationFuncs: []string{"test"}, CleanupMethods: []CleanupMethod{{Method: "Close", Required: true}}},
 				},
 			},
-			expectedMsg: "service[0](test): package path is empty",
+			expectedMsg: "Service[0](test): package path is empty",
 		},
 	}
 	
