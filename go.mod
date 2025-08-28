@@ -1,6 +1,6 @@
 module github.com/yukia3e/gcpclosecheck
 
-go 1.25.0
+go 1.24
 
 require (
 	golang.org/x/tools v0.36.0
