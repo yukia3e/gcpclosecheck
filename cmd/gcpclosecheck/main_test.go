@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-// TestCLIBasicExecution は基本的なCLI実行をテストする
+// TestCLIBasicExecution tests basic CLI execution
 func TestCLIBasicExecution(t *testing.T) {
-	// テスト用の実行ファイルをビルド
+	// Build test executable file
 	tmpDir := t.TempDir()
 	binPath := filepath.Join(tmpDir, "gcpclosecheck")
 
@@ -22,22 +22,55 @@ func TestCLIBasicExecution(t *testing.T) {
 		t.Fatalf("Failed to build CLI: %v", err)
 	}
 
-	// ヘルプオプションのテスト
+	// Test help option
 	helpCmd := exec.Command(binPath, "-h")
 	var helpOut bytes.Buffer
 	helpCmd.Stdout = &helpOut
 	helpCmd.Stderr = &helpOut
 
 	if err := helpCmd.Run(); err == nil {
-		// ヘルプメッセージが表示されることを確認
+		// Verify help message is displayed in English
 		output := helpOut.String()
 		if !strings.Contains(output, "gcpclosecheck") {
 			t.Errorf("Help output should contain 'gcpclosecheck', got: %s", output)
 		}
+		
+		// Expect English help content matching messages constants
+		expectedEnglishPhrases := []string{
+			"Detects missing Close/Stop/Cancel calls for GCP resources",
+			"Usage Examples:",
+			"Best Practices:",
+			"Flags:",
+			"Environment Variables:",
+			"Enable debug mode",
+		}
+		
+		for _, phrase := range expectedEnglishPhrases {
+			if !strings.Contains(output, phrase) {
+				t.Errorf("Help output should contain English phrase %q, got: %s", phrase, output)
+			}
+		}
+		
+		// Should not contain Japanese characters
+		if containsJapanese(output) {
+			t.Errorf("Help output should not contain Japanese characters, got: %s", output)
+		}
 	}
 }
 
-// TestCLIVersionFlag はバージョンフラグをテストする
+// Helper function to detect Japanese characters
+func containsJapanese(text string) bool {
+	for _, r := range text {
+		if (r >= 0x3040 && r <= 0x309F) || // Hiragana
+		   (r >= 0x30A0 && r <= 0x30FF) || // Katakana  
+		   (r >= 0x4E00 && r <= 0x9FAF) {  // Kanji
+			return true
+		}
+	}
+	return false
+}
+
+// TestCLIVersionFlag tests the version flag
 func TestCLIVersionFlag(t *testing.T) {
 	tmpDir := t.TempDir()
 	binPath := filepath.Join(tmpDir, "gcpclosecheck")
@@ -48,19 +81,19 @@ func TestCLIVersionFlag(t *testing.T) {
 		t.Fatalf("Failed to build CLI: %v", err)
 	}
 
-	// バージョンフラグのテスト
+	// Test version flag
 	versionCmd := exec.Command(binPath, "-V")
 	var versionOut bytes.Buffer
 	versionCmd.Stdout = &versionOut
 	versionCmd.Stderr = &versionOut
 
-	// バージョンフラグは正常に実行されるか、適切なエラーメッセージを出すべき
+	// Version flag should execute normally or display appropriate error message
 	_ = versionCmd.Run()
 	// output := versionOut.String()
-	// バージョン情報が表示されるかどうかは実装次第
+	// Whether version information is displayed depends on implementation
 }
 
-// TestCLIAnalysisExecution は実際の解析実行をテストする
+// TestCLIAnalysisExecution tests actual analysis execution
 func TestCLIAnalysisExecution(t *testing.T) {
 	tmpDir := t.TempDir()
 	binPath := filepath.Join(tmpDir, "gcpclosecheck")
@@ -71,7 +104,7 @@ func TestCLIAnalysisExecution(t *testing.T) {
 		t.Fatalf("Failed to build CLI: %v", err)
 	}
 
-	// テスト用のGoファイルを作成
+	// Create test Go file
 	testFile := filepath.Join(tmpDir, "test.go")
 	testCode := `
 package main
@@ -87,7 +120,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// defer client.Close() が不足 - これを検出すべき
+	// defer client.Close() is missing - should be detected
 	_ = client
 }
 `
@@ -95,14 +128,14 @@ func main() {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
-	// CLIで解析実行
+	// Execute analysis with CLI
 	analysisCmd := exec.Command(binPath, testFile)
 	var analysisOut bytes.Buffer
 	analysisCmd.Stdout = &analysisOut
 	analysisCmd.Stderr = &analysisOut
 	analysisCmd.Dir = tmpDir
 
-	// タイムアウトを設定
+	// Set timeout
 	done := make(chan error, 1)
 	go func() {
 		done <- analysisCmd.Run()
@@ -110,10 +143,10 @@ func main() {
 
 	select {
 	case err := <-done:
-		// 解析が実行されたことを確認（エラーの有無は問わない）
+		// Confirm analysis was executed (error presence doesn't matter)
 		output := analysisOut.String()
 		if err != nil {
-			// 解析エラーや検出結果による非零終了コードは正常
+			// Non-zero exit code due to analysis errors or detection results is normal
 			t.Logf("Analysis completed with exit code (expected): %v", err)
 			t.Logf("Output: %s", output)
 		}
@@ -125,7 +158,7 @@ func main() {
 	}
 }
 
-// TestCLIExitCodes は異なる状況での終了コードをテストする
+// TestCLIExitCodes tests exit codes in different scenarios
 func TestCLIExitCodes(t *testing.T) {
 	tmpDir := t.TempDir()
 	binPath := filepath.Join(tmpDir, "gcpclosecheck")
@@ -144,17 +177,17 @@ func TestCLIExitCodes(t *testing.T) {
 		{
 			name:          "No arguments (help)",
 			args:          []string{},
-			expectNonZero: false, // ヘルプ表示は正常終了
+			expectNonZero: true, // Help display returns exit code 1 (flag package behavior)
 		},
 		{
 			name:          "Invalid flag",
 			args:          []string{"-invalid-flag"},
-			expectNonZero: true, // 無効なフラグはエラー
+			expectNonZero: true, // Invalid flag is error
 		},
 		{
 			name:          "Non-existent file",
 			args:          []string{"/non/existent/file.go"},
-			expectNonZero: true, // 存在しないファイルはエラー
+			expectNonZero: true, // Non-existent file is error
 		},
 	}
 
@@ -177,7 +210,7 @@ func TestCLIExitCodes(t *testing.T) {
 	}
 }
 
-// TestCLIOutputFormat は出力フォーマットをテストする
+// TestCLIOutputFormat tests output format
 func TestCLIOutputFormat(t *testing.T) {
 	tmpDir := t.TempDir()
 	binPath := filepath.Join(tmpDir, "gcpclosecheck")
@@ -188,7 +221,7 @@ func TestCLIOutputFormat(t *testing.T) {
 		t.Fatalf("Failed to build CLI: %v", err)
 	}
 
-	// 正常なGoファイルで出力フォーマットをテスト
+	// Test output format with valid Go file
 	testFile := filepath.Join(tmpDir, "valid.go")
 	validCode := `
 package main
@@ -204,7 +237,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer client.Close() // 正しいパターン
+	defer client.Close() // Correct pattern
 	_ = client
 }
 `
@@ -212,7 +245,7 @@ func main() {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
-	// 正常なコードでの実行（問題なしの場合）
+	// Execute with valid code (no problems case)
 	cmd := exec.Command(binPath, testFile)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -222,13 +255,13 @@ func main() {
 	_ = cmd.Run()
 	output := out.String()
 
-	// 正常なコードの場合は出力が少ない、またはエラーメッセージがないことを期待
+	// Expect minimal output or no error messages for valid code
 	if strings.Contains(output, "panic") || strings.Contains(output, "fatal") {
 		t.Errorf("Unexpected panic or fatal error in output: %s", output)
 	}
 }
 
-// TestCLIPerformance は基本的なパフォーマンステストを実行する
+// TestCLIPerformance runs basic performance tests
 func TestCLIPerformance(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping performance test in short mode")
@@ -243,7 +276,7 @@ func TestCLIPerformance(t *testing.T) {
 		t.Fatalf("Failed to build CLI: %v", err)
 	}
 
-	// 中規模のテストファイルを作成
+	// Create medium-scale test file
 	testFile := filepath.Join(tmpDir, "large_test.go")
 	var codeBuilder strings.Builder
 	codeBuilder.WriteString(`

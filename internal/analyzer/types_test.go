@@ -3,6 +3,7 @@ package analyzer
 import (
 	"go/token"
 	"go/types"
+	"strings"
 	"testing"
 )
 
@@ -547,4 +548,110 @@ func TestContextInfoIntegration(t *testing.T) {
 	}
 
 	t.Logf("✓ Context cancel information integration test completed")
+}
+
+// TestTask9_EnglishValidationMessages tests that all validation error messages are in English
+func TestTask9_EnglishValidationMessages(t *testing.T) {
+	// Test ResourceInfo validation messages
+	t.Run("ResourceInfo_ValidationMessages", func(t *testing.T) {
+		// Test nil Variable
+		resource := &ResourceInfo{Variable: nil, ServiceType: "test", CleanupMethod: "Close"}
+		err := resource.Validate()
+		if err == nil {
+			t.Error("Expected validation error for nil Variable")
+		}
+		if strings.Contains(err.Error(), "nil であってはいけません") {
+			t.Errorf("Error message should be in English, got: %s", err.Error())
+		}
+		
+		// Test empty ServiceType
+		variable := types.NewVar(token.NoPos, nil, "client", nil)
+		resource2 := &ResourceInfo{Variable: variable, ServiceType: "", CleanupMethod: "Close"}
+		err2 := resource2.Validate()
+		if err2 == nil {
+			t.Error("Expected validation error for empty ServiceType")
+		}
+		if strings.Contains(err2.Error(), "空であってはいけません") {
+			t.Errorf("Error message should be in English, got: %s", err2.Error())
+		}
+		
+		// Test empty CleanupMethod
+		resource3 := &ResourceInfo{Variable: variable, ServiceType: "test", CleanupMethod: ""}
+		err3 := resource3.Validate()
+		if err3 == nil {
+			t.Error("Expected validation error for empty CleanupMethod")
+		}
+		if strings.Contains(err3.Error(), "空であってはいけません") {
+			t.Errorf("Error message should be in English, got: %s", err3.Error())
+		}
+	})
+	
+	// Test ContextInfo validation messages
+	t.Run("ContextInfo_ValidationMessages", func(t *testing.T) {
+		// Test nil Variable
+		context := &ContextInfo{Variable: nil, CancelFunc: types.NewVar(token.NoPos, nil, "cancel", nil)}
+		err := context.Validate()
+		if err == nil {
+			t.Error("Expected validation error for nil Variable")
+		}
+		if strings.Contains(err.Error(), "nil であってはいけません") {
+			t.Errorf("Error message should be in English, got: %s", err.Error())
+		}
+		
+		// Test nil CancelFunc
+		context2 := &ContextInfo{Variable: types.NewVar(token.NoPos, nil, "ctx", nil), CancelFunc: nil}
+		err2 := context2.Validate()
+		if err2 == nil {
+			t.Error("Expected validation error for nil CancelFunc")
+		}
+		if strings.Contains(err2.Error(), "nil であってはいけません") {
+			t.Errorf("Error message should be in English, got: %s", err2.Error())
+		}
+	})
+	
+	// Test DeferCancelInfo validation messages
+	t.Run("DeferCancelInfo_ValidationMessages", func(t *testing.T) {
+		// Test empty CancelVarName
+		defer1 := &DeferCancelInfo{CancelVarName: "", DeferPos: token.Pos(100)}
+		err := defer1.Validate()
+		if err == nil {
+			t.Error("Expected validation error for empty CancelVarName")
+		}
+		if strings.Contains(err.Error(), "空であってはいけません") {
+			t.Errorf("Error message should be in English, got: %s", err.Error())
+		}
+		
+		// Test invalid DeferPos
+		defer2 := &DeferCancelInfo{CancelVarName: "cancel", DeferPos: 0}
+		err2 := defer2.Validate()
+		if err2 == nil {
+			t.Error("Expected validation error for invalid DeferPos")
+		}
+		if strings.Contains(err2.Error(), "無効であってはいけません") {
+			t.Errorf("Error message should be in English, got: %s", err2.Error())
+		}
+	})
+	
+	// Test SpannerEscapeInfo validation messages
+	t.Run("SpannerEscapeInfo_ValidationMessages", func(t *testing.T) {
+		// Test invalid TransactionType
+		spanner := &SpannerEscapeInfo{TransactionType: "Invalid", IsAutoManaged: true, AutoManagementReason: "test"}
+		err := spanner.Validate()
+		if err == nil {
+			t.Error("Expected validation error for invalid TransactionType")
+		}
+		if strings.Contains(err.Error(), "である必要があります") {
+			t.Errorf("Error message should be in English, got: %s", err.Error())
+		}
+		
+		// Test empty AutoManagementReason when IsAutoManaged is true
+		spanner2 := &SpannerEscapeInfo{TransactionType: ReadWriteTransactionType, IsAutoManaged: true, AutoManagementReason: ""}
+		err2 := spanner2.Validate()
+		if err2 == nil {
+			t.Error("Expected validation error for empty AutoManagementReason")
+		}
+		if strings.Contains(err2.Error(), "空であってはいけません") {
+			t.Errorf("Error message should be in English, got: %s", err2.Error())
+		}
+	})
 }

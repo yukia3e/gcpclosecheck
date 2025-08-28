@@ -9,6 +9,7 @@ import (
 	"golang.org/x/tools/go/analysis/singlechecker"
 
 	"github.com/yukia3e/gcpclosecheck/internal/analyzer"
+	"github.com/yukia3e/gcpclosecheck/internal/messages"
 )
 
 var (
@@ -48,28 +49,18 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `gcpclosecheck - GCP リソースの Close/Stop/Cancel 漏れを検出します
+	fmt.Fprintf(os.Stderr, `gcpclosecheck - %s
 
-Usage: gcpclosecheck [flags] packages...
+%s
 
-Examples:
-  gcpclosecheck ./...                      # 現在のディレクトリ以下を再帰的に解析
-  gcpclosecheck ./pkg/handlers             # 特定のパッケージを解析（推奨）
-  gcpclosecheck -gcpdebug ./...            # デバッグモードで解析
-  gcpclosecheck -gcpconfig custom.yaml ./...  # カスタム設定で解析
-  go vet -vettool=gcpclosecheck ./...      # go vet との統合
-
-推奨事項:
-  - パッケージ単位での解析を推奨（./internal/service/ 形式）
-  - 個別ファイル指定は依存関係エラーの原因となる場合があります
-  - 複雑な依存関係がある場合は go vet との統合を推奨
+%s
 
 Flags:
-`)
+`, messages.ToolDescription, messages.UsageExamples, messages.RecommendedPractices)
 	flag.PrintDefaults()
 	fmt.Fprintf(os.Stderr, `
 Environment Variables:
-  GCPCLOSECHECK_DEBUG=1  デバッグモードを有効にする
+  GCPCLOSECHECK_DEBUG=1  Enable debug mode
 
 For more information, see: https://github.com/yukia3e/gcpclosecheck
 `)

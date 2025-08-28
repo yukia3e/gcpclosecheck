@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+	"github.com/yukia3e/gcpclosecheck/internal/messages"
 )
 
 // 有効な例外タイプの定義
@@ -64,17 +65,17 @@ type Config struct {
 // LoadConfig は指定されたパスから設定ファイルを読み込む
 func LoadConfig(configPath string) (*Config, error) {
 	if configPath == "" {
-		return nil, errors.New("設定ファイルパスが空です")
+		return nil, errors.New(messages.ConfigFileEmpty)
 	}
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("設定ファイルの読み込みに失敗: %w", err)
+		return nil, fmt.Errorf(messages.ConfigLoadFailed, err)
 	}
 
 	var config Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("YAML解析に失敗: %w", err)
+		return nil, fmt.Errorf(messages.ConfigYAMLParseFailed, err)
 	}
 
 	return &config, nil
@@ -87,12 +88,12 @@ var defaultRules embed.FS
 func LoadDefaultConfig() (*Config, error) {
 	data, err := defaultRules.ReadFile("rules.yaml")
 	if err != nil {
-		return nil, fmt.Errorf("デフォルト設定ファイルの読み込みに失敗: %w", err)
+		return nil, fmt.Errorf(messages.DefaultConfigLoadFailed, err)
 	}
 
 	var config Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("デフォルト設定のYAML解析に失敗: %w", err)
+		return nil, fmt.Errorf(messages.DefaultConfigYAMLParseFailed, err)
 	}
 
 	return &config, nil
@@ -101,27 +102,27 @@ func LoadDefaultConfig() (*Config, error) {
 // Validate は設定の妥当性を検証する
 func (c *Config) Validate() error {
 	if len(c.Services) == 0 {
-		return errors.New("サービス定義が空です")
+		return errors.New(messages.ServicesListEmpty)
 	}
 
 	for i, service := range c.Services {
 		if service.ServiceName == "" {
-			return fmt.Errorf("サービス[%d]: サービス名が空です", i)
+			return fmt.Errorf(messages.ServiceNameEmpty, i)
 		}
 		if service.PackagePath == "" {
-			return fmt.Errorf("サービス[%d](%s): パッケージパスが空です", i, service.ServiceName)
+			return fmt.Errorf(messages.ServicePackagePathEmpty, i, service.ServiceName)
 		}
 		if len(service.CreationFuncs) == 0 {
-			return fmt.Errorf("サービス[%d](%s): 生成関数が定義されていません", i, service.ServiceName)
+			return fmt.Errorf(messages.ServiceCreationFuncsEmpty, i, service.ServiceName)
 		}
 		if len(service.CleanupMethods) == 0 {
-			return fmt.Errorf("サービス[%d](%s): 解放メソッドが定義されていません", i, service.ServiceName)
+			return fmt.Errorf(messages.ServiceCleanupMethodsEmpty, i, service.ServiceName)
 		}
 
 		// 解放メソッドの検証
 		for j, method := range service.CleanupMethods {
 			if method.Method == "" {
-				return fmt.Errorf("サービス[%d](%s): 解放メソッド[%d]のメソッド名が空です", i, service.ServiceName, j)
+				return fmt.Errorf(messages.CleanupMethodNameEmpty, i, service.ServiceName, j)
 			}
 		}
 	}
@@ -129,15 +130,15 @@ func (c *Config) Validate() error {
 	// パッケージ例外の検証
 	for i, exception := range c.PackageExceptions {
 		if exception.Name == "" {
-			return fmt.Errorf("パッケージ例外[%d]: 例外名が空です", i)
+			return fmt.Errorf(messages.PackageExceptionNameEmpty, i)
 		}
 		if exception.Pattern == "" {
-			return fmt.Errorf("パッケージ例外[%d](%s): パターンが空です", i, exception.Name)
+			return fmt.Errorf(messages.PackageExceptionPatternEmpty, i, exception.Name)
 		}
 
 		// 例外条件タイプの検証
 		if !isValidExceptionType(exception.Condition.Type) {
-			return fmt.Errorf("パッケージ例外[%d](%s): 不正な条件タイプです: %s (有効なタイプ: %v)",
+			return fmt.Errorf(messages.InvalidExceptionType,
 				i, exception.Name, exception.Condition.Type, validExceptionTypes)
 		}
 	}
