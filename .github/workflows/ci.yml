@@ -107,6 +107,12 @@ jobs:
     - name: Download dependencies
       run: go mod download
       
+    - name: Install development tools
+      run: |
+        go install golang.org/x/tools/cmd/goimports@latest
+        go install honnef.co/go/tools/cmd/staticcheck@latest
+        go install golang.org/x/vuln/cmd/govulncheck@latest
+      
     - name: Build
       run: go build -v ./...
       

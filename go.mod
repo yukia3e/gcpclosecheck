@@ -3,7 +3,7 @@ module github.com/yukia3e/gcpclosecheck
 go 1.24
 
 require (
-	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d
+	golang.org/x/tools v0.20.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )
