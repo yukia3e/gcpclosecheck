@@ -136,7 +136,7 @@ package_exceptions:
     condition:
       type: "test"
       description: "テストコード例外"
-      enabled: true
+      enabled: false
 
 # 診断レベル制御設定
 diagnostics:
