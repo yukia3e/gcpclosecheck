@@ -92,7 +92,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            go-version: "1.22"
+            go-version: "1.23"
           - os: ubuntu-latest  
             go-version: "1.24"
           - os: macos-latest    # Minimal macOS check for compatibility
