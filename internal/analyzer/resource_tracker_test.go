@@ -580,6 +580,12 @@ func setupPackageInfo(file *ast.File, typeInfo *types.Info) {
 						Type:  txnType,
 						Value: nil,
 					}
+				case "iter", "iter2":
+					iterType := &mockSpannerType{name: "*spanner.RowIterator"}
+					typeInfo.Types[sel.X] = types.TypeAndValue{
+						Type:  iterType,
+						Value: nil,
+					}
 				}
 			}
 		}
@@ -778,7 +784,7 @@ func testFunction(ctx context.Context) error {
 	
 	return nil
 }`,
-			expectedResources:   3, // client, txn(closure), txn(manual)
+			expectedResources:   4, // client, txn(closure), txn(manual), Read
 			expectedAutoManaged: 1, // txn(closure)のみ自動管理
 		},
 		{
@@ -801,7 +807,63 @@ func testFunction(ctx context.Context) error {
 	
 	return nil
 }`,
-			expectedResources:   2, // client, txn
+			expectedResources:   3, // client, txn, Read
+			expectedAutoManaged: 0, // 自動管理なし
+		},
+		{
+			name: "RowIterator Stop漏れ検知テスト",
+			code: `
+package test
+import (
+	"context"
+	"cloud.google.com/go/spanner"
+)
+func testFunction(ctx context.Context) error {
+	client, err := spanner.NewClient(ctx, "projects/test/instances/test/databases/test")
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+	
+	// Query without Stop - should be detected
+	iter := client.Query(ctx, spanner.Statement{SQL: "SELECT 1"})
+	// iter.Stop() が必要
+	
+	// Read without Stop - should be detected  
+	iter2 := client.Read(ctx, "table", spanner.AllKeys(), []string{"col"})
+	// iter2.Stop() が必要
+	
+	return nil
+}`,
+			expectedResources:   3, // client, iter, iter2
+			expectedAutoManaged: 0, // 自動管理なし
+		},
+		{
+			name: "RowIterator Stop正常パターン",
+			code: `
+package test
+import (
+	"context"
+	"cloud.google.com/go/spanner"
+)
+func testFunction(ctx context.Context) error {
+	client, err := spanner.NewClient(ctx, "projects/test/instances/test/databases/test")
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+	
+	// Query with Stop - should not be detected
+	iter := client.Query(ctx, spanner.Statement{SQL: "SELECT 1"})
+	defer iter.Stop()
+	
+	// Read with Stop - should not be detected  
+	iter2 := client.Read(ctx, "table", spanner.AllKeys(), []string{"col"})
+	defer iter2.Stop()
+	
+	return nil
+}`,
+			expectedResources:   3, // client, iter, iter2 (but all properly cleaned)
 			expectedAutoManaged: 0, // 自動管理なし
 		},
 	}
@@ -864,6 +926,26 @@ func testFunction(ctx context.Context) error {
 					ServiceType:      "spanner",
 					CreationFunction: "ReadOnlyTransaction",
 					CleanupMethod:    "Close",
+					IsRequired:       true,
+				})
+			}
+
+			// Queryの場合 (RowIterator)
+			if strings.Contains(tt.code, "client.Query") {
+				resources = append(resources, ResourceInfo{
+					ServiceType:      "spanner",
+					CreationFunction: "Query",
+					CleanupMethod:    "Stop",
+					IsRequired:       true,
+				})
+			}
+
+			// Readの場合 (RowIterator)
+			if strings.Contains(tt.code, "client.Read") {
+				resources = append(resources, ResourceInfo{
+					ServiceType:      "spanner",
+					CreationFunction: "Read",
+					CleanupMethod:    "Stop",
 					IsRequired:       true,
 				})
 			}
