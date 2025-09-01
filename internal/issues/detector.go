@@ -338,6 +338,11 @@ func (id *issueDetector) runGoImports(file string) error {
 		return fmt.Errorf("file path outside work directory: %s", file)
 	}
 
+	// Check if goimports is available
+	if _, err := exec.LookPath("goimports"); err != nil {
+		return fmt.Errorf("goimports not found in PATH: %w", err)
+	}
+
 	// #nosec G204: absFilePath is validated and safe
 	cmd := exec.Command("goimports", "-w", absFilePath)
 	cmd.Dir = id.workDir
@@ -374,6 +379,11 @@ func (id *issueDetector) runGoFmt(file string) error {
 	}
 	if !strings.HasPrefix(absFilePath, absWorkDir) {
 		return fmt.Errorf("file path outside work directory: %s", file)
+	}
+
+	// Check if gofmt is available (should always be available with Go installation)
+	if _, err := exec.LookPath("gofmt"); err != nil {
+		return fmt.Errorf("gofmt not found in PATH: %w", err)
 	}
 
 	// #nosec G204: absFilePath is validated and safe
