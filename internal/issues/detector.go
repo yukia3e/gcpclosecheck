@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 // Issue represents a quality issue found during linting
@@ -312,6 +313,11 @@ func (id *issueDetector) ApplyAutoFix(suggestion FixSuggestion) error {
 
 // runGoImports executes goimports on the specified file
 func (id *issueDetector) runGoImports(file string) error {
+	// Validate file path to prevent path traversal
+	if strings.Contains(file, "..") || strings.HasPrefix(file, "/") {
+		return fmt.Errorf("invalid file path: %s", file)
+	}
+	
 	filePath := filepath.Join(id.workDir, file)
 	cmd := exec.Command("goimports", "-w", filePath)
 	cmd.Dir = id.workDir
@@ -325,6 +331,11 @@ func (id *issueDetector) runGoImports(file string) error {
 
 // runGoFmt executes gofmt on the specified file
 func (id *issueDetector) runGoFmt(file string) error {
+	// Validate file path to prevent path traversal
+	if strings.Contains(file, "..") || strings.HasPrefix(file, "/") {
+		return fmt.Errorf("invalid file path: %s", file)
+	}
+	
 	filePath := filepath.Join(id.workDir, file)
 	cmd := exec.Command("gofmt", "-w", filePath)
 	cmd.Dir = id.workDir

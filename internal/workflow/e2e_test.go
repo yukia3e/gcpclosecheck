@@ -137,7 +137,11 @@ func TestE2E_ConfigurationWorkflow(t *testing.T) {
 	if err := suite.SetupTestEnvironment(); err != nil {
 		t.Fatalf("Failed to setup test environment: %v", err)
 	}
-	defer suite.CleanupTestEnvironment()
+	defer func() {
+		if err := suite.CleanupTestEnvironment(); err != nil {
+			t.Logf("Failed to cleanup test environment: %v", err)
+		}
+	}()
 
 	result, err := suite.RunConfigurationWorkflow()
 	if err != nil {
@@ -162,7 +166,11 @@ func TestE2E_IssueDetectionWorkflow(t *testing.T) {
 	if err := suite.SetupTestEnvironment(); err != nil {
 		t.Fatalf("Failed to setup test environment: %v", err)
 	}
-	defer suite.CleanupTestEnvironment()
+	defer func() {
+		if err := suite.CleanupTestEnvironment(); err != nil {
+			t.Logf("Failed to cleanup test environment: %v", err)
+		}
+	}()
 
 	result, err := suite.RunIssueDetectionWorkflow()
 	if err != nil {
@@ -187,7 +195,11 @@ func TestE2E_CIIntegrationWorkflow(t *testing.T) {
 	if err := suite.SetupTestEnvironment(); err != nil {
 		t.Fatalf("Failed to setup test environment: %v", err)
 	}
-	defer suite.CleanupTestEnvironment()
+	defer func() {
+		if err := suite.CleanupTestEnvironment(); err != nil {
+			t.Logf("Failed to cleanup test environment: %v", err)
+		}
+	}()
 
 	result, err := suite.RunCIIntegrationWorkflow()
 	if err != nil {
@@ -212,7 +224,11 @@ func TestE2E_ValidationWorkflow(t *testing.T) {
 	if err := suite.SetupTestEnvironment(); err != nil {
 		t.Fatalf("Failed to setup test environment: %v", err)
 	}
-	defer suite.CleanupTestEnvironment()
+	defer func() {
+		if err := suite.CleanupTestEnvironment(); err != nil {
+			t.Logf("Failed to cleanup test environment: %v", err)
+		}
+	}()
 
 	result, err := suite.RunValidationWorkflow()
 	if err != nil {

@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -139,12 +140,19 @@ func (vp *validationPipeline) RunBuild() (*BuildResult, error) {
 
 	// Create bin directory if it doesn't exist
 	binDir := filepath.Join(vp.workDir, "bin")
-	if err := exec.Command("mkdir", "-p", binDir).Run(); err != nil {
+	if err := os.MkdirAll(binDir, 0750); err != nil {
 		return nil, fmt.Errorf("failed to create bin directory: %w", err)
 	}
 
 	// Parse build command
 	cmdParts := strings.Fields(vp.buildCmd)
+	if len(cmdParts) == 0 {
+		return nil, fmt.Errorf("empty build command")
+	}
+	// Only allow safe commands
+	if cmdParts[0] != "go" {
+		return nil, fmt.Errorf("only go commands are allowed for build")
+	}
 	cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
 	cmd.Dir = vp.workDir
 
@@ -172,6 +180,13 @@ func (vp *validationPipeline) RunTests() (*TestResult, error) {
 
 	// Parse test command
 	cmdParts := strings.Fields(vp.testCmd)
+	if len(cmdParts) == 0 {
+		return nil, fmt.Errorf("empty test command")
+	}
+	// Only allow safe commands
+	if cmdParts[0] != "go" {
+		return nil, fmt.Errorf("only go commands are allowed for tests")
+	}
 	cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
 	cmd.Dir = vp.workDir
 
@@ -281,6 +296,7 @@ func (vp *validationPipeline) runLinter() ([]Issue, error) {
 	if err != nil {
 		// golangci-lint returns non-zero exit code when issues found
 		// We still want to parse the output
+		// TODO: Parse JSON output to extract issues
 	}
 
 	// For now, return empty slice - JSON parsing would be implemented here
@@ -346,44 +362,57 @@ func (vp *validationPipeline) GenerateReport(build *BuildResult, test *TestResul
 		Timestamp: time.Now(),
 	}
 
-	// Determine overall success
-	if build != nil && !build.Success {
-		report.Success = false
-	}
-	if test != nil && !test.Success {
-		report.Success = false
-	}
-	if quality != nil && !quality.Success {
-		report.Success = false
-	}
-
-	// Calculate total duration
-	if build != nil {
-		report.TotalDuration += build.Duration
-	}
-	if test != nil {
-		report.TotalDuration += test.Duration
-	}
-	if quality != nil {
-		report.TotalDuration += quality.Duration
-	}
-
-	// Generate summary
-	if report.Success {
-		report.Summary = "All validation checks passed successfully"
-	} else {
-		var failures []string
-		if build != nil && !build.Success {
-			failures = append(failures, "build")
-		}
-		if test != nil && !test.Success {
-			failures = append(failures, "tests")
-		}
-		if quality != nil && !quality.Success {
-			failures = append(failures, "quality checks")
-		}
-		report.Summary = fmt.Sprintf("Validation failed: %s", strings.Join(failures, ", "))
-	}
+	report.Success = vp.determineOverallSuccess(build, test, quality)
+	report.TotalDuration = vp.calculateTotalDuration(build, test, quality)
+	report.Summary = vp.generateSummary(report.Success, build, test, quality)
 
 	return report
+}
+
+// determineOverallSuccess checks if all components succeeded
+func (vp *validationPipeline) determineOverallSuccess(build *BuildResult, test *TestResult, quality *QualityResult) bool {
+	if build != nil && !build.Success {
+		return false
+	}
+	if test != nil && !test.Success {
+		return false
+	}
+	if quality != nil && !quality.Success {
+		return false
+	}
+	return true
+}
+
+// calculateTotalDuration sums up all component durations
+func (vp *validationPipeline) calculateTotalDuration(build *BuildResult, test *TestResult, quality *QualityResult) time.Duration {
+	var total time.Duration
+	if build != nil {
+		total += build.Duration
+	}
+	if test != nil {
+		total += test.Duration
+	}
+	if quality != nil {
+		total += quality.Duration
+	}
+	return total
+}
+
+// generateSummary creates a summary message based on success status and failures
+func (vp *validationPipeline) generateSummary(success bool, build *BuildResult, test *TestResult, quality *QualityResult) string {
+	if success {
+		return "All validation checks passed successfully"
+	}
+
+	var failures []string
+	if build != nil && !build.Success {
+		failures = append(failures, "build")
+	}
+	if test != nil && !test.Success {
+		failures = append(failures, "tests")
+	}
+	if quality != nil && !quality.Success {
+		failures = append(failures, "quality checks")
+	}
+	return fmt.Sprintf("Validation failed: %s", strings.Join(failures, ", "))
 }

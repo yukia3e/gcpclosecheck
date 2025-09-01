@@ -241,7 +241,11 @@ package_exceptions:
 					return err
 				}
 				// Restore permissions after test
-				defer os.Chmod(readonlyDir, 0755)
+				defer func() {
+					if err := os.Chmod(readonlyDir, 0755); err != nil {
+						t.Logf("Failed to restore permissions: %v", err)
+					}
+				}()
 
 				backupPath := filepath.Join(readonlyDir, "backup.yaml")
 				return manager.CreateBackup(backupPath)

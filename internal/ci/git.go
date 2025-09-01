@@ -2,7 +2,6 @@ package ci
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -280,9 +279,3 @@ func (gm *gitManager) GetStatus() (*GitStatus, error) {
 }
 
 // ensureDirectory creates directory if it doesn't exist
-func ensureDirectory(path string) error {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return os.MkdirAll(path, 0755)
-	}
-	return nil
-}
