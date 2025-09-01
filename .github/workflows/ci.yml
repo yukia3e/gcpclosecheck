@@ -25,7 +25,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.24"
+        go-version: "1.25"
         cache: true
         
     # Format and lint checks
@@ -88,11 +88,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            go-version: "1.23"
+            go-version: "1.24"
           - os: ubuntu-latest  
-            go-version: "1.24"
+            go-version: "1.25"
           - os: macos-latest    # Minimal macOS check for compatibility
-            go-version: "1.24"
+            go-version: "1.25"
     
     steps:
     - name: Checkout code
@@ -135,7 +135,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.24"
+        go-version: "1.25"
         cache: true
         
     - name: Build binary
