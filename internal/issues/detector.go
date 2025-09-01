@@ -313,13 +313,33 @@ func (id *issueDetector) ApplyAutoFix(suggestion FixSuggestion) error {
 
 // runGoImports executes goimports on the specified file
 func (id *issueDetector) runGoImports(file string) error {
-	// Validate file path to prevent path traversal
-	if strings.Contains(file, "..") || strings.HasPrefix(file, "/") {
+	// Validate file path to prevent path traversal and command injection
+	if strings.Contains(file, "..") || strings.HasPrefix(file, "/") ||
+		strings.ContainsAny(file, ";|&$`(){}[]<>*?~") {
 		return fmt.Errorf("invalid file path: %s", file)
 	}
-	
+
+	// Only allow .go files
+	if !strings.HasSuffix(file, ".go") {
+		return fmt.Errorf("only .go files are allowed: %s", file)
+	}
+
 	filePath := filepath.Join(id.workDir, file)
-	cmd := exec.Command("goimports", "-w", filePath)
+	// Use absolute path and validate it's within workDir
+	absWorkDir, err := filepath.Abs(id.workDir)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute work directory: %w", err)
+	}
+	absFilePath, err := filepath.Abs(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute file path: %w", err)
+	}
+	if !strings.HasPrefix(absFilePath, absWorkDir) {
+		return fmt.Errorf("file path outside work directory: %s", file)
+	}
+
+	// #nosec G204: absFilePath is validated and safe
+	cmd := exec.Command("goimports", "-w", absFilePath)
 	cmd.Dir = id.workDir
 
 	if err := cmd.Run(); err != nil {
@@ -331,13 +351,33 @@ func (id *issueDetector) runGoImports(file string) error {
 
 // runGoFmt executes gofmt on the specified file
 func (id *issueDetector) runGoFmt(file string) error {
-	// Validate file path to prevent path traversal
-	if strings.Contains(file, "..") || strings.HasPrefix(file, "/") {
+	// Validate file path to prevent path traversal and command injection
+	if strings.Contains(file, "..") || strings.HasPrefix(file, "/") ||
+		strings.ContainsAny(file, ";|&$`(){}[]<>*?~") {
 		return fmt.Errorf("invalid file path: %s", file)
 	}
-	
+
+	// Only allow .go files
+	if !strings.HasSuffix(file, ".go") {
+		return fmt.Errorf("only .go files are allowed: %s", file)
+	}
+
 	filePath := filepath.Join(id.workDir, file)
-	cmd := exec.Command("gofmt", "-w", filePath)
+	// Use absolute path and validate it's within workDir
+	absWorkDir, err := filepath.Abs(id.workDir)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute work directory: %w", err)
+	}
+	absFilePath, err := filepath.Abs(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute file path: %w", err)
+	}
+	if !strings.HasPrefix(absFilePath, absWorkDir) {
+		return fmt.Errorf("file path outside work directory: %s", file)
+	}
+
+	// #nosec G204: absFilePath is validated and safe
+	cmd := exec.Command("gofmt", "-w", absFilePath)
 	cmd.Dir = id.workDir
 
 	if err := cmd.Run(); err != nil {

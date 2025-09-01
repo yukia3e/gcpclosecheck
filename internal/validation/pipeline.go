@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -144,15 +145,22 @@ func (vp *validationPipeline) RunBuild() (*BuildResult, error) {
 		return nil, fmt.Errorf("failed to create bin directory: %w", err)
 	}
 
-	// Parse build command
+	// Parse build command with strict validation
 	cmdParts := strings.Fields(vp.buildCmd)
 	if len(cmdParts) == 0 {
 		return nil, fmt.Errorf("empty build command")
 	}
-	// Only allow safe commands
+	// Only allow safe commands and validate arguments
 	if cmdParts[0] != "go" {
 		return nil, fmt.Errorf("only go commands are allowed for build")
 	}
+	// Validate all command parts contain no dangerous characters
+	for _, part := range cmdParts {
+		if strings.ContainsAny(part, ";|&$`(){}[]<>*?~") {
+			return nil, fmt.Errorf("unsafe characters in build command: %s", part)
+		}
+	}
+	// #nosec G204: cmdParts are validated and safe
 	cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
 	cmd.Dir = vp.workDir
 
@@ -178,15 +186,22 @@ func (vp *validationPipeline) RunBuild() (*BuildResult, error) {
 func (vp *validationPipeline) RunTests() (*TestResult, error) {
 	start := time.Now()
 
-	// Parse test command
+	// Parse test command with strict validation
 	cmdParts := strings.Fields(vp.testCmd)
 	if len(cmdParts) == 0 {
 		return nil, fmt.Errorf("empty test command")
 	}
-	// Only allow safe commands
+	// Only allow safe commands and validate arguments
 	if cmdParts[0] != "go" {
 		return nil, fmt.Errorf("only go commands are allowed for tests")
 	}
+	// Validate all command parts contain no dangerous characters
+	for _, part := range cmdParts {
+		if strings.ContainsAny(part, ";|&$`(){}[]<>*?~") {
+			return nil, fmt.Errorf("unsafe characters in test command: %s", part)
+		}
+	}
+	// #nosec G204: cmdParts are validated and safe
 	cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
 	cmd.Dir = vp.workDir
 
@@ -292,15 +307,57 @@ func (vp *validationPipeline) runLinter() ([]Issue, error) {
 	cmd := exec.Command("golangci-lint", "run", "--out-format", "json")
 	cmd.Dir = vp.workDir
 
-	_, err := cmd.CombinedOutput()
-	if err != nil {
-		// golangci-lint returns non-zero exit code when issues found
-		// We still want to parse the output
-		// TODO: Parse JSON output to extract issues
+	output, err := cmd.CombinedOutput()
+	// golangci-lint returns non-zero exit code when issues found
+	// We still want to parse the output even if err != nil
+
+	if len(output) == 0 {
+		// No output means no issues found
+		return []Issue{}, nil
 	}
 
-	// For now, return empty slice - JSON parsing would be implemented here
-	return []Issue{}, nil
+	// Parse golangci-lint JSON output
+	var lintResult struct {
+		Issues []struct {
+			FromLinter  string      `json:"FromLinter"`
+			Text        string      `json:"Text"`
+			Severity    string      `json:"Severity"`
+			SourceLines []string    `json:"SourceLines"`
+			Replacement interface{} `json:"Replacement"`
+			Pos         struct {
+				Filename string `json:"Filename"`
+				Offset   int    `json:"Offset"`
+				Line     int    `json:"Line"`
+				Column   int    `json:"Column"`
+			} `json:"Pos"`
+			ExpectNoLint         bool   `json:"ExpectNoLint"`
+			ExpectedNoLintLinter string `json:"ExpectedNoLintLinter"`
+		} `json:"Issues"`
+	}
+
+	if jsonErr := json.Unmarshal(output, &lintResult); jsonErr != nil {
+		// If JSON parsing fails, still return the original error if there was one
+		if err != nil {
+			return nil, fmt.Errorf("golangci-lint execution failed: %w", err)
+		}
+		return nil, fmt.Errorf("failed to parse golangci-lint JSON output: %w", jsonErr)
+	}
+
+	// Convert to our Issue format
+	var issues []Issue
+	for _, lintIssue := range lintResult.Issues {
+		issue := Issue{
+			File:     lintIssue.Pos.Filename,
+			Line:     lintIssue.Pos.Line,
+			Column:   lintIssue.Pos.Column,
+			Linter:   lintIssue.FromLinter,
+			Message:  lintIssue.Text,
+			Severity: lintIssue.Severity,
+		}
+		issues = append(issues, issue)
+	}
+
+	return issues, nil
 }
 
 // parseFloat safely parses a float string
