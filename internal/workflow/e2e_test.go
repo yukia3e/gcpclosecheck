@@ -7,52 +7,52 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yukia3e/gcpclosecheck/internal/config"
-	"github.com/yukia3e/gcpclosecheck/internal/validation"
-	"github.com/yukia3e/gcpclosecheck/internal/issues"
 	"github.com/yukia3e/gcpclosecheck/internal/ci"
+	"github.com/yukia3e/gcpclosecheck/internal/config"
+	"github.com/yukia3e/gcpclosecheck/internal/issues"
+	"github.com/yukia3e/gcpclosecheck/internal/validation"
 )
 
 // E2ETestResult captures the result of an end-to-end test
 type E2ETestResult struct {
-	Success      bool                        `json:"success"`
-	Duration     time.Duration               `json:"duration"`
-	Stages       map[string]E2EStageResult   `json:"stages"`
-	Errors       []string                    `json:"errors,omitempty"`
-	ConfigState  *config.ConfigurationState  `json:"config_state,omitempty"`
-	IssuesFound  []issues.Issue              `json:"issues_found,omitempty"`
-	CIResults    *ci.CIResult               `json:"ci_results,omitempty"`
-	Validation   *validation.ValidationReport `json:"validation,omitempty"`
+	Success     bool                         `json:"success"`
+	Duration    time.Duration                `json:"duration"`
+	Stages      map[string]E2EStageResult    `json:"stages"`
+	Errors      []string                     `json:"errors,omitempty"`
+	ConfigState *config.ConfigurationState   `json:"config_state,omitempty"`
+	IssuesFound []issues.Issue               `json:"issues_found,omitempty"`
+	CIResults   *ci.CIResult                 `json:"ci_results,omitempty"`
+	Validation  *validation.ValidationReport `json:"validation,omitempty"`
 }
 
 // E2EStageResult represents the result of a single stage
 type E2EStageResult struct {
-	Success   bool          `json:"success"`
-	Duration  time.Duration `json:"duration"`
-	Message   string        `json:"message"`
-	Error     string        `json:"error,omitempty"`
+	Success  bool          `json:"success"`
+	Duration time.Duration `json:"duration"`
+	Message  string        `json:"message"`
+	Error    string        `json:"error,omitempty"`
 }
 
 // E2ETestSuite manages end-to-end testing workflow
 type E2ETestSuite interface {
 	// RunCompleteWorkflow executes the complete workflow from config load to CI validation
 	RunCompleteWorkflow() (*E2ETestResult, error)
-	
+
 	// RunConfigurationWorkflow tests configuration management workflow
 	RunConfigurationWorkflow() (*E2ETestResult, error)
-	
+
 	// RunIssueDetectionWorkflow tests issue detection and resolution workflow
 	RunIssueDetectionWorkflow() (*E2ETestResult, error)
-	
+
 	// RunCIIntegrationWorkflow tests CI integration workflow
 	RunCIIntegrationWorkflow() (*E2ETestResult, error)
-	
+
 	// RunValidationWorkflow tests validation pipeline workflow
 	RunValidationWorkflow() (*E2ETestResult, error)
-	
+
 	// SetupTestEnvironment prepares test environment
 	SetupTestEnvironment() error
-	
+
 	// CleanupTestEnvironment cleans up test environment
 	CleanupTestEnvironment() error
 }
@@ -88,7 +88,7 @@ func NewE2ETestSuite(workDir string) E2ETestSuite {
 func TestE2E_CompleteWorkflow(t *testing.T) {
 	tmpDir := t.TempDir()
 	suite := NewE2ETestSuite(tmpDir)
-	
+
 	// Setup test environment
 	if err := suite.SetupTestEnvironment(); err != nil {
 		t.Fatalf("Failed to setup test environment: %v", err)
@@ -98,21 +98,21 @@ func TestE2E_CompleteWorkflow(t *testing.T) {
 			t.Errorf("Failed to cleanup test environment: %v", err)
 		}
 	}()
-	
+
 	// Run complete workflow
 	result, err := suite.RunCompleteWorkflow()
 	if err != nil {
 		t.Fatalf("Complete workflow failed: %v", err)
 	}
-	
+
 	if result == nil {
 		t.Fatal("Expected E2ETestResult but got nil")
 	}
-	
+
 	if result.Duration == 0 {
 		t.Error("Expected non-zero duration")
 	}
-	
+
 	// Verify all stages completed
 	expectedStages := []string{"config", "validation", "issues", "ci"}
 	for _, stage := range expectedStages {
@@ -122,7 +122,7 @@ func TestE2E_CompleteWorkflow(t *testing.T) {
 			t.Errorf("Stage '%s' failed: %s", stage, stageResult.Error)
 		}
 	}
-	
+
 	// Verify overall success
 	if !result.Success {
 		t.Errorf("Expected overall success, got errors: %v", result.Errors)
@@ -133,21 +133,21 @@ func TestE2E_CompleteWorkflow(t *testing.T) {
 func TestE2E_ConfigurationWorkflow(t *testing.T) {
 	tmpDir := t.TempDir()
 	suite := NewE2ETestSuite(tmpDir)
-	
+
 	if err := suite.SetupTestEnvironment(); err != nil {
 		t.Fatalf("Failed to setup test environment: %v", err)
 	}
 	defer suite.CleanupTestEnvironment()
-	
+
 	result, err := suite.RunConfigurationWorkflow()
 	if err != nil {
 		t.Fatalf("Configuration workflow failed: %v", err)
 	}
-	
+
 	if !result.Success {
 		t.Errorf("Configuration workflow should succeed, got errors: %v", result.Errors)
 	}
-	
+
 	// Verify configuration state is tracked
 	if result.ConfigState == nil {
 		t.Error("Expected configuration state to be captured")
@@ -158,21 +158,21 @@ func TestE2E_ConfigurationWorkflow(t *testing.T) {
 func TestE2E_IssueDetectionWorkflow(t *testing.T) {
 	tmpDir := t.TempDir()
 	suite := NewE2ETestSuite(tmpDir)
-	
+
 	if err := suite.SetupTestEnvironment(); err != nil {
 		t.Fatalf("Failed to setup test environment: %v", err)
 	}
 	defer suite.CleanupTestEnvironment()
-	
+
 	result, err := suite.RunIssueDetectionWorkflow()
 	if err != nil {
 		t.Fatalf("Issue detection workflow failed: %v", err)
 	}
-	
+
 	if !result.Success {
 		t.Errorf("Issue detection workflow should succeed, got errors: %v", result.Errors)
 	}
-	
+
 	// Verify issues were detected
 	if len(result.IssuesFound) == 0 {
 		t.Error("Expected some issues to be detected in test scenario")
@@ -183,21 +183,21 @@ func TestE2E_IssueDetectionWorkflow(t *testing.T) {
 func TestE2E_CIIntegrationWorkflow(t *testing.T) {
 	tmpDir := t.TempDir()
 	suite := NewE2ETestSuite(tmpDir)
-	
+
 	if err := suite.SetupTestEnvironment(); err != nil {
 		t.Fatalf("Failed to setup test environment: %v", err)
 	}
 	defer suite.CleanupTestEnvironment()
-	
+
 	result, err := suite.RunCIIntegrationWorkflow()
 	if err != nil {
 		t.Fatalf("CI integration workflow failed: %v", err)
 	}
-	
+
 	if !result.Success {
 		t.Errorf("CI integration workflow should succeed, got errors: %v", result.Errors)
 	}
-	
+
 	// Verify CI results are captured
 	if result.CIResults == nil {
 		t.Error("Expected CI results to be captured")
@@ -208,21 +208,21 @@ func TestE2E_CIIntegrationWorkflow(t *testing.T) {
 func TestE2E_ValidationWorkflow(t *testing.T) {
 	tmpDir := t.TempDir()
 	suite := NewE2ETestSuite(tmpDir)
-	
+
 	if err := suite.SetupTestEnvironment(); err != nil {
 		t.Fatalf("Failed to setup test environment: %v", err)
 	}
 	defer suite.CleanupTestEnvironment()
-	
+
 	result, err := suite.RunValidationWorkflow()
 	if err != nil {
 		t.Fatalf("Validation workflow failed: %v", err)
 	}
-	
+
 	if !result.Success {
 		t.Errorf("Validation workflow should succeed, got errors: %v", result.Errors)
 	}
-	
+
 	// Verify validation report is generated
 	if result.Validation == nil {
 		t.Error("Expected validation report to be captured")
@@ -247,7 +247,7 @@ func TestE2E_ErrorScenarios(t *testing.T) {
 			errorMsg:    "config",
 		},
 		{
-			name: "invalid_yaml_config", 
+			name: "invalid_yaml_config",
 			setupError: func(suite E2ETestSuite) error {
 				// Create invalid YAML
 				return nil
@@ -265,19 +265,19 @@ func TestE2E_ErrorScenarios(t *testing.T) {
 			errorMsg:    "permission",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 			suite := NewE2ETestSuite(tmpDir)
-			
+
 			// Apply setup error
 			if err := tt.setupError(suite); err != nil {
 				t.Fatalf("Setup error failed: %v", err)
 			}
-			
+
 			result, err := suite.RunCompleteWorkflow()
-			
+
 			if tt.expectError {
 				if err == nil && (result == nil || result.Success) {
 					t.Error("Expected error but got success")
@@ -342,7 +342,7 @@ func main() {
 		},
 		MockResponses: map[string]string{
 			"github_actions": `{"workflow_runs":[{"id":123,"status":"completed","conclusion":"success"}]}`,
-			"linter_output": `[{"Issues":[{"FromLinter":"gcpclosecheck","Text":"spanner client not closed","Pos":{"Filename":"main.go","Line":12,"Column":1}}]}]`,
+			"linter_output":  `[{"Issues":[{"FromLinter":"gcpclosecheck","Text":"spanner client not closed","Pos":{"Filename":"main.go","Line":12,"Column":1}}]}]`,
 		},
 	}
 }
@@ -354,7 +354,7 @@ func (e *e2eTestSuite) RunCompleteWorkflow() (*E2ETestResult, error) {
 		Success: true,
 		Stages:  make(map[string]E2EStageResult),
 	}
-	
+
 	// Stage 1: Configuration
 	configResult, err := e.runConfigStage()
 	result.Stages["config"] = configResult
@@ -362,7 +362,7 @@ func (e *e2eTestSuite) RunCompleteWorkflow() (*E2ETestResult, error) {
 		result.Success = false
 		result.Errors = append(result.Errors, fmt.Sprintf("Config stage failed: %v", err))
 	}
-	
+
 	// Stage 2: Validation
 	validationResult, err := e.runValidationStage()
 	result.Stages["validation"] = validationResult
@@ -370,7 +370,7 @@ func (e *e2eTestSuite) RunCompleteWorkflow() (*E2ETestResult, error) {
 		result.Success = false
 		result.Errors = append(result.Errors, fmt.Sprintf("Validation stage failed: %v", err))
 	}
-	
+
 	// Stage 3: Issue Detection
 	issueResult, err := e.runIssueStage()
 	result.Stages["issues"] = issueResult
@@ -378,7 +378,7 @@ func (e *e2eTestSuite) RunCompleteWorkflow() (*E2ETestResult, error) {
 		result.Success = false
 		result.Errors = append(result.Errors, fmt.Sprintf("Issue stage failed: %v", err))
 	}
-	
+
 	// Stage 4: CI Integration
 	ciResult, err := e.runCIStage()
 	result.Stages["ci"] = ciResult
@@ -386,7 +386,7 @@ func (e *e2eTestSuite) RunCompleteWorkflow() (*E2ETestResult, error) {
 		result.Success = false
 		result.Errors = append(result.Errors, fmt.Sprintf("CI stage failed: %v", err))
 	}
-	
+
 	result.Duration = time.Since(start)
 	return result, nil
 }
@@ -394,69 +394,69 @@ func (e *e2eTestSuite) RunCompleteWorkflow() (*E2ETestResult, error) {
 // runConfigStage executes configuration management stage
 func (e *e2eTestSuite) runConfigStage() (E2EStageResult, error) {
 	start := time.Now()
-	
+
 	configPath := filepath.Join(e.workDir, "config.yaml")
 	_, err := e.configManager.LoadConfig(configPath)
-	
+
 	result := E2EStageResult{
 		Success:  err == nil,
 		Duration: time.Since(start),
 		Message:  "Configuration loaded successfully",
 	}
-	
+
 	if err != nil {
 		result.Error = err.Error()
 		return result, err
 	}
-	
+
 	return result, nil
 }
 
 // runValidationStage executes validation pipeline stage
 func (e *e2eTestSuite) runValidationStage() (E2EStageResult, error) {
 	start := time.Now()
-	
+
 	// Create mock validation pipeline for testing
 	e.pipeline = validation.NewValidationPipeline(e.workDir)
-	
+
 	result := E2EStageResult{
 		Success:  true,
 		Duration: time.Since(start),
 		Message:  "Validation pipeline initialized",
 	}
-	
+
 	return result, nil
 }
 
 // runIssueStage executes issue detection stage
 func (e *e2eTestSuite) runIssueStage() (E2EStageResult, error) {
 	start := time.Now()
-	
+
 	// Create mock issue detector
 	e.detector = issues.NewIssueDetector(e.workDir)
-	
+
 	result := E2EStageResult{
 		Success:  true,
 		Duration: time.Since(start),
 		Message:  "Issue detection completed",
 	}
-	
+
 	return result, nil
 }
 
 // runCIStage executes CI integration stage
 func (e *e2eTestSuite) runCIStage() (E2EStageResult, error) {
 	start := time.Now()
-	
+
 	// Create mock CI validator
 	e.ciValidator = ci.NewCIValidator("test-repo", "test-token")
-	
+
 	result := E2EStageResult{
 		Success:  true,
 		Duration: time.Since(start),
 		Message:  "CI integration completed",
 	}
-	
+
 	return result, nil
 }
 
@@ -467,7 +467,7 @@ func (e *e2eTestSuite) RunConfigurationWorkflow() (*E2ETestResult, error) {
 		Success: true,
 		Stages:  make(map[string]E2EStageResult),
 	}
-	
+
 	// Load configuration
 	configPath := filepath.Join(e.workDir, "config.yaml")
 	_, err := e.configManager.LoadConfig(configPath)
@@ -476,21 +476,21 @@ func (e *e2eTestSuite) RunConfigurationWorkflow() (*E2ETestResult, error) {
 		result.Errors = append(result.Errors, fmt.Sprintf("Failed to load config: %v", err))
 		return result, err
 	}
-	
+
 	// Create configuration state for testing
 	result.ConfigState = &config.ConfigurationState{
 		Path:         configPath,
 		LastModified: time.Now(),
 		Version:      "1.0.0",
 	}
-	
+
 	result.Duration = time.Since(start)
 	result.Stages["config"] = E2EStageResult{
 		Success:  true,
 		Duration: result.Duration,
 		Message:  "Configuration workflow completed",
 	}
-	
+
 	return result, nil
 }
 
@@ -521,14 +521,14 @@ func (e *e2eTestSuite) SetupTestEnvironment() error {
 			return fmt.Errorf("failed to create config file %s: %w", filename, err)
 		}
 	}
-	
+
 	for filename, content := range e.testData.TestFiles {
 		path := filepath.Join(e.workDir, filename)
 		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 			return fmt.Errorf("failed to create test file %s: %w", filename, err)
 		}
 	}
-	
+
 	return nil
 }
 

@@ -13,25 +13,25 @@ import (
 type ConfigManager interface {
 	// LoadConfig loads configuration from the specified file path
 	LoadConfig(path string) (*Config, error)
-	
+
 	// ValidateYAMLIntegrity validates the YAML structure and configuration integrity
 	ValidateYAMLIntegrity() error
-	
+
 	// SaveConfig saves the current configuration to the specified file path
 	SaveConfig(path string) error
-	
+
 	// UpdateTestException updates the test exception enabled flag
 	UpdateTestException(enabled bool) error
-	
+
 	// CreateBackup creates a backup of the current configuration
 	CreateBackup(backupPath string) error
-	
+
 	// CompareConfigurations compares two configurations and returns differences
 	CompareConfigurations(otherPath string) ([]string, error)
-	
+
 	// RestoreFromBackup restores configuration from a backup file
 	RestoreFromBackup(backupPath string) error
-	
+
 	// VerifyConfigChange verifies that configuration changes were applied correctly
 	VerifyConfigChange(filePath string) error
 }
@@ -54,9 +54,9 @@ type ConfigurationState struct {
 
 // configManager is the concrete implementation of ConfigManager
 type configManager struct {
-	config *Config
+	config     *Config
 	configPath string
-	state  *ConfigurationState
+	state      *ConfigurationState
 }
 
 // NewConfigManager creates a new instance of ConfigManager
@@ -91,13 +91,13 @@ func (cm *configManager) LoadConfig(path string) (*Config, error) {
 
 	cm.config = &config
 	cm.configPath = path
-	
+
 	// Update state
 	if fileInfo, err := os.Stat(path); err == nil {
 		cm.state.LastModified = fileInfo.ModTime()
 		cm.state.Path = path
 	}
-	
+
 	return &config, nil
 }
 
@@ -146,7 +146,7 @@ func (cm *configManager) UpdateTestException(enabled bool) error {
 			if enabled {
 				newValue = "true"
 			}
-			
+
 			cm.config.PackageExceptions[i].Condition.Enabled = enabled
 			cm.recordChange("test_files.enabled", oldValue, newValue)
 			return nil
@@ -184,18 +184,18 @@ func (cm *configManager) CompareConfigurations(otherPath string) ([]string, erro
 
 	// Compare configurations and return differences
 	var diffs []string
-	
+
 	// Compare package exceptions specifically
 	currentExceptions := make(map[string]*PackageExceptionRule)
 	for i := range cm.config.PackageExceptions {
 		currentExceptions[cm.config.PackageExceptions[i].Name] = &cm.config.PackageExceptions[i]
 	}
-	
+
 	otherExceptions := make(map[string]*PackageExceptionRule)
 	for i := range otherConfig.PackageExceptions {
 		otherExceptions[otherConfig.PackageExceptions[i].Name] = &otherConfig.PackageExceptions[i]
 	}
-	
+
 	// Check for differences in package exceptions
 	for name, currentEx := range currentExceptions {
 		otherEx, exists := otherExceptions[name]
@@ -203,35 +203,35 @@ func (cm *configManager) CompareConfigurations(otherPath string) ([]string, erro
 			diffs = append(diffs, fmt.Sprintf("Package exception '%s' removed", name))
 			continue
 		}
-		
+
 		if currentEx.Condition.Enabled != otherEx.Condition.Enabled {
-			diffs = append(diffs, fmt.Sprintf("Package exception '%s' enabled changed from %t to %t", 
+			diffs = append(diffs, fmt.Sprintf("Package exception '%s' enabled changed from %t to %t",
 				name, currentEx.Condition.Enabled, otherEx.Condition.Enabled))
 		}
-		
+
 		if currentEx.Pattern != otherEx.Pattern {
-			diffs = append(diffs, fmt.Sprintf("Package exception '%s' pattern changed from '%s' to '%s'", 
+			diffs = append(diffs, fmt.Sprintf("Package exception '%s' pattern changed from '%s' to '%s'",
 				name, currentEx.Pattern, otherEx.Pattern))
 		}
-		
+
 		if currentEx.Condition.Description != otherEx.Condition.Description {
 			diffs = append(diffs, fmt.Sprintf("Package exception '%s' description changed", name))
 		}
 	}
-	
+
 	// Check for new package exceptions
 	for name := range otherExceptions {
 		if _, exists := currentExceptions[name]; !exists {
 			diffs = append(diffs, fmt.Sprintf("Package exception '%s' added", name))
 		}
 	}
-	
+
 	// Compare services (basic comparison)
 	if len(cm.config.Services) != len(otherConfig.Services) {
-		diffs = append(diffs, fmt.Sprintf("Services count changed from %d to %d", 
+		diffs = append(diffs, fmt.Sprintf("Services count changed from %d to %d",
 			len(cm.config.Services), len(otherConfig.Services)))
 	}
-	
+
 	return diffs, nil
 }
 
@@ -246,25 +246,25 @@ func (cm *configManager) VerifyConfigChange(filePath string) error {
 	if cm.config == nil {
 		return fmt.Errorf("no configuration loaded to compare")
 	}
-	
+
 	// Check if the file exists
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return fmt.Errorf("file does not exist: %s", filePath)
 	}
-	
+
 	// Load the file and verify it can be parsed
 	tempManager := NewConfigManager().(*configManager)
 	_, err := tempManager.LoadConfig(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to load file for verification: %w", err)
 	}
-	
+
 	// Verify YAML integrity
 	err = tempManager.ValidateYAMLIntegrity()
 	if err != nil {
 		return fmt.Errorf("YAML integrity validation failed: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -281,13 +281,13 @@ func (cm *configManager) recordChange(field, oldValue, newValue string) {
 			Version:       "1.0.0",
 		}
 	}
-	
+
 	change := ChangeRecord{
 		Field:     field,
 		OldValue:  oldValue,
 		NewValue:  newValue,
 		Timestamp: time.Now(),
 	}
-	
+
 	cm.state.ChangeHistory = append(cm.state.ChangeHistory, change)
 }

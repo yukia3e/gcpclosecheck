@@ -31,25 +31,25 @@ type GitStatus struct {
 type GitManager interface {
 	// InitRepository initializes a git repository
 	InitRepository() error
-	
+
 	// CreateCommit creates a commit with standardized commit message
 	CreateCommit(message string) (string, error)
-	
+
 	// PushChanges pushes changes to remote with error handling and retry logic
 	PushChanges(branch string) error
-	
+
 	// CreateBranch creates and switches to a new branch
 	CreateBranch(branchName string) error
-	
+
 	// GetCurrentBranch returns the current branch name
 	GetCurrentBranch() (string, error)
-	
+
 	// AddFiles adds files to staging area
 	AddFiles(files []string) error
-	
+
 	// GetCommitHistory returns recent commit history
 	GetCommitHistory(limit int) ([]GitCommit, error)
-	
+
 	// GetStatus returns current repository status
 	GetStatus() (*GitStatus, error)
 }
@@ -70,22 +70,22 @@ func NewGitManager(repoPath string) GitManager {
 func (gm *gitManager) InitRepository() error {
 	cmd := exec.Command("git", "init")
 	cmd.Dir = gm.repoPath
-	
+
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to initialize git repository: %w", err)
 	}
-	
+
 	// Set default user config for testing
 	err := gm.runGitCommand("config", "user.email", "test@example.com")
 	if err != nil {
 		return fmt.Errorf("failed to set git user email: %w", err)
 	}
-	
+
 	err = gm.runGitCommand("config", "user.name", "Test User")
 	if err != nil {
 		return fmt.Errorf("failed to set git user name: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -93,12 +93,12 @@ func (gm *gitManager) InitRepository() error {
 func (gm *gitManager) runGitCommand(args ...string) error {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = gm.repoPath
-	
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("git command failed: %s, output: %s", err, string(output))
 	}
-	
+
 	return nil
 }
 
@@ -106,12 +106,12 @@ func (gm *gitManager) runGitCommand(args ...string) error {
 func (gm *gitManager) runGitCommandWithOutput(args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = gm.repoPath
-	
+
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("git command failed: %w", err)
 	}
-	
+
 	return strings.TrimSpace(string(output)), nil
 }
 
@@ -119,40 +119,40 @@ func (gm *gitManager) runGitCommandWithOutput(args ...string) (string, error) {
 func (gm *gitManager) CreateCommit(message string) (string, error) {
 	// Add timestamp and standard format to commit message
 	standardizedMessage := fmt.Sprintf("%s\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>", message)
-	
+
 	err := gm.runGitCommand("commit", "-m", standardizedMessage)
 	if err != nil {
 		return "", fmt.Errorf("failed to create commit: %w", err)
 	}
-	
+
 	// Get the commit SHA
 	commitSHA, err := gm.runGitCommandWithOutput("rev-parse", "HEAD")
 	if err != nil {
 		return "", fmt.Errorf("failed to get commit SHA: %w", err)
 	}
-	
+
 	return commitSHA, nil
 }
 
 // PushChanges pushes changes to remote with error handling and retry logic
 func (gm *gitManager) PushChanges(branch string) error {
 	maxRetries := 3
-	
+
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		err := gm.runGitCommand("push", "origin", branch)
 		if err == nil {
 			return nil
 		}
-		
+
 		// If it's the last attempt, return the error
 		if attempt == maxRetries-1 {
 			return fmt.Errorf("failed to push changes after %d attempts: %w", maxRetries, err)
 		}
-		
+
 		// Wait before retry
 		time.Sleep(time.Second * time.Duration(attempt+1))
 	}
-	
+
 	return nil
 }
 
@@ -162,7 +162,7 @@ func (gm *gitManager) CreateBranch(branchName string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create and switch to branch %s: %w", branchName, err)
 	}
-	
+
 	return nil
 }
 
@@ -172,7 +172,7 @@ func (gm *gitManager) GetCurrentBranch() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get current branch: %w", err)
 	}
-	
+
 	return branch, nil
 }
 
@@ -183,7 +183,7 @@ func (gm *gitManager) AddFiles(files []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to add files %v: %w", files, err)
 	}
-	
+
 	return nil
 }
 
@@ -194,29 +194,29 @@ func (gm *gitManager) GetCommitHistory(limit int) ([]GitCommit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get commit history: %w", err)
 	}
-	
+
 	if output == "" {
 		return []GitCommit{}, nil
 	}
-	
+
 	lines := strings.Split(output, "\n")
 	commits := make([]GitCommit, 0, len(lines))
-	
+
 	for _, line := range lines {
 		if line == "" {
 			continue
 		}
-		
+
 		parts := strings.Split(line, "|")
 		if len(parts) != 5 {
 			continue
 		}
-		
+
 		timestampInt, err := strconv.ParseInt(parts[4], 10, 64)
 		if err != nil {
 			continue
 		}
-		
+
 		commit := GitCommit{
 			SHA:       parts[0],
 			Message:   parts[1],
@@ -224,10 +224,10 @@ func (gm *gitManager) GetCommitHistory(limit int) ([]GitCommit, error) {
 			Email:     parts[3],
 			Timestamp: time.Unix(timestampInt, 0),
 		}
-		
+
 		commits = append(commits, commit)
 	}
-	
+
 	return commits, nil
 }
 
@@ -238,13 +238,13 @@ func (gm *gitManager) GetStatus() (*GitStatus, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current branch: %w", err)
 	}
-	
+
 	// Get status output
 	output, err := gm.runGitCommandWithOutput("status", "--porcelain")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get git status: %w", err)
 	}
-	
+
 	status := &GitStatus{
 		ModifiedFiles:  []string{},
 		UntrackedFiles: []string{},
@@ -252,20 +252,20 @@ func (gm *gitManager) GetStatus() (*GitStatus, error) {
 		Branch:         branch,
 		Clean:          output == "",
 	}
-	
+
 	if output == "" {
 		return status, nil
 	}
-	
+
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
 		if len(line) < 3 {
 			continue
 		}
-		
+
 		statusCode := line[:2]
 		filename := line[3:]
-		
+
 		switch statusCode {
 		case "??":
 			status.UntrackedFiles = append(status.UntrackedFiles, filename)
@@ -275,7 +275,7 @@ func (gm *gitManager) GetStatus() (*GitStatus, error) {
 			status.StagedFiles = append(status.StagedFiles, filename)
 		}
 	}
-	
+
 	return status, nil
 }
 

@@ -157,7 +157,7 @@ package_exceptions:
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 			configPath := filepath.Join(tmpDir, "rules.yaml")
-			
+
 			if err := os.WriteFile(configPath, []byte(tt.configYAML), 0644); err != nil {
 				t.Fatalf("Failed to create test file: %v", err)
 			}
@@ -226,7 +226,7 @@ package_exceptions:
       type: "test"
       description: "Test exception"
       enabled: true`
-				
+
 				configPath := filepath.Join(tmpDir, "rules.yaml")
 				if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
 					return err
@@ -242,7 +242,7 @@ package_exceptions:
 				}
 				// Restore permissions after test
 				defer os.Chmod(readonlyDir, 0755)
-				
+
 				backupPath := filepath.Join(readonlyDir, "backup.yaml")
 				return manager.CreateBackup(backupPath)
 			},
@@ -276,7 +276,7 @@ package_exceptions:
       type: "test"
       description: "Test exception"
       enabled: true`
-				
+
 				configPath := filepath.Join(tmpDir, "rules.yaml")
 				if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
 					return err
@@ -363,7 +363,7 @@ package_exceptions:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "rules.yaml")
-	
+
 	if err := os.WriteFile(configPath, []byte(originalYAML), 0644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
@@ -452,7 +452,7 @@ package_exceptions:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "rules.yaml")
-	
+
 	if err := os.WriteFile(configPath, []byte(originalYAML), 0644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
@@ -511,7 +511,7 @@ package_exceptions:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "rules.yaml")
-	
+
 	if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}

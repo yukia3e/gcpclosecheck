@@ -10,11 +10,11 @@ import (
 
 // BuildResult represents the result of a build operation
 type BuildResult struct {
-	Success   bool          `json:"success"`
-	Duration  time.Duration `json:"duration"`
-	Output    string        `json:"output"`
-	Error     string        `json:"error,omitempty"`
-	BinaryPath string       `json:"binary_path,omitempty"`
+	Success    bool          `json:"success"`
+	Duration   time.Duration `json:"duration"`
+	Output     string        `json:"output"`
+	Error      string        `json:"error,omitempty"`
+	BinaryPath string        `json:"binary_path,omitempty"`
 }
 
 // TestResult represents the result of test execution
@@ -23,12 +23,12 @@ type TestResult struct {
 	Duration    time.Duration `json:"duration"`
 	Output      string        `json:"output"`
 	Error       string        `json:"error,omitempty"`
-	Passed      int          `json:"passed"`
-	Failed      int          `json:"failed"`
-	Skipped     int          `json:"skipped"`
-	Coverage    float64      `json:"coverage,omitempty"`
-	TestsPassed int          `json:"tests_passed"` // Alias for integration tests
-	TestsFailed int          `json:"tests_failed"` // Alias for integration tests
+	Passed      int           `json:"passed"`
+	Failed      int           `json:"failed"`
+	Skipped     int           `json:"skipped"`
+	Coverage    float64       `json:"coverage,omitempty"`
+	TestsPassed int           `json:"tests_passed"` // Alias for integration tests
+	TestsFailed int           `json:"tests_failed"` // Alias for integration tests
 }
 
 // QualityStepResult represents the result of a single quality check step
@@ -41,13 +41,13 @@ type QualityStepResult struct {
 
 // QualityResult aggregates quality check results
 type QualityResult struct {
-	Success  bool                          `json:"success"`
-	Duration time.Duration                 `json:"duration"`
-	Build    BuildResult                   `json:"build"`
-	Test     TestResult                    `json:"test"`
-	Issues   []Issue                       `json:"issues,omitempty"`
-	Output   string                        `json:"output"`
-	Steps    map[string]QualityStepResult  `json:"steps"`
+	Success  bool                         `json:"success"`
+	Duration time.Duration                `json:"duration"`
+	Build    BuildResult                  `json:"build"`
+	Test     TestResult                   `json:"test"`
+	Issues   []Issue                      `json:"issues,omitempty"`
+	Output   string                       `json:"output"`
+	Steps    map[string]QualityStepResult `json:"steps"`
 }
 
 // Issue represents a quality issue found during checks
@@ -62,29 +62,29 @@ type Issue struct {
 
 // ValidationReport represents the overall result of validation
 type ValidationReport struct {
-	Success       bool          `json:"success"`
-	Summary       string        `json:"summary"`
-	TotalDuration time.Duration `json:"total_duration"`
-	Build         *BuildResult  `json:"build,omitempty"`
-	Test          *TestResult   `json:"test,omitempty"`
+	Success       bool           `json:"success"`
+	Summary       string         `json:"summary"`
+	TotalDuration time.Duration  `json:"total_duration"`
+	Build         *BuildResult   `json:"build,omitempty"`
+	Test          *TestResult    `json:"test,omitempty"`
 	Quality       *QualityResult `json:"quality,omitempty"`
-	Timestamp     time.Time     `json:"timestamp"`
+	Timestamp     time.Time      `json:"timestamp"`
 }
 
 // ValidationPipeline manages build, test, and quality validation workflows
 type ValidationPipeline interface {
 	// RunBuild executes go build command and returns result
 	RunBuild() (*BuildResult, error)
-	
+
 	// RunTests executes go test command and parses results
 	RunTests() (*TestResult, error)
-	
+
 	// RunQualityChecks executes comprehensive quality checks
 	RunQualityChecks() (*QualityResult, error)
-	
+
 	// RunQualityChecksWithTargets runs quality checks with specific make targets
 	RunQualityChecksWithTargets(targets []string) (*QualityResult, error)
-	
+
 	// GenerateReport aggregates results into a comprehensive report
 	GenerateReport(build *BuildResult, test *TestResult, quality *QualityResult) *ValidationReport
 }
@@ -136,94 +136,94 @@ func NewValidationPipelineWithExecutor(workDir string, executor CommandExecutor)
 // RunBuild executes the build command and returns structured result
 func (vp *validationPipeline) RunBuild() (*BuildResult, error) {
 	start := time.Now()
-	
+
 	// Create bin directory if it doesn't exist
 	binDir := filepath.Join(vp.workDir, "bin")
 	if err := exec.Command("mkdir", "-p", binDir).Run(); err != nil {
 		return nil, fmt.Errorf("failed to create bin directory: %w", err)
 	}
-	
+
 	// Parse build command
 	cmdParts := strings.Fields(vp.buildCmd)
 	cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
 	cmd.Dir = vp.workDir
-	
+
 	output, err := cmd.CombinedOutput()
 	duration := time.Since(start)
-	
+
 	result := &BuildResult{
 		Success:  err == nil,
 		Duration: duration,
 		Output:   string(output),
 	}
-	
+
 	if err != nil {
 		result.Error = err.Error()
 	} else {
 		result.BinaryPath = filepath.Join(binDir, vp.binaryName)
 	}
-	
+
 	return result, nil
 }
 
 // RunTests executes test command and parses results
 func (vp *validationPipeline) RunTests() (*TestResult, error) {
 	start := time.Now()
-	
+
 	// Parse test command
 	cmdParts := strings.Fields(vp.testCmd)
 	cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
 	cmd.Dir = vp.workDir
-	
+
 	output, err := cmd.CombinedOutput()
 	duration := time.Since(start)
-	
+
 	result := &TestResult{
 		Success:  err == nil,
 		Duration: duration,
 		Output:   string(output),
 	}
-	
+
 	if err != nil {
 		result.Error = err.Error()
 	}
-	
+
 	// Parse test output for statistics
 	vp.parseTestOutput(string(output), result)
-	
+
 	return result, nil
 }
 
 // RunQualityChecks executes comprehensive quality validation
 func (vp *validationPipeline) RunQualityChecks() (*QualityResult, error) {
 	start := time.Now()
-	
+
 	result := &QualityResult{
 		Success: true,
 	}
-	
+
 	// Run build
 	buildResult, err := vp.RunBuild()
 	if err != nil {
 		return nil, fmt.Errorf("build execution failed: %w", err)
 	}
 	result.Build = *buildResult
-	
+
 	if !buildResult.Success {
 		result.Success = false
 	}
-	
+
 	// Run tests
 	testResult, err := vp.RunTests()
 	if err != nil {
 		return nil, fmt.Errorf("test execution failed: %w", err)
 	}
 	result.Test = *testResult
-	
+
 	if !testResult.Success {
 		result.Success = false
 	}
-	
+
 	// Run linter (if available)
 	issues, err := vp.runLinter()
 	if err == nil {
@@ -232,7 +232,7 @@ func (vp *validationPipeline) RunQualityChecks() (*QualityResult, error) {
 			result.Success = false
 		}
 	}
-	
+
 	result.Duration = time.Since(start)
 	return result, nil
 }
@@ -240,10 +240,10 @@ func (vp *validationPipeline) RunQualityChecks() (*QualityResult, error) {
 // parseTestOutput extracts test statistics from go test output
 func (vp *validationPipeline) parseTestOutput(output string, result *TestResult) {
 	lines := strings.Split(output, "\n")
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		
+
 		// Count individual test results from --- PASS/FAIL/SKIP lines
 		if strings.HasPrefix(line, "--- PASS:") {
 			result.Passed++
@@ -254,7 +254,7 @@ func (vp *validationPipeline) parseTestOutput(output string, result *TestResult)
 		if strings.HasPrefix(line, "--- SKIP:") {
 			result.Skipped++
 		}
-		
+
 		// Look for coverage information
 		if strings.Contains(line, "coverage:") {
 			// Parse coverage percentage if present
@@ -276,13 +276,13 @@ func (vp *validationPipeline) parseTestOutput(output string, result *TestResult)
 func (vp *validationPipeline) runLinter() ([]Issue, error) {
 	cmd := exec.Command("golangci-lint", "run", "--out-format", "json")
 	cmd.Dir = vp.workDir
-	
+
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		// golangci-lint returns non-zero exit code when issues found
 		// We still want to parse the output
 	}
-	
+
 	// For now, return empty slice - JSON parsing would be implemented here
 	return []Issue{}, nil
 }
@@ -300,38 +300,38 @@ func parseFloat(s string) float64 {
 // RunQualityChecksWithTargets runs quality checks with specific make targets
 func (vp *validationPipeline) RunQualityChecksWithTargets(targets []string) (*QualityResult, error) {
 	start := time.Now()
-	
+
 	result := &QualityResult{
 		Success: true,
 		Steps:   make(map[string]QualityStepResult),
 	}
-	
+
 	// Run each target
 	for _, target := range targets {
 		stepStart := time.Now()
-		
+
 		output, err := vp.executor.ExecuteCommand("make", target)
-		
+
 		stepResult := QualityStepResult{
 			Success:  err == nil,
 			Duration: time.Since(stepStart),
 			Output:   string(output),
 		}
-		
+
 		if err != nil {
 			stepResult.Error = err.Error()
 			result.Success = false
 		}
-		
+
 		result.Steps[target] = stepResult
-		
+
 		// Also update the overall output
 		if result.Output != "" {
 			result.Output += "\n"
 		}
 		result.Output += string(output)
 	}
-	
+
 	result.Duration = time.Since(start)
 	return result, nil
 }
@@ -345,7 +345,7 @@ func (vp *validationPipeline) GenerateReport(build *BuildResult, test *TestResul
 		Quality:   quality,
 		Timestamp: time.Now(),
 	}
-	
+
 	// Determine overall success
 	if build != nil && !build.Success {
 		report.Success = false
@@ -356,7 +356,7 @@ func (vp *validationPipeline) GenerateReport(build *BuildResult, test *TestResul
 	if quality != nil && !quality.Success {
 		report.Success = false
 	}
-	
+
 	// Calculate total duration
 	if build != nil {
 		report.TotalDuration += build.Duration
@@ -367,7 +367,7 @@ func (vp *validationPipeline) GenerateReport(build *BuildResult, test *TestResul
 	if quality != nil {
 		report.TotalDuration += quality.Duration
 	}
-	
+
 	// Generate summary
 	if report.Success {
 		report.Summary = "All validation checks passed successfully"
@@ -384,6 +384,6 @@ func (vp *validationPipeline) GenerateReport(build *BuildResult, test *TestResul
 		}
 		report.Summary = fmt.Sprintf("Validation failed: %s", strings.Join(failures, ", "))
 	}
-	
+
 	return report
 }

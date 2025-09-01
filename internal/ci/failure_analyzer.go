@@ -54,19 +54,19 @@ type FailurePattern struct {
 type CIFailureAnalyzer interface {
 	// AnalyzeFailure analyzes a CI job failure and identifies causes
 	AnalyzeFailure(jobName, logContent string) (*FailureAnalysis, error)
-	
+
 	// IdentifyFailureType determines the type of failure from log content
 	IdentifyFailureType(logContent string) FailureType
-	
+
 	// ExtractErrorLines extracts relevant error lines from logs
 	ExtractErrorLines(logContent string) []ErrorLine
-	
+
 	// GenerateSuggestions provides suggestions based on failure analysis
 	GenerateSuggestions(analysis FailureAnalysis) []string
-	
+
 	// RecordFailurePattern records a failure pattern for tracking
 	RecordFailurePattern(pattern FailurePattern) error
-	
+
 	// GetFailurePatterns returns all recorded failure patterns
 	GetFailurePatterns() []FailurePattern
 }
@@ -94,46 +94,46 @@ func (cfa *ciFailureAnalyzer) AnalyzeFailure(jobName, logContent string) (*Failu
 		ErrorLines:  cfa.ExtractErrorLines(logContent),
 		Timestamp:   time.Now(),
 	}
-	
+
 	// Generate summary based on failure type
 	analysis.Summary = cfa.generateSummary(analysis.FailureType, analysis.ErrorLines)
-	
+
 	// Generate suggestions
 	analysis.Suggestions = cfa.GenerateSuggestions(*analysis)
-	
+
 	return analysis, nil
 }
 
 // IdentifyFailureType determines the type of failure from log content
 func (cfa *ciFailureAnalyzer) IdentifyFailureType(logContent string) FailureType {
 	lowerContent := strings.ToLower(logContent)
-	
+
 	// Check for test failures
-	if strings.Contains(lowerContent, "fail testsomething") || 
-	   strings.Contains(lowerContent, "--- fail:") ||
-	   (strings.Contains(lowerContent, "test") && strings.Contains(lowerContent, "failed")) {
+	if strings.Contains(lowerContent, "fail testsomething") ||
+		strings.Contains(lowerContent, "--- fail:") ||
+		(strings.Contains(lowerContent, "test") && strings.Contains(lowerContent, "failed")) {
 		return TestFailure
 	}
-	
+
 	// Check for build failures
-	if strings.Contains(lowerContent, "build failed") || 
-	   strings.Contains(lowerContent, "compilation") || 
-	   strings.Contains(lowerContent, "syntax error") {
+	if strings.Contains(lowerContent, "build failed") ||
+		strings.Contains(lowerContent, "compilation") ||
+		strings.Contains(lowerContent, "syntax error") {
 		return BuildFailure
 	}
-	
+
 	// Check for lint failures
-	if strings.Contains(lowerContent, "golangci-lint") || 
-	   strings.Contains(lowerContent, "lint") && strings.Contains(lowerContent, "failed") {
+	if strings.Contains(lowerContent, "golangci-lint") ||
+		strings.Contains(lowerContent, "lint") && strings.Contains(lowerContent, "failed") {
 		return LintFailure
 	}
-	
+
 	// Check for timeout failures
-	if strings.Contains(lowerContent, "timeout") || 
-	   strings.Contains(lowerContent, "exceeded the maximum execution time") {
+	if strings.Contains(lowerContent, "timeout") ||
+		strings.Contains(lowerContent, "exceeded the maximum execution time") {
 		return TimeoutFailure
 	}
-	
+
 	return UnknownFailure
 }
 
@@ -141,7 +141,7 @@ func (cfa *ciFailureAnalyzer) IdentifyFailureType(logContent string) FailureType
 func (cfa *ciFailureAnalyzer) ExtractErrorLines(logContent string) []ErrorLine {
 	lines := strings.Split(logContent, "\n")
 	var errorLines []ErrorLine
-	
+
 	for i, line := range lines {
 		if cfa.isErrorLine(line) {
 			severity := cfa.determineSeverity(line)
@@ -154,14 +154,14 @@ func (cfa *ciFailureAnalyzer) ExtractErrorLines(logContent string) []ErrorLine {
 			errorLines = append(errorLines, errorLine)
 		}
 	}
-	
+
 	return errorLines
 }
 
 // isErrorLine determines if a line contains error information
 func (cfa *ciFailureAnalyzer) isErrorLine(line string) bool {
 	lowerLine := strings.ToLower(line)
-	
+
 	// Common error patterns
 	errorPatterns := []string{
 		"fail:",
@@ -173,20 +173,20 @@ func (cfa *ciFailureAnalyzer) isErrorLine(line string) bool {
 		"failed",
 		"assertion",
 	}
-	
+
 	for _, pattern := range errorPatterns {
 		if strings.Contains(lowerLine, pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 // determineSeverity determines the severity level of an error line
 func (cfa *ciFailureAnalyzer) determineSeverity(line string) string {
 	lowerLine := strings.ToLower(line)
-	
+
 	if strings.Contains(lowerLine, "fatal") || strings.Contains(lowerLine, "panic") {
 		return "fatal"
 	}
@@ -196,7 +196,7 @@ func (cfa *ciFailureAnalyzer) determineSeverity(line string) string {
 	if strings.Contains(lowerLine, "warn") {
 		return "warning"
 	}
-	
+
 	return "info"
 }
 
@@ -219,34 +219,34 @@ func (cfa *ciFailureAnalyzer) generateSummary(failureType FailureType, errorLine
 // GenerateSuggestions provides suggestions based on failure analysis
 func (cfa *ciFailureAnalyzer) GenerateSuggestions(analysis FailureAnalysis) []string {
 	var suggestions []string
-	
+
 	switch analysis.FailureType {
 	case TestFailure:
 		suggestions = append(suggestions, "Review failing test cases and fix assertions")
 		suggestions = append(suggestions, "Check for race conditions or timing issues")
 		suggestions = append(suggestions, "Verify test data and mock configurations")
-		
+
 	case BuildFailure:
 		suggestions = append(suggestions, "Check for syntax errors and compilation issues")
 		suggestions = append(suggestions, "Verify import paths and dependencies")
 		suggestions = append(suggestions, "Review recent code changes for breaking changes")
-		
+
 	case LintFailure:
 		suggestions = append(suggestions, "Run golangci-lint locally to identify issues")
 		suggestions = append(suggestions, "Fix code style and formatting issues")
 		suggestions = append(suggestions, "Review linter configuration and exclusions")
-		
+
 	case TimeoutFailure:
 		suggestions = append(suggestions, "Optimize slow tests or operations")
 		suggestions = append(suggestions, "Consider increasing timeout limits")
 		suggestions = append(suggestions, "Review for infinite loops or blocking operations")
-		
+
 	default:
 		suggestions = append(suggestions, "Review CI logs for specific error messages")
 		suggestions = append(suggestions, "Check system resources and dependencies")
 		suggestions = append(suggestions, "Verify CI configuration and environment setup")
 	}
-	
+
 	return suggestions
 }
 
@@ -254,9 +254,9 @@ func (cfa *ciFailureAnalyzer) GenerateSuggestions(analysis FailureAnalysis) []st
 func (cfa *ciFailureAnalyzer) RecordFailurePattern(pattern FailurePattern) error {
 	cfa.mutex.Lock()
 	defer cfa.mutex.Unlock()
-	
+
 	key := fmt.Sprintf("%s:%s", pattern.Type, pattern.Pattern)
-	
+
 	if existing, exists := cfa.failurePatterns[key]; exists {
 		// Update existing pattern
 		existing.Frequency++
@@ -269,7 +269,7 @@ func (cfa *ciFailureAnalyzer) RecordFailurePattern(pattern FailurePattern) error
 		}
 		cfa.failurePatterns[key] = &pattern
 	}
-	
+
 	return nil
 }
 
@@ -277,11 +277,11 @@ func (cfa *ciFailureAnalyzer) RecordFailurePattern(pattern FailurePattern) error
 func (cfa *ciFailureAnalyzer) GetFailurePatterns() []FailurePattern {
 	cfa.mutex.RLock()
 	defer cfa.mutex.RUnlock()
-	
+
 	patterns := make([]FailurePattern, 0, len(cfa.failurePatterns))
 	for _, pattern := range cfa.failurePatterns {
 		patterns = append(patterns, *pattern)
 	}
-	
+
 	return patterns
 }

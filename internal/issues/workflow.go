@@ -3,16 +3,16 @@ package issues
 import (
 	"fmt"
 	"time"
-	
+
 	"github.com/yukia3e/gcpclosecheck/internal/validation"
 )
 
 // ResolutionStep represents a single step in the issue resolution process
 type ResolutionStep struct {
-	Issue    Issue     `json:"issue"`
-	Action   string    `json:"action"`
-	Success  bool      `json:"success"`
-	Error    string    `json:"error,omitempty"`
+	Issue    Issue         `json:"issue"`
+	Action   string        `json:"action"`
+	Success  bool          `json:"success"`
+	Error    string        `json:"error,omitempty"`
 	Duration time.Duration `json:"duration"`
 }
 
@@ -31,7 +31,7 @@ type ResolutionResult struct {
 type ResolutionWorkflow interface {
 	// ExecuteResolution applies fixes incrementally with validation
 	ExecuteResolution(issues []Issue) (*ResolutionResult, error)
-	
+
 	// ValidateStep runs validation after each fix application
 	ValidateStep() error
 }
@@ -53,18 +53,18 @@ func NewResolutionWorkflow(workDir string) ResolutionWorkflow {
 // ExecuteResolution applies fixes incrementally with validation
 func (rw *resolutionWorkflow) ExecuteResolution(issues []Issue) (*ResolutionResult, error) {
 	start := time.Now()
-	
+
 	result := &ResolutionResult{
 		TotalIssues: len(issues),
 		Steps:       make([]ResolutionStep, 0, len(issues)),
 	}
-	
+
 	// Generate fix suggestions for all issues
 	suggestions, err := rw.detector.GenerateFixSuggestions(issues)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate fix suggestions: %w", err)
 	}
-	
+
 	// Process each suggestion incrementally
 	for _, suggestion := range suggestions {
 		stepStart := time.Now()
@@ -72,9 +72,9 @@ func (rw *resolutionWorkflow) ExecuteResolution(issues []Issue) (*ResolutionResu
 			Issue:  suggestion.Issue,
 			Action: suggestion.Action,
 		}
-		
+
 		result.ProcessedIssues++
-		
+
 		// Try to apply auto-fix if possible
 		if suggestion.AutoFixable {
 			err := rw.detector.ApplyAutoFix(suggestion)
@@ -85,7 +85,7 @@ func (rw *resolutionWorkflow) ExecuteResolution(issues []Issue) (*ResolutionResu
 			} else {
 				step.Success = true
 				result.FixedIssues++
-				
+
 				// Validate after applying fix
 				if validateErr := rw.ValidateStep(); validateErr != nil {
 					step.Success = false
@@ -100,14 +100,14 @@ func (rw *resolutionWorkflow) ExecuteResolution(issues []Issue) (*ResolutionResu
 			step.Error = "manual review required"
 			result.FailedIssues++
 		}
-		
+
 		step.Duration = time.Since(stepStart)
 		result.Steps = append(result.Steps, step)
 	}
-	
+
 	result.Duration = time.Since(start)
 	result.Success = result.FailedIssues == 0
-	
+
 	return result, nil
 }
 
@@ -119,10 +119,10 @@ func (rw *resolutionWorkflow) ValidateStep() error {
 	if err != nil {
 		return fmt.Errorf("validation build execution failed: %w", err)
 	}
-	
+
 	if !buildResult.Success {
 		return fmt.Errorf("build failed after fix application: %s", buildResult.Error)
 	}
-	
+
 	return nil
 }

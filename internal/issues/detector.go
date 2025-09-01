@@ -38,13 +38,13 @@ type FixSuggestion struct {
 type IssueCategory string
 
 const (
-	CategoryErrorCheck    IssueCategory = "errcheck"
-	CategorySecurity      IssueCategory = "gosec"
-	CategoryComplexity    IssueCategory = "gocyclo"
-	CategoryIneffAssign   IssueCategory = "ineffassign"
-	CategoryUnused        IssueCategory = "unused"
-	CategoryGoVet         IssueCategory = "govet"
-	CategoryOther         IssueCategory = "other"
+	CategoryErrorCheck  IssueCategory = "errcheck"
+	CategorySecurity    IssueCategory = "gosec"
+	CategoryComplexity  IssueCategory = "gocyclo"
+	CategoryIneffAssign IssueCategory = "ineffassign"
+	CategoryUnused      IssueCategory = "unused"
+	CategoryGoVet       IssueCategory = "govet"
+	CategoryOther       IssueCategory = "other"
 )
 
 // severityPriority defines priority order for severity levels
@@ -71,10 +71,10 @@ type GolangciLintOutput struct {
 
 // GolangciLintIssue represents a single issue from golangci-lint
 type GolangciLintIssue struct {
-	FromLinter string                  `json:"FromLinter"`
-	Text       string                  `json:"Text"`
-	Severity   string                  `json:"Severity"`
-	Pos        GolangciLintPosition    `json:"Pos"`
+	FromLinter string               `json:"FromLinter"`
+	Text       string               `json:"Text"`
+	Severity   string               `json:"Severity"`
+	Pos        GolangciLintPosition `json:"Pos"`
 }
 
 // GolangciLintPosition represents position information from golangci-lint
@@ -88,19 +88,19 @@ type GolangciLintPosition struct {
 type IssueDetector interface {
 	// DetectIssues runs golangci-lint and returns parsed issues
 	DetectIssues() ([]Issue, error)
-	
+
 	// ParseLinterOutput parses golangci-lint JSON output into Issue structs
 	ParseLinterOutput(output string) ([]Issue, error)
-	
+
 	// CategorizeIssues groups issues by linter, severity, and file
 	CategorizeIssues(issues []Issue) *IssueCategorization
-	
+
 	// PrioritizeIssues orders issues by severity and fixability
 	PrioritizeIssues(issues []Issue) []Issue
-	
+
 	// GenerateFixSuggestions creates fix suggestions for common linter issues
 	GenerateFixSuggestions(issues []Issue) ([]FixSuggestion, error)
-	
+
 	// ApplyAutoFix applies an automatic fix for fixable issues
 	ApplyAutoFix(suggestion FixSuggestion) error
 }
@@ -122,7 +122,7 @@ func (id *issueDetector) DetectIssues() ([]Issue, error) {
 	// Execute golangci-lint with JSON output
 	cmd := exec.Command("golangci-lint", "run", "--out-format", "json")
 	cmd.Dir = id.workDir
-	
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		// golangci-lint returns non-zero exit code when issues are found
@@ -131,7 +131,7 @@ func (id *issueDetector) DetectIssues() ([]Issue, error) {
 			return nil, fmt.Errorf("golangci-lint execution failed: %w", err)
 		}
 	}
-	
+
 	return id.ParseLinterOutput(string(output))
 }
 
@@ -140,12 +140,12 @@ func (id *issueDetector) ParseLinterOutput(output string) ([]Issue, error) {
 	if output == "" {
 		return []Issue{}, nil
 	}
-	
+
 	var lintOutput GolangciLintOutput
 	if err := json.Unmarshal([]byte(output), &lintOutput); err != nil {
 		return nil, fmt.Errorf("failed to parse golangci-lint output: %w", err)
 	}
-	
+
 	issues := make([]Issue, len(lintOutput.Issues))
 	for i, lintIssue := range lintOutput.Issues {
 		issues[i] = Issue{
@@ -157,7 +157,7 @@ func (id *issueDetector) ParseLinterOutput(output string) ([]Issue, error) {
 			Severity: lintIssue.Severity,
 		}
 	}
-	
+
 	return issues, nil
 }
 
@@ -169,18 +169,18 @@ func (id *issueDetector) CategorizeIssues(issues []Issue) *IssueCategorization {
 		ByFile:     make(map[string][]Issue),
 		Total:      len(issues),
 	}
-	
+
 	for _, issue := range issues {
 		// Categorize by linter
 		categorization.ByLinter[issue.Linter] = append(categorization.ByLinter[issue.Linter], issue)
-		
+
 		// Categorize by severity
 		categorization.BySeverity[issue.Severity] = append(categorization.BySeverity[issue.Severity], issue)
-		
+
 		// Categorize by file
 		categorization.ByFile[issue.File] = append(categorization.ByFile[issue.File], issue)
 	}
-	
+
 	return categorization
 }
 
@@ -189,45 +189,45 @@ func (id *issueDetector) PrioritizeIssues(issues []Issue) []Issue {
 	// Create a copy to avoid modifying the original slice
 	prioritized := make([]Issue, len(issues))
 	copy(prioritized, issues)
-	
+
 	// Sort by priority: severity first, then linter priority
 	sort.Slice(prioritized, func(i, j int) bool {
 		issueA, issueB := prioritized[i], prioritized[j]
-		
+
 		// Compare severity priority
 		severityA := severityPriority[issueA.Severity]
 		severityB := severityPriority[issueB.Severity]
-		
+
 		if severityA != severityB {
 			return severityA < severityB // Lower number = higher priority
 		}
-		
+
 		// If severity is the same, compare linter priority
 		linterA := linterPriority[issueA.Linter]
 		linterB := linterPriority[issueB.Linter]
-		
+
 		if linterA == 0 {
 			linterA = 999 // Unknown linters get low priority
 		}
 		if linterB == 0 {
 			linterB = 999
 		}
-		
+
 		return linterA < linterB
 	})
-	
+
 	return prioritized
 }
 
 // GenerateFixSuggestions creates fix suggestions for common linter issues
 func (id *issueDetector) GenerateFixSuggestions(issues []Issue) ([]FixSuggestion, error) {
 	suggestions := make([]FixSuggestion, 0, len(issues))
-	
+
 	for _, issue := range issues {
 		suggestion := id.generateSuggestionForIssue(issue)
 		suggestions = append(suggestions, suggestion)
 	}
-	
+
 	return suggestions, nil
 }
 
@@ -241,7 +241,7 @@ func (id *issueDetector) generateSuggestionForIssue(issue Issue) FixSuggestion {
 			Message:     "Add proper error handling: if err != nil { ... }",
 			AutoFixable: false, // Requires context-specific handling
 		}
-	
+
 	case "goimports":
 		return FixSuggestion{
 			Issue:       issue,
@@ -249,7 +249,7 @@ func (id *issueDetector) generateSuggestionForIssue(issue Issue) FixSuggestion {
 			Message:     "Run 'goimports -w' to fix import formatting",
 			AutoFixable: true,
 		}
-	
+
 	case "gofmt":
 		return FixSuggestion{
 			Issue:       issue,
@@ -257,7 +257,7 @@ func (id *issueDetector) generateSuggestionForIssue(issue Issue) FixSuggestion {
 			Message:     "Run 'gofmt -w' to fix code formatting",
 			AutoFixable: true,
 		}
-	
+
 	case "unused":
 		return FixSuggestion{
 			Issue:       issue,
@@ -265,7 +265,7 @@ func (id *issueDetector) generateSuggestionForIssue(issue Issue) FixSuggestion {
 			Message:     "Remove unused variable/import/function",
 			AutoFixable: false, // May affect other code
 		}
-	
+
 	case "ineffassign":
 		return FixSuggestion{
 			Issue:       issue,
@@ -273,7 +273,7 @@ func (id *issueDetector) generateSuggestionForIssue(issue Issue) FixSuggestion {
 			Message:     "Remove ineffectual assignment",
 			AutoFixable: false, // Requires code review
 		}
-	
+
 	case "gosec":
 		return FixSuggestion{
 			Issue:       issue,
@@ -281,7 +281,7 @@ func (id *issueDetector) generateSuggestionForIssue(issue Issue) FixSuggestion {
 			Message:     "Review security implications and add appropriate mitigations",
 			AutoFixable: false, // Requires manual security analysis
 		}
-	
+
 	default:
 		return FixSuggestion{
 			Issue:       issue,
@@ -297,14 +297,14 @@ func (id *issueDetector) ApplyAutoFix(suggestion FixSuggestion) error {
 	if !suggestion.AutoFixable {
 		return fmt.Errorf("issue is not auto-fixable: %s", suggestion.Issue.Message)
 	}
-	
+
 	switch suggestion.Action {
 	case "run_goimports":
 		return id.runGoImports(suggestion.Issue.File)
-	
+
 	case "run_gofmt":
 		return id.runGoFmt(suggestion.Issue.File)
-	
+
 	default:
 		return fmt.Errorf("unknown auto-fix action: %s", suggestion.Action)
 	}
@@ -315,11 +315,11 @@ func (id *issueDetector) runGoImports(file string) error {
 	filePath := filepath.Join(id.workDir, file)
 	cmd := exec.Command("goimports", "-w", filePath)
 	cmd.Dir = id.workDir
-	
+
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to run goimports on %s: %w", file, err)
 	}
-	
+
 	return nil
 }
 
@@ -328,10 +328,10 @@ func (id *issueDetector) runGoFmt(file string) error {
 	filePath := filepath.Join(id.workDir, file)
 	cmd := exec.Command("gofmt", "-w", filePath)
 	cmd.Dir = id.workDir
-	
+
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to run gofmt on %s: %w", file, err)
 	}
-	
+
 	return nil
 }

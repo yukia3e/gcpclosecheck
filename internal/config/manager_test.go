@@ -49,7 +49,7 @@ package_exceptions:
 			// Create temporary file
 			tmpDir := t.TempDir()
 			configPath := filepath.Join(tmpDir, "rules.yaml")
-			
+
 			if err := os.WriteFile(configPath, []byte(tt.content), 0644); err != nil {
 				t.Fatalf("Failed to create test file: %v", err)
 			}
@@ -87,9 +87,9 @@ package_exceptions:
 
 func TestConfigManager_ValidateYAMLIntegrity(t *testing.T) {
 	tests := []struct {
-		name        string
-		configYAML  string
-		wantErr     bool
+		name       string
+		configYAML string
+		wantErr    bool
 	}{
 		{
 			name: "valid config loaded from file",
@@ -123,7 +123,7 @@ package_exceptions: []`,
 			// Create temporary file
 			tmpDir := t.TempDir()
 			configPath := filepath.Join(tmpDir, "rules.yaml")
-			
+
 			if err := os.WriteFile(configPath, []byte(tt.configYAML), 0644); err != nil {
 				t.Fatalf("Failed to create test file: %v", err)
 			}
@@ -149,11 +149,11 @@ package_exceptions: []`,
 func TestConfigManager_ValidateYAMLIntegrity_NoConfigLoaded(t *testing.T) {
 	manager := NewConfigManager()
 	err := manager.ValidateYAMLIntegrity()
-	
+
 	if err == nil {
 		t.Error("Expected error when no config is loaded")
 	}
-	
+
 	expected := "no configuration loaded"
 	if err.Error() != expected {
 		t.Errorf("Expected error message %q, got %q", expected, err.Error())
@@ -162,9 +162,9 @@ func TestConfigManager_ValidateYAMLIntegrity_NoConfigLoaded(t *testing.T) {
 
 func TestConfigManager_SaveConfig(t *testing.T) {
 	tests := []struct {
-		name        string
-		configYAML  string
-		wantErr     bool
+		name       string
+		configYAML string
+		wantErr    bool
 	}{
 		{
 			name: "valid config save",
@@ -193,7 +193,7 @@ package_exceptions:
 			tmpDir := t.TempDir()
 			configPath := filepath.Join(tmpDir, "rules.yaml")
 			outputPath := filepath.Join(tmpDir, "output.yaml")
-			
+
 			if err := os.WriteFile(configPath, []byte(tt.configYAML), 0644); err != nil {
 				t.Fatalf("Failed to create test file: %v", err)
 			}
@@ -234,13 +234,13 @@ func TestConfigManager_SaveConfig_NoConfigLoaded(t *testing.T) {
 	manager := NewConfigManager()
 	tmpDir := t.TempDir()
 	outputPath := filepath.Join(tmpDir, "output.yaml")
-	
+
 	err := manager.SaveConfig(outputPath)
-	
+
 	if err == nil {
 		t.Error("Expected error when no config is loaded")
 	}
-	
+
 	expected := "no configuration to save"
 	if err.Error() != expected {
 		t.Errorf("Expected error message %q, got %q", expected, err.Error())
@@ -249,9 +249,9 @@ func TestConfigManager_SaveConfig_NoConfigLoaded(t *testing.T) {
 
 func TestConfigManager_UpdateTestException(t *testing.T) {
 	tests := []struct {
-		name       string
-		enabled    bool
-		wantErr    bool
+		name    string
+		enabled bool
+		wantErr bool
 	}{
 		{
 			name:    "enable test exception",
@@ -286,7 +286,7 @@ package_exceptions:
 			// Create temporary file
 			tmpDir := t.TempDir()
 			configPath := filepath.Join(tmpDir, "rules.yaml")
-			
+
 			if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
 				t.Fatalf("Failed to create test file: %v", err)
 			}
@@ -355,11 +355,11 @@ package_exceptions:
 func TestConfigManager_UpdateTestException_NoConfigLoaded(t *testing.T) {
 	manager := NewConfigManager()
 	err := manager.UpdateTestException(false)
-	
+
 	if err == nil {
 		t.Error("Expected error when no config is loaded")
 	}
-	
+
 	expected := "no configuration loaded"
 	if err.Error() != expected {
 		t.Errorf("Expected error message %q, got %q", expected, err.Error())
@@ -385,7 +385,7 @@ package_exceptions:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "rules.yaml")
-	
+
 	if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
@@ -397,11 +397,11 @@ package_exceptions:
 	}
 
 	err = manager.UpdateTestException(false)
-	
+
 	if err == nil {
 		t.Error("Expected error when test_files exception not found")
 	}
-	
+
 	expected := "test_files exception not found in configuration"
 	if err.Error() != expected {
 		t.Errorf("Expected error message %q, got %q", expected, err.Error())
@@ -428,7 +428,7 @@ package_exceptions:
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "rules.yaml")
 	backupPath := filepath.Join(tmpDir, "backup.yaml")
-	
+
 	if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
@@ -461,13 +461,13 @@ func TestConfigManager_CreateBackup_NoConfigLoaded(t *testing.T) {
 	manager := NewConfigManager()
 	tmpDir := t.TempDir()
 	backupPath := filepath.Join(tmpDir, "backup.yaml")
-	
+
 	err := manager.CreateBackup(backupPath)
-	
+
 	if err == nil {
 		t.Error("Expected error when no config is loaded")
 	}
-	
+
 	expected := "no configuration loaded"
 	if err.Error() != expected {
 		t.Errorf("Expected error message %q, got %q", expected, err.Error())
@@ -510,7 +510,7 @@ package_exceptions:
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "rules.yaml")
 	modifiedPath := filepath.Join(tmpDir, "modified.yaml")
-	
+
 	if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
@@ -565,7 +565,7 @@ package_exceptions:
 
 	tmpDir := t.TempDir()
 	backupPath := filepath.Join(tmpDir, "backup.yaml")
-	
+
 	if err := os.WriteFile(backupPath, []byte(originalConfigYAML), 0644); err != nil {
 		t.Fatalf("Failed to create backup file: %v", err)
 	}
@@ -615,7 +615,7 @@ package_exceptions:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "rules.yaml")
-	
+
 	if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
@@ -745,7 +745,7 @@ package_exceptions: []`,
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 			configPath := filepath.Join(tmpDir, "rules.yaml")
-			
+
 			if err := os.WriteFile(configPath, []byte(tt.configYAML), 0644); err != nil {
 				t.Fatalf("Failed to create test file: %v", err)
 			}

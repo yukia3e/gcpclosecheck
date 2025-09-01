@@ -40,7 +40,7 @@ func (m *mockCommandExecutor) ExecuteCommand(name string, args ...string) ([]byt
 	if result, exists := m.commands[key]; exists {
 		return result.output, result.err
 	}
-	
+
 	// Default behavior for unmocked commands
 	return []byte(""), fmt.Errorf("command not found: %s", name)
 }
@@ -48,12 +48,12 @@ func (m *mockCommandExecutor) ExecuteCommand(name string, args ...string) ([]byt
 // TestValidationPipeline_QualityCheckIntegration tests make quality integration with various targets
 func TestValidationPipeline_QualityCheckIntegration(t *testing.T) {
 	tests := []struct {
-		name           string
-		makeTargets    []string
-		setupMocks     func(*mockCommandExecutor)
-		expectSuccess  bool
-		expectOutput   []string
-		description    string
+		name          string
+		makeTargets   []string
+		setupMocks    func(*mockCommandExecutor)
+		expectSuccess bool
+		expectOutput  []string
+		description   string
 	}{
 		{
 			name:        "successful_full_quality_check",
@@ -115,20 +115,20 @@ func TestValidationPipeline_QualityCheckIntegration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			
+
 			// Create a basic Go project structure
 			createBasicGoProject(t, tmpDir)
-			
+
 			// Create a mock executor
 			mockExec := newMockCommandExecutor()
 			tt.setupMocks(mockExec)
-			
+
 			// Create pipeline with mocked executor
 			pipeline := NewValidationPipelineWithExecutor(tmpDir, mockExec)
-			
+
 			// Run quality checks
 			result, err := pipeline.RunQualityChecksWithTargets(tt.makeTargets)
-			
+
 			if tt.expectSuccess {
 				if err != nil {
 					t.Errorf("Expected success but got error: %v", err)
@@ -145,7 +145,7 @@ func TestValidationPipeline_QualityCheckIntegration(t *testing.T) {
 					t.Error("Expected failure but got success")
 				}
 			}
-			
+
 			// Verify output contains expected content
 			if result != nil {
 				for _, expectedOutput := range tt.expectOutput {
@@ -161,13 +161,13 @@ func TestValidationPipeline_QualityCheckIntegration(t *testing.T) {
 // TestValidationPipeline_ResultAggregation tests result aggregation with different success/failure combinations
 func TestValidationPipeline_ResultAggregation(t *testing.T) {
 	tests := []struct {
-		name              string
-		buildResult       *BuildResult
-		testResult        *TestResult
-		qualityResult     *QualityResult
-		expectedSuccess   bool
-		expectedFailures  int
-		description       string
+		name             string
+		buildResult      *BuildResult
+		testResult       *TestResult
+		qualityResult    *QualityResult
+		expectedSuccess  bool
+		expectedFailures int
+		description      string
 	}{
 		{
 			name: "all_successful",
@@ -177,13 +177,13 @@ func TestValidationPipeline_ResultAggregation(t *testing.T) {
 				Output:   "Build successful",
 			},
 			testResult: &TestResult{
-				Success:    true,
+				Success:     true,
 				Duration:    2 * time.Second,
 				Passed:      10,
 				Failed:      0,
 				TestsPassed: 10,
 				TestsFailed: 0,
-				Output:     "All tests passed",
+				Output:      "All tests passed",
 			},
 			qualityResult: &QualityResult{
 				Success:  true,
@@ -207,13 +207,13 @@ func TestValidationPipeline_ResultAggregation(t *testing.T) {
 				Error:    "compilation failed",
 			},
 			testResult: &TestResult{
-				Success:    true,
+				Success:     true,
 				Duration:    2 * time.Second,
 				Passed:      10,
 				Failed:      0,
 				TestsPassed: 10,
 				TestsFailed: 0,
-				Output:     "All tests passed",
+				Output:      "All tests passed",
 			},
 			qualityResult: &QualityResult{
 				Success:  true,
@@ -237,14 +237,14 @@ func TestValidationPipeline_ResultAggregation(t *testing.T) {
 				Error:    "compilation failed",
 			},
 			testResult: &TestResult{
-				Success:    false,
+				Success:     false,
 				Duration:    2 * time.Second,
 				Passed:      5,
 				Failed:      5,
 				TestsPassed: 5,
 				TestsFailed: 5,
-				Output:     "Some tests failed",
-				Error:      "test failures",
+				Output:      "Some tests failed",
+				Error:       "test failures",
 			},
 			qualityResult: &QualityResult{
 				Success:  false,
@@ -267,13 +267,13 @@ func TestValidationPipeline_ResultAggregation(t *testing.T) {
 				Output:   "Build successful",
 			},
 			testResult: &TestResult{
-				Success:    true,
+				Success:     true,
 				Duration:    2 * time.Second,
 				Passed:      10,
 				Failed:      0,
 				TestsPassed: 10,
 				TestsFailed: 0,
-				Output:     "All tests passed",
+				Output:      "All tests passed",
 			},
 			qualityResult: &QualityResult{
 				Success:  false,
@@ -294,18 +294,18 @@ func TestValidationPipeline_ResultAggregation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 			pipeline := NewValidationPipeline(tmpDir)
-			
+
 			// Create validation report
 			report := pipeline.GenerateReport(tt.buildResult, tt.testResult, tt.qualityResult)
-			
+
 			if report == nil {
 				t.Fatal("Expected ValidationReport but got nil")
 			}
-			
+
 			if report.Success != tt.expectedSuccess {
 				t.Errorf("Expected Success %v, got %v", tt.expectedSuccess, report.Success)
 			}
-			
+
 			// Count actual failures
 			actualFailures := 0
 			if tt.buildResult != nil && !tt.buildResult.Success {
@@ -321,16 +321,16 @@ func TestValidationPipeline_ResultAggregation(t *testing.T) {
 					}
 				}
 			}
-			
+
 			if actualFailures != tt.expectedFailures {
 				t.Errorf("Expected %d failures, got %d", tt.expectedFailures, actualFailures)
 			}
-			
+
 			// Verify report contains relevant information
 			if report.Summary == "" {
 				t.Error("Expected report summary to be populated")
 			}
-			
+
 			if report.TotalDuration == 0 && (tt.buildResult != nil || tt.testResult != nil || tt.qualityResult != nil) {
 				t.Error("Expected total duration to be calculated")
 			}
@@ -406,13 +406,13 @@ func TestValidationPipeline_ErrorHandling(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 			createBasicGoProject(t, tmpDir)
-			
+
 			mockExec := newMockCommandExecutor()
 			tt.setupMocks(mockExec)
-			
+
 			pipeline := NewValidationPipelineWithExecutor(tmpDir, mockExec)
 			err := tt.operation(pipeline)
-			
+
 			// Error handling tests should work with the mocked executor
 			// For now, we accept that the current implementation doesn't fully use the executor
 			// In production, RunBuild would be refactored to use the executor interface
@@ -435,45 +435,45 @@ func TestValidationPipeline_ErrorHandling(t *testing.T) {
 func TestValidationPipeline_ConcurrentExecution(t *testing.T) {
 	tmpDir := t.TempDir()
 	createBasicGoProject(t, tmpDir)
-	
+
 	mockExec := newMockCommandExecutor()
-	
+
 	// Mock commands with delays to test concurrent execution
 	mockExec.mockCommand("go", []byte("build successful"), nil)
 	mockExec.mockCommand("make", []byte("quality checks passed"), nil)
-	
+
 	pipeline := NewValidationPipelineWithExecutor(tmpDir, mockExec)
-	
+
 	// Run multiple operations concurrently
 	start := time.Now()
-	
+
 	buildCh := make(chan error)
 	qualityCh := make(chan error)
-	
+
 	go func() {
 		_, err := pipeline.RunBuild()
 		buildCh <- err
 	}()
-	
+
 	go func() {
 		_, err := pipeline.RunQualityChecks()
 		qualityCh <- err
 	}()
-	
+
 	// Wait for both operations to complete
 	buildErr := <-buildCh
 	qualityErr := <-qualityCh
-	
+
 	duration := time.Since(start)
-	
+
 	if buildErr != nil {
 		t.Errorf("Build error: %v", buildErr)
 	}
-	
+
 	if qualityErr != nil {
 		t.Errorf("Quality check error: %v", qualityErr)
 	}
-	
+
 	// Verify concurrent execution completed reasonably quickly
 	if duration > 5*time.Second {
 		t.Errorf("Concurrent execution took too long: %v", duration)
@@ -483,13 +483,13 @@ func TestValidationPipeline_ConcurrentExecution(t *testing.T) {
 // Helper function to create a basic Go project structure for testing
 func createBasicGoProject(t *testing.T, rootDir string) {
 	t.Helper()
-	
+
 	// Create cmd/gcpclosecheck directory
 	cmdDir := filepath.Join(rootDir, "cmd", "gcpclosecheck")
 	if err := os.MkdirAll(cmdDir, 0755); err != nil {
 		t.Fatalf("Failed to create cmd directory: %v", err)
 	}
-	
+
 	// Create main.go
 	mainGoContent := `package main
 
@@ -502,7 +502,7 @@ func main() {
 	if err := os.WriteFile(filepath.Join(cmdDir, "main.go"), []byte(mainGoContent), 0644); err != nil {
 		t.Fatalf("Failed to create main.go: %v", err)
 	}
-	
+
 	// Create go.mod
 	goModContent := `module github.com/yukia3e/gcpclosecheck
 
@@ -511,7 +511,7 @@ go 1.21
 	if err := os.WriteFile(filepath.Join(rootDir, "go.mod"), []byte(goModContent), 0644); err != nil {
 		t.Fatalf("Failed to create go.mod: %v", err)
 	}
-	
+
 	// Create Makefile
 	makefileContent := `quality:
 	go fmt ./...

@@ -28,13 +28,13 @@ type JobResult struct {
 type CIValidator interface {
 	// ValidateGitHubActions checks CI pipeline status for a commit
 	ValidateGitHubActions(commitSHA string) (*CIResult, error)
-	
+
 	// ParseGitHubActionsResponse parses GitHub Actions API response
 	ParseGitHubActionsResponse(response string) (*CIResult, error)
-	
+
 	// GetJobDetails fetches detailed job information
 	GetJobDetails(jobsResponse string) ([]JobResult, error)
-	
+
 	// IsSuccessful determines if all jobs passed
 	IsSuccessful(jobs []JobResult) bool
 }
@@ -69,7 +69,7 @@ func (cv *ciValidator) ValidateGitHubActions(commitSHA string) (*CIResult, error
 		Success:   true,
 		Timestamp: time.Now(),
 	}
-	
+
 	return result, nil
 }
 
@@ -93,17 +93,17 @@ func (cv *ciValidator) ParseGitHubActionsResponse(response string) (*CIResult, e
 	if err := json.Unmarshal([]byte(response), &actionsResponse); err != nil {
 		return nil, fmt.Errorf("failed to parse GitHub Actions response: %w", err)
 	}
-	
+
 	if len(actionsResponse.WorkflowRuns) == 0 {
 		return nil, fmt.Errorf("no workflow runs found")
 	}
-	
+
 	run := actionsResponse.WorkflowRuns[0]
 	status := run.Conclusion
 	if status == "" {
 		status = run.Status
 	}
-	
+
 	result := &CIResult{
 		CommitSHA: run.HeadSHA,
 		Status:    status,
@@ -111,7 +111,7 @@ func (cv *ciValidator) ParseGitHubActionsResponse(response string) (*CIResult, e
 		Success:   status == "success",
 		Timestamp: time.Now(),
 	}
-	
+
 	return result, nil
 }
 
@@ -136,19 +136,19 @@ func (cv *ciValidator) GetJobDetails(jobsResponse string) ([]JobResult, error) {
 	if err := json.Unmarshal([]byte(jobsResponse), &response); err != nil {
 		return nil, fmt.Errorf("failed to parse jobs response: %w", err)
 	}
-	
+
 	jobs := make([]JobResult, len(response.Jobs))
 	for i, job := range response.Jobs {
 		status := job.Conclusion
 		if status == "" {
 			status = job.Status
 		}
-		
+
 		duration := 0
 		if !job.CompletedAt.IsZero() && !job.StartedAt.IsZero() {
 			duration = int(job.CompletedAt.Sub(job.StartedAt).Seconds())
 		}
-		
+
 		jobs[i] = JobResult{
 			Name:     job.Name,
 			Status:   status,
@@ -156,7 +156,7 @@ func (cv *ciValidator) GetJobDetails(jobsResponse string) ([]JobResult, error) {
 			LogURL:   job.HTMLURL,
 		}
 	}
-	
+
 	return jobs, nil
 }
 

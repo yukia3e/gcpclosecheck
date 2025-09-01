@@ -53,11 +53,11 @@ func TestIssueDetector_ParseLinterOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse linter output: %v", err)
 	}
-	
+
 	if len(issues) != 2 {
 		t.Errorf("Expected 2 issues, got %d", len(issues))
 	}
-	
+
 	// Verify first issue structure
 	if len(issues) > 0 {
 		issue := issues[0]
@@ -86,17 +86,17 @@ func TestIssueDetector_DetectIssues_RealProject(t *testing.T) {
 	// Test with actual project directory
 	detector := NewIssueDetector(".")
 	issues, err := detector.DetectIssues()
-	
+
 	// This test allows for either success or known failures
 	if err != nil {
 		t.Logf("DetectIssues returned error (may be expected): %v", err)
 	} else {
 		t.Logf("DetectIssues found %d issues", len(issues))
-		
+
 		// Log first few issues for debugging
 		for i, issue := range issues {
 			if i < 3 {
-				t.Logf("Issue %d: %s:%d:%d [%s] %s", 
+				t.Logf("Issue %d: %s:%d:%d [%s] %s",
 					i+1, issue.File, issue.Line, issue.Column, issue.Linter, issue.Message)
 			}
 		}
@@ -106,7 +106,7 @@ func TestIssueDetector_DetectIssues_RealProject(t *testing.T) {
 func TestIssueDetector_DetectIssues_NoLinter(t *testing.T) {
 	detector := NewIssueDetector("/nonexistent/dir")
 	issues, err := detector.DetectIssues()
-	
+
 	// Should handle the case where golangci-lint is not available
 	if err == nil {
 		t.Log("golangci-lint not available, got empty result")
@@ -128,27 +128,27 @@ func TestIssue_Structure(t *testing.T) {
 		Message:  "exported function should have comment",
 		Severity: "warning",
 	}
-	
+
 	if issue.File != "test.go" {
 		t.Error("Expected file to be test.go")
 	}
-	
+
 	if issue.Line != 10 {
 		t.Error("Expected line to be 10")
 	}
-	
+
 	if issue.Column != 5 {
 		t.Error("Expected column to be 5")
 	}
-	
+
 	if issue.Linter != "golint" {
 		t.Error("Expected linter to be golint")
 	}
-	
+
 	if issue.Message != "exported function should have comment" {
 		t.Error("Expected specific message")
 	}
-	
+
 	if issue.Severity != "warning" {
 		t.Error("Expected severity to be warning")
 	}
@@ -161,28 +161,28 @@ func TestIssueDetector_CategorizeIssues(t *testing.T) {
 		{File: "util.go", Line: 30, Linter: "gocyclo", Message: "Cyclomatic complexity too high", Severity: "warning"},
 		{File: "api.go", Line: 40, Linter: "ineffassign", Message: "Ineffectual assignment", Severity: "info"},
 	}
-	
+
 	detector := NewIssueDetector(".")
 	categorized := detector.CategorizeIssues(issues)
-	
+
 	if categorized == nil {
 		t.Fatal("Expected categorized issues, got nil")
 	}
-	
+
 	// Check that we have categories
 	if len(categorized.ByLinter) == 0 {
 		t.Error("Expected issues to be categorized by linter")
 	}
-	
+
 	if len(categorized.BySeverity) == 0 {
 		t.Error("Expected issues to be categorized by severity")
 	}
-	
+
 	// Check specific categorization
 	if len(categorized.ByLinter["errcheck"]) != 1 {
 		t.Errorf("Expected 1 errcheck issue, got %d", len(categorized.ByLinter["errcheck"]))
 	}
-	
+
 	if len(categorized.BySeverity["error"]) != 1 {
 		t.Errorf("Expected 1 error severity issue, got %d", len(categorized.BySeverity["error"]))
 	}
@@ -195,14 +195,14 @@ func TestIssueDetector_PrioritizeIssues(t *testing.T) {
 		{File: "util.go", Line: 30, Linter: "gocyclo", Message: "Cyclomatic complexity too high", Severity: "warning"},
 		{File: "api.go", Line: 40, Linter: "ineffassign", Message: "Ineffectual assignment", Severity: "info"},
 	}
-	
+
 	detector := NewIssueDetector(".")
 	prioritized := detector.PrioritizeIssues(issues)
-	
+
 	if len(prioritized) != len(issues) {
 		t.Errorf("Expected %d prioritized issues, got %d", len(issues), len(prioritized))
 	}
-	
+
 	// First issue should be high priority (error severity)
 	if len(prioritized) > 0 {
 		firstIssue := prioritized[0]
@@ -210,7 +210,7 @@ func TestIssueDetector_PrioritizeIssues(t *testing.T) {
 			t.Errorf("Expected first prioritized issue to have error severity, got %q", firstIssue.Severity)
 		}
 	}
-	
+
 	// Last issue should be lower priority
 	if len(prioritized) > 3 {
 		lastIssue := prioritized[len(prioritized)-1]
@@ -233,19 +233,19 @@ func TestIssueCategorization_Structure(t *testing.T) {
 		},
 		Total: 1,
 	}
-	
+
 	if categorization.Total != 1 {
 		t.Error("Expected total to be 1")
 	}
-	
+
 	if len(categorization.ByLinter) != 1 {
 		t.Error("Expected 1 linter category")
 	}
-	
+
 	if len(categorization.BySeverity) != 1 {
 		t.Error("Expected 1 severity category")
 	}
-	
+
 	if len(categorization.ByFile) != 1 {
 		t.Error("Expected 1 file category")
 	}
@@ -258,18 +258,18 @@ func TestIssueDetector_GenerateFixSuggestions(t *testing.T) {
 		{File: "util.go", Line: 30, Linter: "unused", Message: "unused variable x", Severity: "info"},
 		{File: "api.go", Line: 40, Linter: "unknown-linter", Message: "Unknown issue", Severity: "warning"},
 	}
-	
+
 	detector := NewIssueDetector(".")
 	suggestions, err := detector.GenerateFixSuggestions(issues)
-	
+
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	
+
 	if len(suggestions) == 0 {
 		t.Error("Expected fix suggestions to be generated")
 	}
-	
+
 	// Check that auto-fixable issues are identified
 	autoFixableCount := 0
 	for _, suggestion := range suggestions {
@@ -277,11 +277,11 @@ func TestIssueDetector_GenerateFixSuggestions(t *testing.T) {
 			autoFixableCount++
 		}
 	}
-	
+
 	if autoFixableCount == 0 {
 		t.Error("Expected at least some issues to be auto-fixable")
 	}
-	
+
 	// Verify errcheck suggestion
 	errcheckFound := false
 	for _, suggestion := range suggestions {
@@ -295,7 +295,7 @@ func TestIssueDetector_GenerateFixSuggestions(t *testing.T) {
 			}
 		}
 	}
-	
+
 	if !errcheckFound {
 		t.Error("Expected fix suggestion for errcheck issue")
 	}
@@ -304,23 +304,23 @@ func TestIssueDetector_GenerateFixSuggestions(t *testing.T) {
 func TestIssueDetector_ApplyAutoFix(t *testing.T) {
 	// Create a simple auto-fixable issue
 	issue := Issue{
-		File:     "test.go", 
-		Line:     10, 
-		Linter:   "goimports", 
-		Message:  "File is not goimports-ed", 
+		File:     "test.go",
+		Line:     10,
+		Linter:   "goimports",
+		Message:  "File is not goimports-ed",
 		Severity: "warning",
 	}
-	
+
 	suggestion := FixSuggestion{
 		Issue:       issue,
 		Action:      "run_goimports",
 		Message:     "Run goimports to fix import formatting",
 		AutoFixable: true,
 	}
-	
+
 	detector := NewIssueDetector(".")
 	err := detector.ApplyAutoFix(suggestion)
-	
+
 	// This test should handle both success and expected failures
 	if err != nil {
 		t.Logf("ApplyAutoFix returned error (may be expected): %v", err)
@@ -331,26 +331,26 @@ func TestIssueDetector_ApplyAutoFix(t *testing.T) {
 
 func TestFixSuggestion_Structure(t *testing.T) {
 	issue := Issue{File: "test.go", Line: 10, Linter: "errcheck", Message: "Error not checked", Severity: "error"}
-	
+
 	suggestion := FixSuggestion{
 		Issue:       issue,
 		Action:      "add_error_check",
 		Message:     "Add proper error handling",
 		AutoFixable: false,
 	}
-	
+
 	if suggestion.Issue.File != "test.go" {
 		t.Error("Expected issue file to be preserved")
 	}
-	
+
 	if suggestion.Action != "add_error_check" {
 		t.Error("Expected specific action")
 	}
-	
+
 	if suggestion.Message != "Add proper error handling" {
 		t.Error("Expected specific message")
 	}
-	
+
 	if suggestion.AutoFixable {
 		t.Error("Expected AutoFixable to be false")
 	}
@@ -368,26 +368,26 @@ func TestResolutionWorkflow_ExecuteResolution(t *testing.T) {
 		{File: "test.go", Line: 10, Linter: "goimports", Message: "File is not goimports-ed", Severity: "warning"},
 		{File: "main.go", Line: 20, Linter: "errcheck", Message: "Error return value not checked", Severity: "error"},
 	}
-	
+
 	workflow := NewResolutionWorkflow(".")
 	result, err := workflow.ExecuteResolution(issues)
-	
+
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	
+
 	if result == nil {
 		t.Fatal("Expected ResolutionResult, got nil")
 	}
-	
+
 	if result.TotalIssues != len(issues) {
 		t.Errorf("Expected total issues %d, got %d", len(issues), result.TotalIssues)
 	}
-	
+
 	if result.ProcessedIssues == 0 {
 		t.Error("Expected some issues to be processed")
 	}
-	
+
 	if len(result.Steps) == 0 {
 		t.Error("Expected resolution steps to be recorded")
 	}
@@ -395,10 +395,10 @@ func TestResolutionWorkflow_ExecuteResolution(t *testing.T) {
 
 func TestResolutionWorkflow_ValidateStep(t *testing.T) {
 	workflow := NewResolutionWorkflow(".")
-	
+
 	// Test validation after a hypothetical fix
 	err := workflow.ValidateStep()
-	
+
 	// This should either succeed or fail gracefully
 	if err != nil {
 		t.Logf("ValidateStep returned error (may be expected): %v", err)
@@ -411,7 +411,7 @@ func TestResolutionResult_Structure(t *testing.T) {
 	steps := []ResolutionStep{
 		{Issue: Issue{File: "test.go", Linter: "errcheck"}, Action: "add_error_check", Success: true},
 	}
-	
+
 	result := ResolutionResult{
 		TotalIssues:     2,
 		ProcessedIssues: 1,
@@ -420,23 +420,23 @@ func TestResolutionResult_Structure(t *testing.T) {
 		Steps:           steps,
 		Success:         true,
 	}
-	
+
 	if result.TotalIssues != 2 {
 		t.Error("Expected total issues to be 2")
 	}
-	
+
 	if result.ProcessedIssues != 1 {
 		t.Error("Expected processed issues to be 1")
 	}
-	
+
 	if result.FixedIssues != 1 {
 		t.Error("Expected fixed issues to be 1")
 	}
-	
+
 	if !result.Success {
 		t.Error("Expected success to be true")
 	}
-	
+
 	if len(result.Steps) != 1 {
 		t.Error("Expected 1 resolution step")
 	}
