@@ -1058,8 +1058,8 @@ func TestGoldenPackageExceptionComparison(t *testing.T) {
 		{
 			name:         "test_patterns",
 			packagePath:  "github.com/example/project/pkg/service_test.go",
-			shouldExempt: true,
-			exemptReason: "テストコード例外",
+			shouldExempt: false,
+			exemptReason: "",
 		},
 		{
 			name:         "regular_package",
